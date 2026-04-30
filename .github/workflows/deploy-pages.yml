@@ -1,0 +1,50 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine target subdirectory
+        id: target
+        run: |
+          BRANCH="${GITHUB_REF_NAME}"
+          # Replace any slashes in branch name with dashes (safe for URLs)
+          SAFE_BRANCH="${BRANCH//\//-}"
+          if [ "$BRANCH" = "main" ]; then
+            echo "dir=" >> $GITHUB_OUTPUT
+            echo "label=root" >> $GITHUB_OUTPUT
+          else
+            echo "dir=${SAFE_BRANCH}" >> $GITHUB_OUTPUT
+            echo "label=${SAFE_BRANCH}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Stage files for deployment
+        run: |
+          mkdir -p _deploy/data/policies
+          # Static game files
+          cp *.html _deploy/ 2>/dev/null || true
+          cp *.jsx _deploy/ 2>/dev/null || true
+          # Policies the game loads at runtime
+          cp data/policies/candidate.json _deploy/data/policies/ 2>/dev/null || true
+          cp data/policies/baseline.json _deploy/data/policies/ 2>/dev/null || true
+          cp data/policies/baseline-genesis.json _deploy/data/policies/ 2>/dev/null || true
+          ls -la _deploy/
+
+      - name: Deploy to gh-pages branch (subdir = ${{ steps.target.outputs.label }})
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_deploy
+          destination_dir: ${{ steps.target.outputs.dir }}
+          keep_files: true
+          commit_message: "Deploy ${{ github.ref_name }} (${{ github.sha }})"

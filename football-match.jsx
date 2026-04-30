@@ -22,6 +22,17 @@ const h2 = FH / 2;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const norm  = (dx, dy) => { const m = Math.hypot(dx, dy) || 1; return [dx/m, dy/m]; };
 
+const BASELINE_AI_PARAMS = {
+  passChancePressured: 0.16,
+  passChanceWing: 0.07,
+  passChanceForward: 0.04,
+  passChanceDefault: 0.055,
+  shootProgressThreshold: 0.76,
+  tackleChance: 0.08,
+  forwardPassMinGain: 8,
+  markDistance: 48,
+};
+
 const HAIR = ['#5a3a1a','#1a1a1a','#f4d090','#8b0000','#ffd700','#5a3a1a',
               '#1a1a1a','#f4d090','#5a3a1a','#c87850'];
 
@@ -201,6 +212,8 @@ function newGame() {
     score:[0,0], timer:GAME_SECS*60,
     phase:'kickoff', goalAnim:0, goalTeam:null,
     setPieceText:null, setPieceTimer:0, penaltyTeam:null, penaltyTaken:false,
+    aiPolicies:{ 0: BASELINE_AI_PARAMS, 1: BASELINE_AI_PARAMS },
+    aiPolicyNames:{ 0: 'baseline', 1: 'baseline' },
     lastScorer:null, celebration:false, celebrateFrame:0,
     _done:false,
   };
@@ -534,11 +547,12 @@ function getDefendTarget(g, p) {
 }
 
 function cpuFindPass(g, carrier) {
+  const params = g.aiPolicies?.[carrier.team] || BASELINE_AI_PARAMS;
   const oppGoalX = carrier.team===0 ? FW : 0;
   let best=null, bestScore=-Infinity;
   g.pl.forEach(p => {
     if (p.team!==carrier.team||p.id===carrier.id||p.state!=='active') return;
-    if (isMarked(g,p,48)) return;
+    if (isMarked(g,p,params.markDistance ?? 48)) return;
     if (!passLineOpen(g, carrier, p, carrier.team)) return;
     const forwardGain = (p.x-carrier.x) * teamDir(carrier.team);
     const gain = Math.abs(carrier.x-oppGoalX) - Math.abs(p.x-oppGoalX);
@@ -547,7 +561,8 @@ function cpuFindPass(g, carrier) {
     const wingBonus = p.role==='mid' ? 70 + width*0.35 : 0;
     const cutbackBonus = carrier.role==='mid' && ((carrier.team===0 && carrier.x>FW*0.50) || (carrier.team===1 && carrier.x<FW*0.50)) ? inFrontOfGoal + (Math.abs(p.y-h2)<75 ? 55 : 0) : 0;
     const centralCarrierBonus = Math.abs(carrier.y-h2)<55 && p.role==='mid' ? 110 : 0;
-    const forwardBonus = forwardGain > 8 ? 150 + forwardGain*1.15 : forwardGain*8;
+    const minGain = params.forwardPassMinGain ?? 8;
+    const forwardBonus = forwardGain > minGain ? 150 + forwardGain*1.15 : forwardGain*8;
     const score = gain + forwardBonus + wingBonus + cutbackBonus + centralCarrierBonus - Math.hypot(p.x-carrier.x,p.y-carrier.y)*0.05;
     if (score>bestScore) { bestScore=score; best=p; }
   });
@@ -555,13 +570,14 @@ function cpuFindPass(g, carrier) {
 }
 
 function cpuTick(g, p) {
+  const params = g.aiPolicies?.[p.team] || BASELINE_AI_PARAMS;
   const ball = g.ball;
   const hasball = ball.owner===p.id;
   const carrier = g.pl.find(q => q.id===ball.owner);
   const teamHasBall = carrier && carrier.team===p.team;
 
   if (!hasball && carrier && carrier.team!==p.team && p.tackleCooldown<=0) {
-    if (Math.hypot(p.x-carrier.x,p.y-carrier.y)<TACKLE_DIST && Math.random()<0.08) {
+    if (Math.hypot(p.x-carrier.x,p.y-carrier.y)<TACKLE_DIST && Math.random()<(params.tackleChance ?? 0.08)) {
       tacklePlayer(g, p, carrier);
       return;
     }
@@ -590,13 +606,19 @@ function cpuTick(g, p) {
 
   if (hasball) {
     const oppGoal = oppGoalPoint(p.team);
-    const inShootZone = attackProgress(p.team,p.x)>0.76;
+    const inShootZone = attackProgress(p.team,p.x)>(params.shootProgressThreshold ?? 0.76);
     const reachedHalf = p.team===0 ? p.x>FW*0.50 : p.x<FW*0.50;
     const onWing = p.role==='mid' && Math.abs(p.y-wingY(p))<54;
     const pressured = nearestOpponentDistance(g,p) < 72;
-    const passChance = pressured ? 0.16 : onWing ? 0.07 : p.role==='fwd' ? 0.04 : 0.055;
+    const passChance = pressured
+      ? (params.passChancePressured ?? 0.16)
+      : onWing
+        ? (params.passChanceWing ?? 0.07)
+        : p.role==='fwd'
+          ? (params.passChanceForward ?? 0.04)
+          : (params.passChanceDefault ?? 0.055);
     const pt = cpuFindPass(g,p);
-    const forwardPt = pt && passMovesForward(p,pt,8) ? pt : null;
+    const forwardPt = pt && passMovesForward(p,pt,params.forwardPassMinGain ?? 8) ? pt : null;
     const safePt = pressured ? pt : forwardPt;
 
     if (p.role==='mid' && !reachedHalf) {
@@ -650,6 +672,18 @@ function FootballMatch({ matchData, onComplete, onExit }) {
 
   useEffFM(() => {
     gRef.current = newGame();
+    fetch('data/policies/candidate.json')
+      .then(r => r.ok ? r.json() : null)
+      .then(policy => {
+        if (!policy || !gRef.current) return;
+        const params = { ...BASELINE_AI_PARAMS, ...(policy.parameters || {}) };
+        gRef.current.aiPolicies[0] = params;
+        gRef.current.aiPolicies[1] = params;
+        gRef.current.aiPolicyNames[1] = policy.name || 'candidate';
+        gRef.current.setPieceText = `MOTSTÅNDARE: ${gRef.current.aiPolicyNames[1].toUpperCase()}`;
+        gRef.current.setPieceTimer = 120;
+      })
+      .catch(() => {});
     const canvas = canvasRef.current;
     const ctx    = canvas.getContext('2d');
 

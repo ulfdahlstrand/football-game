@@ -1,0 +1,148 @@
+{
+  "acceptedCount": 1,
+  "acceptedEpochs": [
+    4
+  ],
+  "averageEpochElapsedMs": 9656,
+  "bestGoalDiff": 255.0,
+  "epochs": 10,
+  "finalChampionEpoch": 4,
+  "finalChampionParameters": {
+    "forwardPassMinGain": 18.0,
+    "markDistance": 67.0,
+    "passChanceDefault": 0.004999999888241291,
+    "passChanceForward": 0.18000000715255737,
+    "passChancePressured": 0.36899998784065247,
+    "passChanceWing": 0.009999999776482582,
+    "shootProgressThreshold": 0.8133999705314636,
+    "tackleChance": 0.21739999949932098
+  },
+  "finishedAt": "2026-04-30T10:55:03Z",
+  "gamesPerEpoch": 100000,
+  "history": [
+    {
+      "accepted": false,
+      "baselineAvgGoals": 3.98,
+      "candidateAvgGoals": 0.24,
+      "championEpoch": 0,
+      "earlyStop": "worse",
+      "elapsedMs": 33,
+      "epoch": 1,
+      "gamesRun": 100,
+      "goalDiff": -374.0,
+      "zScore": -11.173
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 2.93,
+      "candidateAvgGoals": 0.78,
+      "championEpoch": 0,
+      "earlyStop": "worse",
+      "elapsedMs": 32,
+      "epoch": 2,
+      "gamesRun": 100,
+      "goalDiff": -215.0,
+      "zScore": -5.941
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 4.21,
+      "candidateAvgGoals": 2.3,
+      "championEpoch": 0,
+      "earlyStop": "worse",
+      "elapsedMs": 29,
+      "epoch": 3,
+      "gamesRun": 100,
+      "goalDiff": -191.0,
+      "zScore": -4.587
+    },
+    {
+      "accepted": true,
+      "baselineAvgGoals": 6.226,
+      "candidateAvgGoals": 6.229,
+      "championEpoch": 4,
+      "earlyStop": null,
+      "elapsedMs": 29029,
+      "epoch": 4,
+      "gamesRun": 100000,
+      "goalDiff": 255.0,
+      "zScore": 0.124
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 6.015,
+      "candidateAvgGoals": 5.906,
+      "championEpoch": 4,
+      "earlyStop": "worse",
+      "elapsedMs": 6178,
+      "epoch": 5,
+      "gamesRun": 21375,
+      "goalDiff": -2333.0,
+      "zScore": -2.525
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 6.198,
+      "candidateAvgGoals": 6.196,
+      "championEpoch": 4,
+      "earlyStop": null,
+      "elapsedMs": 29570,
+      "epoch": 6,
+      "gamesRun": 100000,
+      "goalDiff": -131.0,
+      "zScore": -0.064
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 6.057,
+      "candidateAvgGoals": 5.793,
+      "championEpoch": 4,
+      "earlyStop": "worse",
+      "elapsedMs": 1001,
+      "epoch": 7,
+      "gamesRun": 3375,
+      "goalDiff": -891.0,
+      "zScore": -2.545
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 6.188,
+      "candidateAvgGoals": 6.181,
+      "championEpoch": 4,
+      "earlyStop": null,
+      "elapsedMs": 29963,
+      "epoch": 8,
+      "gamesRun": 100000,
+      "goalDiff": -738.0,
+      "zScore": -0.36
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 5.183,
+      "candidateAvgGoals": 4.126,
+      "championEpoch": 4,
+      "earlyStop": "worse",
+      "elapsedMs": 51,
+      "epoch": 9,
+      "gamesRun": 175,
+      "goalDiff": -185.0,
+      "zScore": -2.722
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 6.311,
+      "candidateAvgGoals": 5.964,
+      "championEpoch": 4,
+      "earlyStop": "worse",
+      "elapsedMs": 680,
+      "epoch": 10,
+      "gamesRun": 2275,
+      "goalDiff": -789.0,
+      "zScore": -2.533
+    }
+  ],
+  "name": "session-13",
+  "rejectedCount": 9,
+  "startedAt": "2026-04-30T10:53:27Z",
+  "totalTrainingElapsedMs": 96566
+}
