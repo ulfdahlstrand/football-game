@@ -1,4 +1,4 @@
-const { useEffect: useEffFM, useRef: useRefFM } = React;
+const { useEffect: useEffFM, useRef: useRefFM, useState: useStateFM } = React;
 
 // ── Konstanter ───────────────────────────────────────────────────────────────
 const FW = 880, FH = 520, GH = 130, GD = 26;
@@ -670,20 +670,36 @@ function FootballMatch({ matchData, onComplete, onExit }) {
   const gRef      = useRefFM(null);
   const keysRef   = useRefFM({});
 
+  const [opponents, setOpponents] = useStateFM([]);
+  const [selectedIdx, setSelectedIdx] = useStateFM(0);
+  const [started, setStarted] = useStateFM(false);
+
+  // Load opponent list on first mount
   useEffFM(() => {
+    fetch('data/policies/opponents.json')
+      .then(r => r.ok ? r.json() : { opponents: [] })
+      .then(d => setOpponents((d && d.opponents) || []))
+      .catch(() => setOpponents([]));
+  }, []);
+
+  useEffFM(() => {
+    if (!started) return;
     gRef.current = newGame();
-    fetch('data/policies/candidate.json')
-      .then(r => r.ok ? r.json() : null)
-      .then(policy => {
-        if (!policy || !gRef.current) return;
-        const params = { ...BASELINE_AI_PARAMS, ...(policy.parameters || {}) };
-        gRef.current.aiPolicies[0] = params;
-        gRef.current.aiPolicies[1] = params;
-        gRef.current.aiPolicyNames[1] = policy.name || 'candidate';
-        gRef.current.setPieceText = `MOTSTÅNDARE: ${gRef.current.aiPolicyNames[1].toUpperCase()}`;
-        gRef.current.setPieceTimer = 120;
-      })
-      .catch(() => {});
+    const opp = opponents[selectedIdx];
+    if (opp) {
+      fetch(opp.file)
+        .then(r => r.ok ? r.json() : null)
+        .then(policy => {
+          if (!policy || !gRef.current) return;
+          const params = { ...BASELINE_AI_PARAMS, ...(policy.parameters || {}) };
+          gRef.current.aiPolicies[0] = params;
+          gRef.current.aiPolicies[1] = params;
+          gRef.current.aiPolicyNames[1] = policy.name || opp.name || 'candidate';
+          gRef.current.setPieceText = `MOTSTÅNDARE: ${(opp.label || policy.name || opp.name || 'CANDIDATE').toUpperCase()}`;
+          gRef.current.setPieceTimer = 120;
+        })
+        .catch(() => {});
+    }
     const canvas = canvasRef.current;
     const ctx    = canvas.getContext('2d');
 
@@ -1047,11 +1063,49 @@ function FootballMatch({ matchData, onComplete, onExit }) {
     const loop=()=>{ update(); draw(); raf=requestAnimationFrame(loop); };
     raf=requestAnimationFrame(loop);
     return ()=>{ cancelAnimationFrame(raf); window.removeEventListener('keydown',onKD); window.removeEventListener('keyup',onKU); };
-  },[]);
+  },[started]);
 
   return (
     <div style={{position:'absolute',inset:0,background:'#0a0a0a',
       display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}>
+      {!started && (
+        <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.85)',
+          display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
+          gap:'16px',padding:'24px',color:'#f3f4f6',zIndex:10,fontFamily:'Arial, sans-serif'}}>
+          <h2 style={{margin:0,fontSize:'28px',letterSpacing:'1px'}}>VÄLJ MOTSTÅNDARE</h2>
+          {opponents.length === 0 ? (
+            <p style={{color:'#9ca3af',fontSize:'14px'}}>Laddar motståndare...</p>
+          ) : (
+            <select
+              value={selectedIdx}
+              onChange={(e)=>setSelectedIdx(Number(e.target.value))}
+              style={{padding:'10px 14px',fontSize:'15px',minWidth:'320px',
+                background:'#1f2937',color:'#f3f4f6',border:'1px solid #374151',borderRadius:'6px'}}
+            >
+              {opponents.map((o, i) => (
+                <option key={o.name || i} value={i}>{o.label || o.name}</option>
+              ))}
+            </select>
+          )}
+          <button
+            onClick={()=>setStarted(true)}
+            disabled={opponents.length === 0}
+            style={{padding:'12px 28px',fontSize:'16px',fontWeight:700,
+              background:'#16a34a',color:'#ffffff',border:'none',borderRadius:'6px',
+              cursor: opponents.length === 0 ? 'not-allowed' : 'pointer',
+              opacity: opponents.length === 0 ? 0.5 : 1}}
+          >
+            STARTA MATCH
+          </button>
+          {onExit && (
+            <button onClick={onExit}
+              style={{padding:'8px 18px',fontSize:'13px',background:'transparent',
+                color:'#9ca3af',border:'1px solid #374151',borderRadius:'6px',cursor:'pointer'}}>
+              Avbryt
+            </button>
+          )}
+        </div>
+      )}
       <canvas ref={canvasRef} width={FW} height={FH}
         style={{maxWidth:'100%',maxHeight:'100%',display:'block'}}/>
     </div>

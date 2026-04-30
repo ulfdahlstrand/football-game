@@ -184,6 +184,43 @@ fn run_matrix(policies_dir: &Path, games_per_pair: usize) {
     println!("  {}", svg_path.display());
 }
 
+fn build_opponents_index(policies_dir: &Path) {
+    let mut opponents: Vec<serde_json::Value> = Vec::new();
+
+    if policies_dir.join("baseline.json").exists() {
+        opponents.push(serde_json::json!({
+            "name": "baseline",
+            "label": "Baseline (current champion)",
+            "file": "data/policies/baseline.json"
+        }));
+    }
+    if policies_dir.join("baseline-genesis.json").exists() {
+        opponents.push(serde_json::json!({
+            "name": "genesis",
+            "label": "Genesis (hand-tuned original)",
+            "file": "data/policies/baseline-genesis.json"
+        }));
+    }
+
+    let sessions_dir = policies_dir.join("sessions");
+    let dirs = list_sessions(&sessions_dir);
+    for name in &dirs {
+        let best_path = sessions_dir.join(name).join("best.json");
+        if !best_path.exists() { continue; }
+        opponents.push(serde_json::json!({
+            "name": format!("{}-best", name),
+            "label": format!("{} champion", name),
+            "file": format!("data/policies/sessions/{}/best.json", name)
+        }));
+    }
+
+    let count = opponents.len();
+    let doc = serde_json::json!({ "opponents": opponents });
+    let out_path = policies_dir.join("opponents.json");
+    let _ = std::fs::write(&out_path, format!("{}\n", serde_json::to_string_pretty(&doc).unwrap()));
+    println!("Wrote {} ({} opponents)", out_path.display(), count);
+}
+
 fn regenerate_progress_svg(policies_dir: &Path, baseline_path: &Path) {
     let sessions_dir = policies_dir.join("sessions");
     let progress_path = sessions_dir.join("progress.svg");
@@ -294,6 +331,12 @@ fn main() {
     if args.get(1).map(|s| s.as_str()) == Some("--matrix") {
         let games: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(1000);
         run_matrix(&policies_dir, games);
+        return;
+    }
+
+    // Build opponents.json index for in-game opponent selector
+    if args.get(1).map(|s| s.as_str()) == Some("--build-opponents") {
+        build_opponents_index(&policies_dir);
         return;
     }
 

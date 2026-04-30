@@ -30,7 +30,7 @@ jobs:
 
       - name: Stage files for deployment
         run: |
-          mkdir -p _deploy/data/policies
+          mkdir -p _deploy/data/policies/sessions
           # Static game files
           cp *.html _deploy/ 2>/dev/null || true
           cp *.jsx _deploy/ 2>/dev/null || true
@@ -38,7 +38,48 @@ jobs:
           cp data/policies/candidate.json _deploy/data/policies/ 2>/dev/null || true
           cp data/policies/baseline.json _deploy/data/policies/ 2>/dev/null || true
           cp data/policies/baseline-genesis.json _deploy/data/policies/ 2>/dev/null || true
-          ls -la _deploy/
+
+          # Bundle each session's best champion for the in-game opponent selector
+          for d in data/policies/sessions/*/; do
+            name=$(basename "$d")
+            if [ -f "$d/best.json" ]; then
+              mkdir -p "_deploy/data/policies/sessions/$name"
+              cp "$d/best.json" "_deploy/data/policies/sessions/$name/best.json"
+            fi
+          done
+
+          # Generate opponents.json index (used by football-match.jsx selector)
+          python3 - <<'PY'
+          import json, os, glob, re
+          opponents = []
+          if os.path.exists('_deploy/data/policies/baseline.json'):
+              opponents.append({
+                  'name': 'baseline',
+                  'label': 'Baseline (current champion)',
+                  'file': 'data/policies/baseline.json',
+              })
+          if os.path.exists('_deploy/data/policies/baseline-genesis.json'):
+              opponents.append({
+                  'name': 'genesis',
+                  'label': 'Genesis (hand-tuned original)',
+                  'file': 'data/policies/baseline-genesis.json',
+              })
+          def session_key(p):
+              n = os.path.basename(os.path.dirname(p))
+              m = re.search(r'(\d+)$', n)
+              return (n[:len(n)-len(m.group(1))] if m else n, int(m.group(1)) if m else 0)
+          for f in sorted(glob.glob('_deploy/data/policies/sessions/*/best.json'), key=session_key):
+              name = os.path.basename(os.path.dirname(f))
+              opponents.append({
+                  'name': f'{name}-best',
+                  'label': f'{name} champion',
+                  'file': f'data/policies/sessions/{name}/best.json',
+              })
+          with open('_deploy/data/policies/opponents.json', 'w') as out:
+              json.dump({'opponents': opponents}, out, indent=2)
+          print(f"opponents.json: {len(opponents)} entries")
+          PY
+          ls -la _deploy/data/policies/
 
       - name: Deploy to gh-pages branch (subdir = ${{ steps.target.outputs.label }})
         uses: peaceiris/actions-gh-pages@v4
