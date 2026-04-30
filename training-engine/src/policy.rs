@@ -87,6 +87,30 @@ pub fn mutate(p: &PolicyParams, rng: &mut impl Rng, scale: f32) -> PolicyParams 
     next
 }
 
+/// A team policy is 5 player slots: [fwd, mid_top, mid_bottom, def, gk].
+/// Slot index = player.id % 5 for both teams.
+pub type TeamPolicy = [PolicyParams; 5];
+
+pub const TEAM_SLOT_NAMES: [&str; 5] = ["fwd", "mid", "mid", "def", "gk"];
+
+/// Mutate a team policy. On average ~2 of 5 positions get a mutation
+/// (each independently 40%, with at-least-one guarantee).
+pub fn mutate_team(team: &TeamPolicy, rng: &mut impl Rng, scale: f32) -> TeamPolicy {
+    let mut next = *team;
+    let mut any_mutated = false;
+    for i in 0..5 {
+        if rng.gen::<f32>() < 0.4 {
+            next[i] = mutate(&team[i], rng, scale);
+            any_mutated = true;
+        }
+    }
+    if !any_mutated {
+        let i = rng.gen_range(0..5);
+        next[i] = mutate(&team[i], rng, scale);
+    }
+    next
+}
+
 pub fn within_bounds(p: &PolicyParams) -> bool {
     p.pass_chance_pressured >= 0.02 && p.pass_chance_pressured <= 0.4
         && p.pass_chance_wing >= 0.01 && p.pass_chance_wing <= 0.25

@@ -149,6 +149,18 @@ impl Game {
             stats: Stats::default(),
         }
     }
+
+    /// Sets up a v2 team-vs-team match. Each player gets the policy from
+    /// `team_policy[player.id % 5]` for their respective team.
+    pub fn for_team_battle(team0: &crate::policy::TeamPolicy, team1: &crate::policy::TeamPolicy) -> Self {
+        // Game.policies kept as fallback for any code path that reads it.
+        let mut game = Self::new(team0[0], team1[0]);
+        for player in &mut game.pl {
+            let slot = player.id % 5;
+            player.policy = Some(if player.team == 0 { team0[slot] } else { team1[slot] });
+        }
+        game
+    }
 }
 
 pub fn make_players() -> Vec<Player> {

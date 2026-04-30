@@ -10,9 +10,12 @@ mod svg;
 use std::path::Path;
 use std::time::SystemTime;
 
-use policy::{mutate, PolicyParams};
-use session::{ensure_genesis, read_baseline, update_baseline, EpochSummary, SessionWriter};
-use trainer::{evaluate_policies, play_match, EarlyStop};
+use policy::{mutate, mutate_team, PolicyParams, TeamPolicy};
+use session::{
+    ensure_genesis, ensure_team_genesis, read_baseline, read_team_baseline,
+    update_baseline, update_team_baseline, EpochSummary, SessionWriter,
+};
+use trainer::{evaluate_policies, evaluate_team_policies, play_match, EarlyStop};
 use svg::{write_training_svg, write_progress_svg, write_matrix_svg, SessionProgress, MatrixCell};
 use rayon::prelude::*;
 
@@ -328,43 +331,43 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
 
     let project_root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
-    let policies_dir = project_root.join("data").join("policies");
-    let baseline_path = policies_dir.join("baseline.json");
+    let v1_dir = project_root.join("data").join("policies").join("v1");
+    let v2_dir = project_root.join("data").join("policies").join("v2");
 
-    // Regen-only mode: just rebuild progress.svg from existing session folders + baseline history
+    // v1-only utilities (work against the frozen v1 archive)
     if args.get(1).map(|s| s.as_str()) == Some("--regen-progress") {
-        regenerate_progress_svg(&policies_dir, &baseline_path);
+        regenerate_progress_svg(&v1_dir, &v1_dir.join("baseline.json"));
         return;
     }
-
-    // Round-robin matrix: every session champion vs every other
     if args.get(1).map(|s| s.as_str()) == Some("--matrix") {
         let games: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(1000);
-        run_matrix(&policies_dir, games);
+        run_matrix(&v1_dir, games);
+        return;
+    }
+    if args.get(1).map(|s| s.as_str()) == Some("--build-opponents") {
+        build_opponents_index(&v1_dir);
         return;
     }
 
-    // Build opponents.json index for in-game opponent selector
-    if args.get(1).map(|s| s.as_str()) == Some("--build-opponents") {
-        build_opponents_index(&policies_dir);
-        return;
-    }
+    // ─── v2 training (default) ─────────────────────────────────────────────
+    let policies_dir = v2_dir;
+    let baseline_path = policies_dir.join("baseline.json");
 
     let epochs: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(100);
     let games_per_epoch: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(1000);
     let session_name: &str = args.get(3).map(|s| s.as_str()).unwrap_or("session-1");
 
-    let baseline_file = match read_baseline(&baseline_path) {
+    let baseline_file = match read_team_baseline(&baseline_path) {
         Ok(b) => b,
-        Err(e) => { eprintln!("Error reading baseline: {}", e); std::process::exit(1); }
+        Err(e) => { eprintln!("Error reading v2 baseline: {}", e); std::process::exit(1); }
     };
 
-    let initial_params = baseline_file.parameters;
-    let mut champion_params = initial_params;
+    let initial_team: TeamPolicy = baseline_file.player_params;
+    let mut champion: TeamPolicy = initial_team;
     let mut champion_epoch: usize = 0;
     let session_started = iso_now();
 
-    ensure_genesis(&baseline_path, &baseline_file);
+    ensure_team_genesis(&baseline_path, &baseline_file);
 
     let training_start = std::time::Instant::now();
 
@@ -373,35 +376,50 @@ fn main() {
         Err(e) => { eprintln!("Error creating session dir: {}", e); std::process::exit(1); }
     };
 
-    if let Err(e) = writer.write_initial_baseline(&initial_params, &session_started) {
+    if let Err(e) = writer.write_team_initial_baseline(&initial_team, &session_started) {
         eprintln!("Warning: could not write initial baseline: {}", e);
     }
 
     println!(
-        "Training session '{}': {} epochs x {} games/epoch",
+        "v2 training '{}': {} epochs x {} games/epoch (5 player slots per team)",
         session_name, epochs, games_per_epoch
     );
     println!("Using {} CPU threads via rayon", rayon::current_num_threads());
 
     let mut history: Vec<EpochSummary> = Vec::with_capacity(epochs);
-    // Adaptive mutation scale: decays when stuck, recovers on acceptance.
     let mut scale_factor: f32 = 1.0;
     let mut rejection_streak: usize = 0;
-    const SCALE_DECAY_EVERY: usize = 20;  // reduce scale after this many consecutive rejections
+    const SCALE_DECAY_EVERY: usize = 20;
     const SCALE_DECAY_FACTOR: f32 = 0.75;
     const SCALE_FLOOR: f32 = 0.1;
     const SCALE_RECOVER_FACTOR: f32 = 1.5;
 
     for epoch in 1..=epochs {
         let opponent_epoch = champion_epoch;
-        let opponent_params = champion_params;
+        let opponent = champion;
         let mut rng = rand::thread_rng();
-        let candidate_params = mutate(&champion_params, &mut rng, scale_factor);
+        let candidate = mutate_team(&champion, &mut rng, scale_factor);
 
-        let eval = evaluate_policies(&opponent_params, &candidate_params, games_per_epoch);
+        // Detect which slots changed so the epoch record can show what was tried.
+        let mutated_slots: Vec<usize> = (0..5)
+            .filter(|i| {
+                let a = &champion[*i];
+                let b = &candidate[*i];
+                (a.pass_chance_pressured - b.pass_chance_pressured).abs() > 1e-9
+                    || (a.pass_chance_wing - b.pass_chance_wing).abs() > 1e-9
+                    || (a.pass_chance_forward - b.pass_chance_forward).abs() > 1e-9
+                    || (a.pass_chance_default - b.pass_chance_default).abs() > 1e-9
+                    || (a.shoot_progress_threshold - b.shoot_progress_threshold).abs() > 1e-9
+                    || (a.tackle_chance - b.tackle_chance).abs() > 1e-9
+                    || (a.forward_pass_min_gain - b.forward_pass_min_gain).abs() > 1e-9
+                    || (a.mark_distance - b.mark_distance).abs() > 1e-9
+            })
+            .collect();
+
+        let eval = evaluate_team_policies(&opponent, &candidate, games_per_epoch);
         let accepted = eval.candidate_won;
         if accepted {
-            champion_params = candidate_params;
+            champion = candidate;
             champion_epoch = epoch;
             rejection_streak = 0;
             scale_factor = (scale_factor * SCALE_RECOVER_FACTOR).min(1.0);
@@ -414,20 +432,25 @@ fn main() {
         }
 
         let current_champion_epoch = if accepted { epoch } else { champion_epoch };
-        let current_champion_params = if accepted { candidate_params } else { champion_params };
+        let current_champion = if accepted { candidate } else { champion };
 
         let early_label = eval.early_stop.map(|s| match s {
             EarlyStop::Worse => "worse".to_string(),
             EarlyStop::Better => "better".to_string(),
         });
-
         let stop_str = eval.early_stop.map(|s| match s {
             EarlyStop::Worse => " [EARLY STOP: worse]",
             EarlyStop::Better => " [EARLY STOP: better]",
         }).unwrap_or("");
 
+        let slot_names = policy::TEAM_SLOT_NAMES;
+        let slot_label: String = mutated_slots.iter()
+            .map(|i| format!("{}#{}", slot_names[*i], i))
+            .collect::<Vec<_>>()
+            .join(",");
+
         println!(
-            "epoch-{:03} {} diff={:+.3} z={:.2} games={}/{} scale={:.3} champion={}{}",
+            "epoch-{:03} {} diff={:+.3} z={:.2} games={}/{} scale={:.3} mutated=[{}] champion={}{}",
             epoch,
             if accepted { "ACCEPTED" } else { "rejected" },
             eval.goal_diff,
@@ -435,14 +458,15 @@ fn main() {
             eval.games,
             games_per_epoch,
             scale_factor,
+            slot_label,
             current_champion_epoch,
             stop_str,
         );
 
-        if let Err(e) = writer.write_epoch(
-            epoch, opponent_epoch, &opponent_params, &candidate_params,
-            accepted, current_champion_epoch, &current_champion_params,
-            &eval, &iso_now(), games_per_epoch,
+        if let Err(e) = writer.write_team_epoch(
+            epoch, opponent_epoch, &opponent, &candidate,
+            accepted, current_champion_epoch, &current_champion,
+            &mutated_slots, &eval, &iso_now(), games_per_epoch,
         ) {
             eprintln!("Warning: could not write epoch {}: {}", epoch, e);
         }
@@ -463,14 +487,14 @@ fn main() {
 
     let finished_at = iso_now();
 
-    if let Err(e) = writer.write_summary(
+    if let Err(e) = writer.write_team_summary(
         &session_started, &finished_at, epochs, games_per_epoch,
-        champion_epoch, &champion_params, &history,
+        champion_epoch, &champion, &history,
     ) {
         eprintln!("Warning: could not write summary: {}", e);
     }
 
-    if let Err(e) = writer.write_best(champion_epoch, &champion_params, session_name) {
+    if let Err(e) = writer.write_team_best(champion_epoch, &champion, session_name) {
         eprintln!("Warning: could not write best.json: {}", e);
     }
 
@@ -483,10 +507,10 @@ fn main() {
     // Final evaluation: update baseline only if champion beats session-start baseline
     if champion_epoch > 0 {
         println!(
-            "\nEvaluating final champion against session baseline ({} games)...",
+            "\nEvaluating final champion against v2 session baseline ({} games)...",
             games_per_epoch
         );
-        let final_eval = evaluate_policies(&initial_params, &champion_params, games_per_epoch);
+        let final_eval = evaluate_team_policies(&initial_team, &champion, games_per_epoch);
         println!(
             "vs session baseline: champion={:.3} baseline={:.3} diff={:+.3} z={:.2}",
             final_eval.candidate_avg_goals,
@@ -495,12 +519,11 @@ fn main() {
             final_eval.z_score,
         );
 
-        // Also measure against genesis so we can see total improvement
         let genesis_path = policies_dir.join("baseline-genesis.json");
-        if let Ok(genesis_file) = read_baseline(&genesis_path) {
-            let genesis_eval = evaluate_policies(&genesis_file.parameters, &champion_params, games_per_epoch);
+        if let Ok(genesis_file) = read_team_baseline(&genesis_path) {
+            let genesis_eval = evaluate_team_policies(&genesis_file.player_params, &champion, games_per_epoch);
             println!(
-                "vs genesis:          champion={:.3} genesis={:.3}  diff={:+.3} z={:.2}",
+                "vs v2 genesis:       champion={:.3} genesis={:.3}  diff={:+.3} z={:.2}",
                 genesis_eval.candidate_avg_goals,
                 genesis_eval.baseline_avg_goals,
                 genesis_eval.goal_diff,
@@ -509,12 +532,12 @@ fn main() {
         }
 
         if final_eval.candidate_won {
-            match update_baseline(
-                &baseline_path, &baseline_file, &champion_params,
+            match update_team_baseline(
+                &baseline_path, &baseline_file, &champion,
                 session_name, champion_epoch, final_eval.goal_diff, &iso_now(),
             ) {
                 Ok(_) => println!(
-                    "baseline.json updated — version incremented, history appended (epoch {} diff={:+.3})",
+                    "v2 baseline.json updated — version incremented, history appended (epoch {} diff={:+.3})",
                     champion_epoch, final_eval.goal_diff
                 ),
                 Err(e) => eprintln!("Warning: could not update baseline: {}", e),

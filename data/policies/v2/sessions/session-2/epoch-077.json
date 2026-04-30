@@ -1,0 +1,193 @@
+{
+  "accepted": false,
+  "candidate": {
+    "playerParams": [
+      {
+        "forwardPassMinGain": 17.0,
+        "markDistance": 60.0,
+        "passChanceDefault": 0.019700000062584877,
+        "passChanceForward": 0.18000000715255737,
+        "passChancePressured": 0.4000000059604645,
+        "passChanceWing": 0.009999999776482582,
+        "shootProgressThreshold": 0.7656000256538391,
+        "tackleChance": 0.2199999988079071
+      },
+      {
+        "forwardPassMinGain": 18.0,
+        "markDistance": 57.0,
+        "passChanceDefault": 0.06930000334978104,
+        "passChanceForward": 0.18000000715255737,
+        "passChancePressured": 0.39070001244544983,
+        "passChanceWing": 0.009999999776482582,
+        "shootProgressThreshold": 0.7754999995231628,
+        "tackleChance": 0.2199999988079071
+      },
+      {
+        "forwardPassMinGain": 18.0,
+        "markDistance": 73.0,
+        "passChanceDefault": 0.022299999371170998,
+        "passChanceForward": 0.15620000660419464,
+        "passChancePressured": 0.4000000059604645,
+        "passChanceWing": 0.018400000408291817,
+        "shootProgressThreshold": 0.8125,
+        "tackleChance": 0.2199999988079071
+      },
+      {
+        "forwardPassMinGain": 15.0,
+        "markDistance": 78.0,
+        "passChanceDefault": 0.10980000346899033,
+        "passChanceForward": 0.15600000321865082,
+        "passChancePressured": 0.4000000059604645,
+        "passChanceWing": 0.015699999406933784,
+        "shootProgressThreshold": 0.8101999759674072,
+        "tackleChance": 0.21240000426769257
+      },
+      {
+        "forwardPassMinGain": 17.0,
+        "markDistance": 70.0,
+        "passChanceDefault": 0.030899999663233757,
+        "passChanceForward": 0.15440000593662262,
+        "passChancePressured": 0.39419999718666077,
+        "passChanceWing": 0.031300000846385956,
+        "shootProgressThreshold": 0.7857000231742859,
+        "tackleChance": 0.17599999904632568
+      }
+    ]
+  },
+  "championEpoch": 57,
+  "championPlayerParams": [
+    {
+      "forwardPassMinGain": 17.0,
+      "markDistance": 60.0,
+      "passChanceDefault": 0.044599998742341995,
+      "passChanceForward": 0.18000000715255737,
+      "passChancePressured": 0.4000000059604645,
+      "passChanceWing": 0.009999999776482582,
+      "shootProgressThreshold": 0.7656000256538391,
+      "tackleChance": 0.2199999988079071
+    },
+    {
+      "forwardPassMinGain": 18.0,
+      "markDistance": 55.0,
+      "passChanceDefault": 0.06930000334978104,
+      "passChanceForward": 0.18000000715255737,
+      "passChancePressured": 0.4000000059604645,
+      "passChanceWing": 0.009999999776482582,
+      "shootProgressThreshold": 0.8011999726295471,
+      "tackleChance": 0.2199999988079071
+    },
+    {
+      "forwardPassMinGain": 18.0,
+      "markDistance": 73.0,
+      "passChanceDefault": 0.022299999371170998,
+      "passChanceForward": 0.15620000660419464,
+      "passChancePressured": 0.4000000059604645,
+      "passChanceWing": 0.018400000408291817,
+      "shootProgressThreshold": 0.8125,
+      "tackleChance": 0.2199999988079071
+    },
+    {
+      "forwardPassMinGain": 15.0,
+      "markDistance": 78.0,
+      "passChanceDefault": 0.10980000346899033,
+      "passChanceForward": 0.15600000321865082,
+      "passChancePressured": 0.4000000059604645,
+      "passChanceWing": 0.015699999406933784,
+      "shootProgressThreshold": 0.8101999759674072,
+      "tackleChance": 0.21240000426769257
+    },
+    {
+      "forwardPassMinGain": 17.0,
+      "markDistance": 70.0,
+      "passChanceDefault": 0.030899999663233757,
+      "passChanceForward": 0.15440000593662262,
+      "passChancePressured": 0.39419999718666077,
+      "passChanceWing": 0.031300000846385956,
+      "shootProgressThreshold": 0.7857000231742859,
+      "tackleChance": 0.17599999904632568
+    }
+  ],
+  "createdAt": "2026-04-30T14:07:55Z",
+  "epoch": 77,
+  "evaluation": {
+    "avgGoals": 5.93,
+    "avgOutOfBounds": 0.02,
+    "avgPasses": 114.8,
+    "avgShots": 109.16,
+    "avgTackles": 3.06,
+    "baselineAvgGoals": 4.05,
+    "candidateAvgGoals": 1.88,
+    "candidateWon": false,
+    "earlyStop": "worse",
+    "elapsedMs": 31,
+    "games": 100,
+    "gamesPerSecond": 3225.81,
+    "goalDiff": -217.0,
+    "maxGames": 10000,
+    "passCompletionRate": 0.949,
+    "tackleSuccessRate": 1.0,
+    "zScore": -4.783
+  },
+  "gamesPerEpoch": 10000,
+  "mutatedSlots": [
+    0,
+    1
+  ],
+  "name": "epoch-077",
+  "opponent": {
+    "playerParams": [
+      {
+        "forwardPassMinGain": 17.0,
+        "markDistance": 60.0,
+        "passChanceDefault": 0.044599998742341995,
+        "passChanceForward": 0.18000000715255737,
+        "passChancePressured": 0.4000000059604645,
+        "passChanceWing": 0.009999999776482582,
+        "shootProgressThreshold": 0.7656000256538391,
+        "tackleChance": 0.2199999988079071
+      },
+      {
+        "forwardPassMinGain": 18.0,
+        "markDistance": 55.0,
+        "passChanceDefault": 0.06930000334978104,
+        "passChanceForward": 0.18000000715255737,
+        "passChancePressured": 0.4000000059604645,
+        "passChanceWing": 0.009999999776482582,
+        "shootProgressThreshold": 0.8011999726295471,
+        "tackleChance": 0.2199999988079071
+      },
+      {
+        "forwardPassMinGain": 18.0,
+        "markDistance": 73.0,
+        "passChanceDefault": 0.022299999371170998,
+        "passChanceForward": 0.15620000660419464,
+        "passChancePressured": 0.4000000059604645,
+        "passChanceWing": 0.018400000408291817,
+        "shootProgressThreshold": 0.8125,
+        "tackleChance": 0.2199999988079071
+      },
+      {
+        "forwardPassMinGain": 15.0,
+        "markDistance": 78.0,
+        "passChanceDefault": 0.10980000346899033,
+        "passChanceForward": 0.15600000321865082,
+        "passChancePressured": 0.4000000059604645,
+        "passChanceWing": 0.015699999406933784,
+        "shootProgressThreshold": 0.8101999759674072,
+        "tackleChance": 0.21240000426769257
+      },
+      {
+        "forwardPassMinGain": 17.0,
+        "markDistance": 70.0,
+        "passChanceDefault": 0.030899999663233757,
+        "passChanceForward": 0.15440000593662262,
+        "passChancePressured": 0.39419999718666077,
+        "passChanceWing": 0.031300000846385956,
+        "shootProgressThreshold": 0.7857000231742859,
+        "tackleChance": 0.17599999904632568
+      }
+    ],
+    "sourceEpoch": 57
+  },
+  "session": "session-2"
+}
