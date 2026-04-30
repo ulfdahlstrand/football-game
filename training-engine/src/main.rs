@@ -1,6 +1,7 @@
 mod constants;
 mod game;
 mod policy;
+mod spatial;
 mod brain;
 mod ai;
 mod physics;
@@ -11,12 +12,14 @@ mod svg;
 use std::path::Path;
 use std::time::SystemTime;
 
-use policy::{mutate, mutate_team, PolicyParams, TeamPolicy};
+use policy::{mutate, mutate_team, mutate_team_v3, PolicyParams, TeamPolicy, TeamPolicyV3, V3Params};
 use session::{
-    ensure_genesis, ensure_team_genesis, read_baseline, read_team_baseline,
-    update_baseline, update_team_baseline, EpochSummary, SessionWriter,
+    ensure_genesis, ensure_team_genesis, ensure_team_v3_genesis,
+    read_baseline, read_team_baseline, read_team_baseline_v3,
+    update_baseline, update_team_baseline, update_team_v3_baseline,
+    EpochSummary, SessionWriter,
 };
-use trainer::{evaluate_policies, evaluate_team_policies, play_match, EarlyStop};
+use trainer::{evaluate_policies, evaluate_team_policies, evaluate_team_policies_v3, play_match, EarlyStop};
 use svg::{write_training_svg, write_progress_svg, write_matrix_svg, SessionProgress, MatrixCell};
 use rayon::prelude::*;
 
@@ -297,6 +300,177 @@ fn regenerate_progress_svg(policies_dir: &Path, baseline_path: &Path) {
     println!("Wrote {} ({}/{} improved)", progress_path.display(), improved, sessions.len());
 }
 
+fn v3_diff_slots(a: &TeamPolicyV3, b: &TeamPolicyV3) -> Vec<usize> {
+    (0..5).filter(|i| {
+        let p = &a[*i]; let q = &b[*i];
+        let base_diff =
+            (p.base.pass_chance_pressured - q.base.pass_chance_pressured).abs() > 1e-9
+                || (p.base.pass_chance_wing - q.base.pass_chance_wing).abs() > 1e-9
+                || (p.base.pass_chance_forward - q.base.pass_chance_forward).abs() > 1e-9
+                || (p.base.pass_chance_default - q.base.pass_chance_default).abs() > 1e-9
+                || (p.base.shoot_progress_threshold - q.base.shoot_progress_threshold).abs() > 1e-9
+                || (p.base.tackle_chance - q.base.tackle_chance).abs() > 1e-9
+                || (p.base.forward_pass_min_gain - q.base.forward_pass_min_gain).abs() > 1e-9
+                || (p.base.mark_distance - q.base.mark_distance).abs() > 1e-9;
+        let mod_diff =
+            (p.aggression - q.aggression).abs() > 1e-9
+                || (p.risk_appetite - q.risk_appetite).abs() > 1e-9
+                || (p.edge_avoidance - q.edge_avoidance).abs() > 1e-9
+                || (p.pressure_radius - q.pressure_radius).abs() > 1e-9
+                || (p.goal_attraction - q.goal_attraction).abs() > 1e-9
+                || (p.block_avoidance - q.block_avoidance).abs() > 1e-9
+                || (p.block_distance - q.block_distance).abs() > 1e-9
+                || (p.clear_shot_bonus - q.clear_shot_bonus).abs() > 1e-9
+                || p.corridor_preference != q.corridor_preference
+                || (0..5).any(|k| (p.zone_aggression[k] - q.zone_aggression[k]).abs() > 1e-9);
+        base_diff || mod_diff
+    }).collect()
+}
+
+fn run_v3_training(policies_dir: &Path, epochs: usize, games_per_epoch: usize, session_name: &str) {
+    let baseline_path = policies_dir.join("baseline.json");
+
+    let baseline_file = match read_team_baseline_v3(&baseline_path) {
+        Ok(b) => b,
+        Err(e) => { eprintln!("Error reading v3 baseline: {}", e); std::process::exit(1); }
+    };
+
+    let initial_team: TeamPolicyV3 = baseline_file.player_params;
+    let mut champion: TeamPolicyV3 = initial_team;
+    let mut champion_epoch: usize = 0;
+    let session_started = iso_now();
+
+    ensure_team_v3_genesis(&baseline_path, &baseline_file);
+    let training_start = std::time::Instant::now();
+
+    let writer = match SessionWriter::new(policies_dir, session_name) {
+        Ok(w) => w,
+        Err(e) => { eprintln!("Error creating session dir: {}", e); std::process::exit(1); }
+    };
+    if let Err(e) = writer.write_team_v3_initial_baseline(&initial_team, &session_started) {
+        eprintln!("Warning: could not write initial baseline: {}", e);
+    }
+
+    println!(
+        "v3 training '{}': {} epochs x {} games/epoch (5 slots, spatial-aware)",
+        session_name, epochs, games_per_epoch
+    );
+    println!("Using {} CPU threads via rayon", rayon::current_num_threads());
+
+    let mut history: Vec<EpochSummary> = Vec::with_capacity(epochs);
+    let mut scale_factor: f32 = 1.0;
+    let mut rejection_streak: usize = 0;
+
+    for epoch in 1..=epochs {
+        let opponent_epoch = champion_epoch;
+        let opponent = champion;
+        let mut rng = rand::thread_rng();
+        let candidate = mutate_team_v3(&champion, &mut rng, scale_factor);
+        let mutated_slots = v3_diff_slots(&champion, &candidate);
+
+        let eval = evaluate_team_policies_v3(&opponent, &candidate, games_per_epoch);
+        let accepted = eval.candidate_won;
+        if accepted {
+            champion = candidate;
+            champion_epoch = epoch;
+            rejection_streak = 0;
+            scale_factor = (scale_factor * 1.5).min(1.0);
+        } else {
+            rejection_streak += 1;
+            if rejection_streak % 20 == 0 {
+                scale_factor = (scale_factor * 0.75).max(0.1);
+                println!("  [scale reduced to {:.3} after {} consecutive rejections]", scale_factor, rejection_streak);
+            }
+        }
+
+        let current_champion_epoch = if accepted { epoch } else { champion_epoch };
+        let current_champion = if accepted { candidate } else { champion };
+        let early_label = eval.early_stop.map(|s| match s {
+            EarlyStop::Worse => "worse".to_string(), EarlyStop::Better => "better".to_string(),
+        });
+        let stop_str = eval.early_stop.map(|s| match s {
+            EarlyStop::Worse => " [EARLY STOP: worse]", EarlyStop::Better => " [EARLY STOP: better]",
+        }).unwrap_or("");
+        let slot_label: String = mutated_slots.iter()
+            .map(|i| format!("{}#{}", policy::TEAM_SLOT_NAMES[*i], i))
+            .collect::<Vec<_>>().join(",");
+
+        println!(
+            "epoch-{:03} {} diff={:+.3} z={:.2} games={}/{} scale={:.3} mutated=[{}] champion={}{}",
+            epoch,
+            if accepted { "ACCEPTED" } else { "rejected" },
+            eval.goal_diff, eval.z_score, eval.games, games_per_epoch,
+            scale_factor, slot_label, current_champion_epoch, stop_str,
+        );
+
+        if let Err(e) = writer.write_team_v3_epoch(
+            epoch, opponent_epoch, &opponent, &candidate,
+            accepted, current_champion_epoch, &current_champion,
+            &mutated_slots, &eval, &iso_now(), games_per_epoch,
+        ) { eprintln!("Warning: could not write epoch {}: {}", epoch, e); }
+
+        history.push(EpochSummary {
+            epoch, accepted, champion_epoch: current_champion_epoch,
+            goal_diff: eval.goal_diff,
+            baseline_avg_goals: eval.baseline_avg_goals,
+            candidate_avg_goals: eval.candidate_avg_goals,
+            elapsed_ms: eval.elapsed_ms, early_stop: early_label,
+            z_score: eval.z_score, games_run: eval.games,
+        });
+    }
+
+    let finished_at = iso_now();
+    let _ = writer.write_team_v3_summary(
+        &session_started, &finished_at, epochs, games_per_epoch,
+        champion_epoch, &champion, &history,
+    );
+    let _ = writer.write_team_v3_best(champion_epoch, &champion, session_name);
+    crate::svg::write_training_svg(
+        &writer.session_dir().join("training-progress.svg"),
+        &history, champion_epoch,
+    );
+
+    if champion_epoch > 0 {
+        println!("\nEvaluating final champion against v3 session baseline ({} games)...", games_per_epoch);
+        let final_eval = evaluate_team_policies_v3(&initial_team, &champion, games_per_epoch);
+        println!(
+            "vs session baseline: champion={:.3} baseline={:.3} diff={:+.3} z={:.2}",
+            final_eval.candidate_avg_goals, final_eval.baseline_avg_goals,
+            final_eval.goal_diff, final_eval.z_score,
+        );
+        let genesis_path = policies_dir.join("baseline-genesis.json");
+        if let Ok(g) = read_team_baseline_v3(&genesis_path) {
+            let ge = evaluate_team_policies_v3(&g.player_params, &champion, games_per_epoch);
+            println!(
+                "vs v3 genesis:       champion={:.3} genesis={:.3}  diff={:+.3} z={:.2}",
+                ge.candidate_avg_goals, ge.baseline_avg_goals, ge.goal_diff, ge.z_score,
+            );
+        }
+        if final_eval.candidate_won {
+            match update_team_v3_baseline(
+                &baseline_path, &baseline_file, &champion,
+                session_name, champion_epoch, final_eval.goal_diff, &iso_now(),
+            ) {
+                Ok(_) => println!("v3 baseline.json updated → epoch {} diff={:+.3}", champion_epoch, final_eval.goal_diff),
+                Err(e) => eprintln!("Warning: could not update baseline: {}", e),
+            }
+        } else {
+            println!("Champion did not beat session baseline — baseline.json unchanged.");
+        }
+    } else {
+        println!("\nNo improvement found this session — baseline.json unchanged.");
+    }
+
+    let elapsed = training_start.elapsed();
+    let total_secs = elapsed.as_secs();
+    let h = total_secs / 3600;
+    let m = (total_secs % 3600) / 60;
+    let s = total_secs % 60;
+    if h > 0 { println!("\nTotal training time: {}h {}m {}s", h, m, s); }
+    else { println!("\nTotal training time: {}m {}s", m, s); }
+    println!("Done. Champion epoch: {}", champion_epoch);
+}
+
 fn iso_now() -> String {
     let d = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
@@ -347,6 +521,16 @@ fn main() {
     }
     if args.get(1).map(|s| s.as_str()) == Some("--build-opponents") {
         build_opponents_index(&v1_dir);
+        return;
+    }
+
+    // ─── v3 training (when --v3 is passed) ──────────────────────────────────
+    if args.get(1).map(|s| s.as_str()) == Some("--v3") {
+        let v3_dir = project_root.join("data").join("policies").join("v3");
+        let epochs: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(100);
+        let games_per_epoch: usize = args.get(3).and_then(|s| s.parse().ok()).unwrap_or(1000);
+        let session_name: String = args.get(4).cloned().unwrap_or_else(|| "session-1".to_string());
+        run_v3_training(&v3_dir, epochs, games_per_epoch, &session_name);
         return;
     }
 
