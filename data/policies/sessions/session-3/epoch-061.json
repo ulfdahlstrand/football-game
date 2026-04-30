@@ -1,0 +1,63 @@
+{
+  "accepted": true,
+  "candidate": {
+    "parameters": {
+      "forwardPassMinGain": 11.0,
+      "markDistance": 61.0,
+      "passChanceDefault": 0.03929999843239784,
+      "passChanceForward": 0.08839999884366989,
+      "passChancePressured": 0.3472000062465668,
+      "passChanceWing": 0.03819999843835831,
+      "shootProgressThreshold": 0.8206999897956848,
+      "tackleChance": 0.21080000698566437
+    }
+  },
+  "championEpoch": 61,
+  "championParameters": {
+    "forwardPassMinGain": 11.0,
+    "markDistance": 61.0,
+    "passChanceDefault": 0.03929999843239784,
+    "passChanceForward": 0.08839999884366989,
+    "passChancePressured": 0.3472000062465668,
+    "passChanceWing": 0.03819999843835831,
+    "shootProgressThreshold": 0.8206999897956848,
+    "tackleChance": 0.21080000698566437
+  },
+  "createdAt": "2026-04-30T09:57:29Z",
+  "epoch": 61,
+  "evaluation": {
+    "avgGoals": 10.28,
+    "avgOutOfBounds": 0.0,
+    "avgPasses": 153.81,
+    "avgShots": 37.3,
+    "avgTackles": 4.58,
+    "baselineAvgGoals": 5.129,
+    "candidateAvgGoals": 5.149,
+    "candidateWon": true,
+    "earlyStop": null,
+    "elapsedMs": 284,
+    "games": 1000,
+    "gamesPerSecond": 3521.13,
+    "goalDiff": 20.0,
+    "maxGames": 1000,
+    "passCompletionRate": 0.924,
+    "tackleSuccessRate": 1.0,
+    "zScore": 0.13
+  },
+  "gamesPerEpoch": 1000,
+  "name": "epoch-061",
+  "opponent": {
+    "parameters": {
+      "forwardPassMinGain": 9.0,
+      "markDistance": 61.0,
+      "passChanceDefault": 0.03929999843239784,
+      "passChanceForward": 0.08839999884366989,
+      "passChancePressured": 0.36970001459121704,
+      "passChanceWing": 0.03819999843835831,
+      "shootProgressThreshold": 0.8206999897956848,
+      "tackleChance": 0.21080000698566437
+    },
+    "sourceEpoch": 60
+  },
+  "session": "session-3"
+}
