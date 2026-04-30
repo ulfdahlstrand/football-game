@@ -87,9 +87,45 @@ pub fn mutate(p: &PolicyParams, rng: &mut impl Rng, scale: f32) -> PolicyParams 
     next
 }
 
+/// V3 introduces additional params layered on top of the classic v1/v2
+/// PolicyParams. The intent is that v3 algorithms can use the classic params
+/// plus brand new behavioral modulators.
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct V3Params {
+    pub base: PolicyParams,
+    /// 0..2, scales tackle_chance and shoot threshold confidence.
+    /// 1.0 = classic behavior.
+    pub aggression: f32,
+    /// Pass-search radius in pixels. Inf = consider all teammates (classic).
+    pub vision_radius: f32,
+    /// 0..1, willingness to attempt risky passes/shots.
+    pub risk_appetite: f32,
+    /// Bias multiplier for cpu_find_pass score toward this teammate id.
+    /// 0 disables. Set per-player at game setup.
+    pub chemistry_target_id: i32,
+    pub chemistry_bonus: f32,
+}
+
+impl Default for V3Params {
+    fn default() -> Self {
+        Self {
+            base: PolicyParams::default(),
+            aggression: 1.0,
+            vision_radius: f32::INFINITY,
+            risk_appetite: 0.5,
+            chemistry_target_id: -1,
+            chemistry_bonus: 0.0,
+        }
+    }
+}
+
 /// A team policy is 5 player slots: [fwd, mid_top, mid_bottom, def, gk].
 /// Slot index = player.id % 5 for both teams.
 pub type TeamPolicy = [PolicyParams; 5];
+
+/// v3 team policy: 5 V3Params, one per slot.
+pub type TeamPolicyV3 = [V3Params; 5];
 
 pub const TEAM_SLOT_NAMES: [&str; 5] = ["fwd", "mid", "mid", "def", "gk"];
 

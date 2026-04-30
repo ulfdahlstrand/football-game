@@ -1,5 +1,6 @@
 use crate::constants::*;
-use crate::policy::PolicyParams;
+use crate::brain::PlayerBrain;
+use crate::policy::{PolicyParams, TeamPolicy, TeamPolicyV3};
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Phase {
@@ -42,8 +43,9 @@ pub struct Player {
     pub ai_jitter_x: f32,
     pub ai_jitter_y: f32,
     pub ai_jitter_timer: i32,
-    /// Per-player policy override. When `None`, falls back to `Game.policies[team]`.
-    pub policy: Option<PolicyParams>,
+    /// What algorithm + parameters this player uses to make decisions.
+    /// Set at game setup; defaults to V1 with classic params.
+    pub brain: PlayerBrain,
 }
 
 impl Player {
@@ -65,16 +67,16 @@ impl Player {
             ai_jitter_x: 0.0,
             ai_jitter_y: 0.0,
             ai_jitter_timer: 0,
-            policy: None,
+            brain: PlayerBrain::default(),
         }
     }
 }
 
-/// Returns the active policy for a player: their per-player override if set,
-/// otherwise the team-level policy.
+/// Returns the underlying classic PolicyParams for a player. Read from their
+/// brain (V1/V2 directly, V3 returns its `.base`). Used by helper code that
+/// only cares about classic params (e.g. `cpu_find_pass`).
 pub fn effective_policy(game: &Game, player_idx: usize) -> PolicyParams {
-    let p = &game.pl[player_idx];
-    p.policy.unwrap_or_else(|| game.policies[p.team])
+    game.pl[player_idx].brain.base_params()
 }
 
 #[derive(Clone, Debug)]
@@ -150,14 +152,46 @@ impl Game {
         }
     }
 
-    /// Sets up a v2 team-vs-team match. Each player gets the policy from
-    /// `team_policy[player.id % 5]` for their respective team.
-    pub fn for_team_battle(team0: &crate::policy::TeamPolicy, team1: &crate::policy::TeamPolicy) -> Self {
-        // Game.policies kept as fallback for any code path that reads it.
+    /// Sets up a v2 team-vs-team match: per-position classic params, V2 brain.
+    pub fn for_team_battle(team0: &TeamPolicy, team1: &TeamPolicy) -> Self {
         let mut game = Self::new(team0[0], team1[0]);
         for player in &mut game.pl {
             let slot = player.id % 5;
-            player.policy = Some(if player.team == 0 { team0[slot] } else { team1[slot] });
+            let p = if player.team == 0 { team0[slot] } else { team1[slot] };
+            player.brain = PlayerBrain::V2(p);
+        }
+        game
+    }
+
+    /// Sets up a v1 team-vs-team match: shared team-level params, V1 brain.
+    pub fn for_team_battle_v1(team0: PolicyParams, team1: PolicyParams) -> Self {
+        let mut game = Self::new(team0, team1);
+        for player in &mut game.pl {
+            let p = if player.team == 0 { team0 } else { team1 };
+            player.brain = PlayerBrain::V1(p);
+        }
+        game
+    }
+
+    /// Sets up a v3 team-vs-team match: per-position V3Params, V3 brain.
+    pub fn for_team_battle_v3(team0: &TeamPolicyV3, team1: &TeamPolicyV3) -> Self {
+        let mut game = Self::new(team0[0].base, team1[0].base);
+        for player in &mut game.pl {
+            let slot = player.id % 5;
+            let p = if player.team == 0 { team0[slot] } else { team1[slot] };
+            player.brain = PlayerBrain::V3(p);
+        }
+        game
+    }
+
+    /// Mixed-version match: caller provides 10 brains directly (one per
+    /// player id). Lets you stage v1-vs-v2, mid-tier v3 vs full-v2, etc.
+    pub fn for_mixed_battle(brains: [PlayerBrain; 10]) -> Self {
+        let p0 = brains[0].base_params();
+        let p1 = brains[5].base_params();
+        let mut game = Self::new(p0, p1);
+        for (player, brain) in game.pl.iter_mut().zip(brains.iter()) {
+            player.brain = *brain;
         }
         game
     }

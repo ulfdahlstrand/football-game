@@ -2,6 +2,7 @@ use rand::Rng;
 
 use crate::constants::*;
 use crate::game::{effective_policy, Game, Player, PlayerState, Role};
+use crate::policy::PolicyParams;
 
 fn clamp(v: f32, lo: f32, hi: f32) -> f32 {
     v.max(lo).min(hi)
@@ -266,7 +267,9 @@ fn loose_ball_chaser(game: &Game) -> Option<usize> {
         .map(|p| p.id)
 }
 
-pub fn baseline_cpu_tick(game: &mut Game, player_idx: usize, rng: &mut impl Rng) {
+/// Classic decision algorithm shared by V1 and V2 brains. The caller
+/// (`brain::tick_player`) supplies `params` from whichever source.
+pub fn classic_tick(game: &mut Game, player_idx: usize, params: &PolicyParams, rng: &mut impl Rng) {
     let p_id = game.pl[player_idx].id;
     let p_team = game.pl[player_idx].team;
     let p_role = game.pl[player_idx].role;
@@ -283,7 +286,7 @@ pub fn baseline_cpu_tick(game: &mut Game, player_idx: usize, rng: &mut impl Rng)
             if c_team != p_team && game.pl[player_idx].tackle_cooldown <= 0 {
                 let dist = (game.pl[player_idx].x - game.pl[c_id].x)
                     .hypot(game.pl[player_idx].y - game.pl[c_id].y);
-                if dist < TACKLE_DIST && rng.gen::<f32>() < effective_policy(game, player_idx).tackle_chance {
+                if dist < TACKLE_DIST && rng.gen::<f32>() < params.tackle_chance {
                     crate::physics::tackle_player(game, player_idx, c_id);
                     return;
                 }
@@ -330,7 +333,6 @@ pub fn baseline_cpu_tick(game: &mut Game, player_idx: usize, rng: &mut impl Rng)
 
     // Has ball
     if has_ball {
-        let params = effective_policy(game, player_idx);
         let (opp_gx, _) = opp_goal_point(p_team);
         let in_shoot_zone = attack_progress(p_team, game.pl[player_idx].x) > params.shoot_progress_threshold;
         let reached_half = if p_team == 0 { game.pl[player_idx].x > FW * 0.50 } else { game.pl[player_idx].x < FW * 0.50 };

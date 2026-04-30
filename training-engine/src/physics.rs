@@ -372,7 +372,7 @@ pub fn step_game(game: &mut Game, rng: &mut impl Rng) {
             if game.pl[i].knock_timer <= 0 { game.pl[i].state = PlayerState::Active; }
             continue;
         }
-        crate::ai::baseline_cpu_tick(game, i, rng);
+        crate::brain::tick_player(game, i, rng);
     }
 
     update_ball(game);

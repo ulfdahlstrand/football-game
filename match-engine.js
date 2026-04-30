@@ -657,7 +657,7 @@
       if (p.state!=='active') { if (--p.knockTimer<=0) p.state='active'; return; }
       const policy = opts.teamPolicies && opts.teamPolicies[p.team] || 'baseline';
       if (policy === 'candidate') candidateCpuTick(g,p,rng,opts.candidatePolicy);
-      else baselineCpuTick(g,p,rng);
+      else tickPlayer(g,p,rng);
     });
 
     updateBall(g);
@@ -672,6 +672,43 @@
       stepGame(g, null, opts);
     }
     return g;
+  }
+
+  // Dispatcher: every CPU player ticks through here. If they have a `brain`
+  // we route to the right algorithm (v1/v2 share classic, v3 modulates).
+  function tickPlayer(g, p, random) {
+    if (!p.brain) { baselineCpuTick(g, p, random); return; }
+    switch (p.brain.version) {
+      case 'v3': v3Tick(g, p, random); return;
+      case 'v1':
+      case 'v2':
+      default: {
+        // Brain params override the team-level policy lookup for this tick
+        const saved = p.aiPolicy;
+        p.aiPolicy = p.brain.params;
+        baselineCpuTick(g, p, random);
+        p.aiPolicy = saved;
+        return;
+      }
+    }
+  }
+
+  // v3 algorithm. Today: classic logic + aggression / risk modulators.
+  // Stays a single source-of-truth for the v3 dispatch path; future v3 work
+  // can diverge further from classic_tick without touching v1/v2.
+  function v3Tick(g, p, random) {
+    const b = p.brain.params || {};
+    const base = b.base || b;
+    const aggression = b.aggression == null ? 1.0 : b.aggression;
+    const risk = b.riskAppetite == null ? 0.5 : b.riskAppetite;
+    const modulated = Object.assign({}, base, {
+      tackleChance: clamp((base.tackleChance ?? 0.08) * aggression, 0.01, 0.5),
+      shootProgressThreshold: clamp((base.shootProgressThreshold ?? 0.76) - 0.05 * (risk - 0.5), 0.5, 0.95),
+    });
+    const saved = p.aiPolicy;
+    p.aiPolicy = modulated;
+    baselineCpuTick(g, p, random);
+    p.aiPolicy = saved;
   }
 
   function candidateCpuTick(g, p, random, policy) {
@@ -693,5 +730,7 @@
     cpuFindPass,
     baselineCpuTick,
     candidateCpuTick,
+    tickPlayer,
+    v3Tick,
   };
 });

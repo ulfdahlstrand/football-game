@@ -575,6 +575,39 @@ function cpuFindPass(g, carrier) {
   return best;
 }
 
+// Brain dispatcher. v1/v2 use the classic cpuTick algorithm; v3 wraps it
+// with aggression / risk modulators on the params.
+function tickPlayer(g, p) {
+  if (!p.brain) { cpuTick(g, p); return; }
+  switch (p.brain.version) {
+    case 'v3': v3Tick(g, p); return;
+    case 'v1':
+    case 'v2':
+    default: {
+      const saved = p.aiPolicy;
+      p.aiPolicy = p.brain.params;
+      cpuTick(g, p);
+      p.aiPolicy = saved;
+      return;
+    }
+  }
+}
+
+function v3Tick(g, p) {
+  const b = p.brain.params || {};
+  const base = b.base || b;
+  const aggression = b.aggression == null ? 1.0 : b.aggression;
+  const risk = b.riskAppetite == null ? 0.5 : b.riskAppetite;
+  const modulated = Object.assign({}, base, {
+    tackleChance: clamp((base.tackleChance ?? 0.08) * aggression, 0.01, 0.5),
+    shootProgressThreshold: clamp((base.shootProgressThreshold ?? 0.76) - 0.05 * (risk - 0.5), 0.5, 0.95),
+  });
+  const saved = p.aiPolicy;
+  p.aiPolicy = modulated;
+  cpuTick(g, p);
+  p.aiPolicy = saved;
+}
+
 function cpuTick(g, p) {
   const params = effectivePolicy(g, p);
   const ball = g.ball;
@@ -880,7 +913,7 @@ function FootballMatch({ matchData, onComplete, onExit }) {
         if (p.tackleCooldown>0) p.tackleCooldown--;
         if (p.jumpTimer>0) p.jumpTimer--;
         if (p.state!=='active') { if (--p.knockTimer<=0) p.state='active'; return; }
-        cpuTick(g,p);
+        tickPlayer(g,p);
       });
 
       // Boll

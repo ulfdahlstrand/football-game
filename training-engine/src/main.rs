@@ -1,6 +1,7 @@
 mod constants;
 mod game;
 mod policy;
+mod brain;
 mod ai;
 mod physics;
 mod trainer;
