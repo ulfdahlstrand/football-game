@@ -284,6 +284,12 @@ function rolePlayer(g, team, role) {
   return teamPlayers(g, team).find(p => p.role===role) || teamPlayers(g, team)[0];
 }
 
+// Returns a player's effective policy: their per-player override if set,
+// otherwise the team-level policy from g.aiPolicies.
+function effectivePolicy(g, p) {
+  return p.aiPolicy || g.aiPolicies?.[p.team] || BASELINE_AI_PARAMS;
+}
+
 function setBallOwner(g, p, x, y, text) {
   const b = g.ball;
   p.x = clamp(x, PR, FW-PR);
@@ -547,7 +553,7 @@ function getDefendTarget(g, p) {
 }
 
 function cpuFindPass(g, carrier) {
-  const params = g.aiPolicies?.[carrier.team] || BASELINE_AI_PARAMS;
+  const params = effectivePolicy(g, carrier);
   const oppGoalX = carrier.team===0 ? FW : 0;
   let best=null, bestScore=-Infinity;
   g.pl.forEach(p => {
@@ -570,7 +576,7 @@ function cpuFindPass(g, carrier) {
 }
 
 function cpuTick(g, p) {
-  const params = g.aiPolicies?.[p.team] || BASELINE_AI_PARAMS;
+  const params = effectivePolicy(g, p);
   const ball = g.ball;
   const hasball = ball.owner===p.id;
   const carrier = g.pl.find(q => q.id===ball.owner);

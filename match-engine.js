@@ -159,6 +159,12 @@
     return g.pl.filter(p => p.team===team && p.state==='active');
   }
 
+  // Returns the active policy params for a player: their per-player override
+  // if set, otherwise the team-level policy from g.aiPolicies.
+  function effectivePolicy(g, p) {
+    return p.aiPolicy || g.aiPolicies?.[p.team] || {};
+  }
+
   function rolePlayer(g, team, role) {
     return teamPlayers(g, team).find(p => p.role===role) || teamPlayers(g, team)[0];
   }
@@ -400,7 +406,7 @@
   }
 
   function cpuFindPass(g, carrier) {
-    const params = g.aiPolicies?.[carrier.team] || {};
+    const params = effectivePolicy(g, carrier);
     const oppGoalX = carrier.team===0 ? FW : 0;
     let best=null, bestScore=-Infinity;
     g.pl.forEach(p => {
@@ -424,7 +430,7 @@
 
   function baselineCpuTick(g, p, random) {
     const rng = random || Math.random;
-    const params = g.aiPolicies?.[p.team] || {};
+    const params = effectivePolicy(g, p);
     const ball = g.ball;
     const hasball = ball.owner===p.id;
     const carrier = g.pl.find(q => q.id===ball.owner);

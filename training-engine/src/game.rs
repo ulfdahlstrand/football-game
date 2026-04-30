@@ -42,6 +42,8 @@ pub struct Player {
     pub ai_jitter_x: f32,
     pub ai_jitter_y: f32,
     pub ai_jitter_timer: i32,
+    /// Per-player policy override. When `None`, falls back to `Game.policies[team]`.
+    pub policy: Option<PolicyParams>,
 }
 
 impl Player {
@@ -63,8 +65,16 @@ impl Player {
             ai_jitter_x: 0.0,
             ai_jitter_y: 0.0,
             ai_jitter_timer: 0,
+            policy: None,
         }
     }
+}
+
+/// Returns the active policy for a player: their per-player override if set,
+/// otherwise the team-level policy.
+pub fn effective_policy(game: &Game, player_idx: usize) -> PolicyParams {
+    let p = &game.pl[player_idx];
+    p.policy.unwrap_or_else(|| game.policies[p.team])
 }
 
 #[derive(Clone, Debug)]

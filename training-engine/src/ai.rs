@@ -1,7 +1,7 @@
 use rand::Rng;
 
 use crate::constants::*;
-use crate::game::{Game, Player, PlayerState, Role};
+use crate::game::{effective_policy, Game, Player, PlayerState, Role};
 
 fn clamp(v: f32, lo: f32, hi: f32) -> f32 {
     v.max(lo).min(hi)
@@ -218,7 +218,7 @@ pub struct PassResult {
 
 pub fn cpu_find_pass(game: &Game, carrier_idx: usize) -> Option<PassResult> {
     let carrier = &game.pl[carrier_idx];
-    let params = &game.policies[carrier.team];
+    let params = effective_policy(game, carrier_idx);
     let opp_goal_x = if carrier.team == 0 { FW } else { 0.0 };
     let mut best: Option<(f32, PassResult)> = None;
 
@@ -283,7 +283,7 @@ pub fn baseline_cpu_tick(game: &mut Game, player_idx: usize, rng: &mut impl Rng)
             if c_team != p_team && game.pl[player_idx].tackle_cooldown <= 0 {
                 let dist = (game.pl[player_idx].x - game.pl[c_id].x)
                     .hypot(game.pl[player_idx].y - game.pl[c_id].y);
-                if dist < TACKLE_DIST && rng.gen::<f32>() < game.policies[p_team].tackle_chance {
+                if dist < TACKLE_DIST && rng.gen::<f32>() < effective_policy(game, player_idx).tackle_chance {
                     crate::physics::tackle_player(game, player_idx, c_id);
                     return;
                 }
@@ -330,7 +330,7 @@ pub fn baseline_cpu_tick(game: &mut Game, player_idx: usize, rng: &mut impl Rng)
 
     // Has ball
     if has_ball {
-        let params = game.policies[p_team];
+        let params = effective_policy(game, player_idx);
         let (opp_gx, _) = opp_goal_point(p_team);
         let in_shoot_zone = attack_progress(p_team, game.pl[player_idx].x) > params.shoot_progress_threshold;
         let reached_half = if p_team == 0 { game.pl[player_idx].x > FW * 0.50 } else { game.pl[player_idx].x < FW * 0.50 };
