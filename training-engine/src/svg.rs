@@ -80,11 +80,11 @@ pub fn write_matrix_svg(
 
     // Title
     out.push_str(&format!(
-        "  <text x=\"{}\" y=\"34\" font-family=\"Arial, sans-serif\" font-size=\"22\" font-weight=\"700\" fill=\"#111827\">Round-robin: row team home win %</text>\n",
+        "  <text x=\"{}\" y=\"34\" font-family=\"Arial, sans-serif\" font-size=\"22\" font-weight=\"700\" fill=\"#111827\">Round-robin (side-swapped): row vs column win %</text>\n",
         pad_left as i64
     ));
     out.push_str(&format!(
-        "  <text x=\"{}\" y=\"56\" font-family=\"Arial, sans-serif\" font-size=\"12\" fill=\"#6b7280\">Each cell: row plays as team 0 (home) vs column as team 1 (away). Color: 0% red — 50% yellow — 100% green.</text>\n",
+        "  <text x=\"{}\" y=\"56\" font-family=\"Arial, sans-serif\" font-size=\"12\" fill=\"#6b7280\">Each pair plays half home, half away to remove positional bias. Diagonal ≈ 50%. Color: 0% red — 50% yellow — 100% green.</text>\n",
         pad_left as i64
     ));
 

@@ -111,24 +111,34 @@ fn run_matrix(policies_dir: &Path, games_per_pair: usize) {
     for i in 0..n {
         let row_start = std::time::Instant::now();
         for j in 0..n {
-            let p0 = sessions[i].1;
-            let p1 = sessions[j].1;
+            let p_i = sessions[i].1;
+            let p_j = sessions[j].1;
             let seed_base = rand::random::<u64>();
 
+            // Side-swap: half games with i as team 0 (home), half with i as team 1 (away).
+            // Removes positional home advantage so result reflects true relative strength.
+            // From row team i's perspective: scores = (i_goals, j_goals) regardless of side.
             let scores: Vec<(u32, u32)> = (0..games_per_pair).into_par_iter()
                 .map(|k| {
                     let seed = seed_base.wrapping_add(k as u64);
-                    let (s0, s1, _) = play_match(&p0, &p1, seed);
-                    (s0, s1)
+                    if k % 2 == 0 {
+                        // i is home (team 0), j is away (team 1)
+                        let (s0, s1, _) = play_match(&p_i, &p_j, seed);
+                        (s0, s1)
+                    } else {
+                        // j is home (team 0), i is away (team 1) — swap perspective
+                        let (s0, s1, _) = play_match(&p_j, &p_i, seed);
+                        (s1, s0)
+                    }
                 })
                 .collect();
 
             let mut cell = MatrixCell { games: games_per_pair as u32, ..Default::default() };
-            for (s0, s1) in scores {
-                cell.team0_goals += s0 as u64;
-                cell.team1_goals += s1 as u64;
-                if s0 > s1 { cell.team0_wins += 1; }
-                else if s1 > s0 { cell.team1_wins += 1; }
+            for (i_goals, j_goals) in scores {
+                cell.team0_goals += i_goals as u64;
+                cell.team1_goals += j_goals as u64;
+                if i_goals > j_goals { cell.team0_wins += 1; }
+                else if j_goals > i_goals { cell.team1_wins += 1; }
                 else { cell.draws += 1; }
             }
             matrix[i][j] = cell;
