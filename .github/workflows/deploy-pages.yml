@@ -30,51 +30,63 @@ jobs:
 
       - name: Stage files for deployment
         run: |
-          mkdir -p _deploy/data/policies/sessions
+          mkdir -p _deploy/data/policies
           # Static game files
           cp *.html _deploy/ 2>/dev/null || true
           cp *.jsx _deploy/ 2>/dev/null || true
-          # Policies the game loads at runtime
-          cp data/policies/candidate.json _deploy/data/policies/ 2>/dev/null || true
-          cp data/policies/baseline.json _deploy/data/policies/ 2>/dev/null || true
-          cp data/policies/baseline-genesis.json _deploy/data/policies/ 2>/dev/null || true
 
-          # Bundle each session's best champion for the in-game opponent selector
-          for d in data/policies/sessions/*/; do
-            name=$(basename "$d")
-            if [ -f "$d/best.json" ]; then
-              mkdir -p "_deploy/data/policies/sessions/$name"
-              cp "$d/best.json" "_deploy/data/policies/sessions/$name/best.json"
-            fi
-          done
+          # Bundle every version's baseline + best.json for the in-game selector.
+          # We use rsync to mirror data/policies/ but exclude per-epoch JSONs and
+          # SVG/JSON output that the browser doesn't need (keeps deploy small).
+          rsync -a \
+            --include='*/' \
+            --include='baseline.json' \
+            --include='baseline-genesis.json' \
+            --include='candidate.json' \
+            --include='opponents.json' \
+            --include='best.json' \
+            --exclude='*' \
+            data/policies/ _deploy/data/policies/
 
-          # Generate opponents.json index (used by football-match.jsx selector)
+          # Generate combined opponents.json by scanning v1/v2/v3 dirs in the
+          # staging copy. Mirrors the Rust --build-opponents logic.
           python3 - <<'PY'
           import json, os, glob, re
           opponents = []
-          if os.path.exists('_deploy/data/policies/baseline.json'):
-              opponents.append({
-                  'name': 'baseline',
-                  'label': 'Baseline (current champion)',
-                  'file': 'data/policies/baseline.json',
-              })
-          if os.path.exists('_deploy/data/policies/baseline-genesis.json'):
-              opponents.append({
-                  'name': 'genesis',
-                  'label': 'Genesis (hand-tuned original)',
-                  'file': 'data/policies/baseline-genesis.json',
-              })
-          def session_key(p):
-              n = os.path.basename(os.path.dirname(p))
-              m = re.search(r'(\d+)$', n)
-              return (n[:len(n)-len(m.group(1))] if m else n, int(m.group(1)) if m else 0)
-          for f in sorted(glob.glob('_deploy/data/policies/sessions/*/best.json'), key=session_key):
-              name = os.path.basename(os.path.dirname(f))
-              opponents.append({
-                  'name': f'{name}-best',
-                  'label': f'{name} champion',
-                  'file': f'data/policies/sessions/{name}/best.json',
-              })
+          def trailing_num(s):
+              m = re.search(r'(\d+)$', s)
+              return int(m.group(1)) if m else 0
+          for ver in ('v1', 'v2', 'v3'):
+              base = os.path.join('_deploy/data/policies', ver)
+              if not os.path.isdir(base): continue
+              if os.path.exists(os.path.join(base, 'baseline.json')):
+                  opponents.append({
+                      'name': f'{ver}-baseline',
+                      'label': f'{ver} baseline (current champion)',
+                      'version': ver,
+                      'file': f'data/policies/{ver}/baseline.json',
+                  })
+              if os.path.exists(os.path.join(base, 'baseline-genesis.json')):
+                  opponents.append({
+                      'name': f'{ver}-genesis',
+                      'label': f'{ver} genesis',
+                      'version': ver,
+                      'file': f'data/policies/{ver}/baseline-genesis.json',
+                  })
+              session_dirs = sorted(
+                  [d for d in glob.glob(os.path.join(base, 'sessions', '*')) if os.path.isdir(d)],
+                  key=lambda d: trailing_num(os.path.basename(d)),
+              )
+              for d in session_dirs:
+                  best = os.path.join(d, 'best.json')
+                  if not os.path.exists(best): continue
+                  name = os.path.basename(d)
+                  opponents.append({
+                      'name': f'{ver}-{name}-best',
+                      'label': f'{ver} {name} champion',
+                      'version': ver,
+                      'file': f'data/policies/{ver}/sessions/{name}/best.json',
+                  })
           with open('_deploy/data/policies/opponents.json', 'w') as out:
               json.dump({'opponents': opponents}, out, indent=2)
           print(f"opponents.json: {len(opponents)} entries")

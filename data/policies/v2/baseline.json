@@ -12,15 +12,21 @@
       "goalDiff": 2673.0,
       "session": "session-3",
       "updatedAt": "2026-04-30T14:39:36Z"
+    },
+    {
+      "epoch": 7,
+      "goalDiff": 355.0,
+      "session": "session-6",
+      "updatedAt": "2026-04-30T21:03:01Z"
     }
   ],
-  "latestGoalDiff": 2673.0,
+  "latestGoalDiff": 355.0,
   "name": "v2-baseline",
   "playerParams": [
     {
       "forwardPassMinGain": 13.0,
       "markDistance": 52.0,
-      "passChanceDefault": 0.07119999825954437,
+      "passChanceDefault": 0.0697999969124794,
       "passChanceForward": 0.18000000715255737,
       "passChancePressured": 0.4000000059604645,
       "passChanceWing": 0.07419999688863754,
@@ -31,11 +37,11 @@
       "forwardPassMinGain": 18.0,
       "markDistance": 54.0,
       "passChanceDefault": 0.03739999979734421,
-      "passChanceForward": 0.1664000004529953,
+      "passChanceForward": 0.18000000715255737,
       "passChancePressured": 0.4000000059604645,
       "passChanceWing": 0.009999999776482582,
       "shootProgressThreshold": 0.8113999962806702,
-      "tackleChance": 0.1736000031232834
+      "tackleChance": 0.21410000324249268
     },
     {
       "forwardPassMinGain": 18.0,
@@ -62,15 +68,15 @@
       "markDistance": 85.0,
       "passChanceDefault": 0.061500001698732376,
       "passChanceForward": 0.1356000006198883,
-      "passChancePressured": 0.3889999985694885,
+      "passChancePressured": 0.4000000059604645,
       "passChanceWing": 0.03759999945759773,
-      "shootProgressThreshold": 0.8626000285148621,
-      "tackleChance": 0.14949999749660492
+      "shootProgressThreshold": 0.8413000106811523,
+      "tackleChance": 0.10949999839067459
     }
   ],
   "type": "team-policy",
-  "updatedAt": "2026-04-30T20:43:55Z",
-  "updatedByEpoch": 82,
-  "updatedBySession": "session-3",
-  "version": 3
+  "updatedAt": "2026-04-30T21:03:01Z",
+  "updatedByEpoch": 7,
+  "updatedBySession": "session-6",
+  "version": 4
 }
