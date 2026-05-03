@@ -1,0 +1,58 @@
+{
+  "description": "Frozen hand-written AI baseline used as the opponent for future trained policies.",
+  "history": [
+    {
+      "epoch": 26,
+      "goalDiff": 190.0,
+      "session": "session-2",
+      "updatedAt": "2026-04-30T09:26:19Z"
+    },
+    {
+      "epoch": 88,
+      "goalDiff": 140.0,
+      "session": "session-3",
+      "updatedAt": "2026-04-30T09:57:38Z"
+    },
+    {
+      "epoch": 997,
+      "goalDiff": 124.0,
+      "session": "session-4",
+      "updatedAt": "2026-04-30T10:01:43Z"
+    },
+    {
+      "epoch": 10,
+      "goalDiff": 111.0,
+      "session": "session-5",
+      "updatedAt": "2026-04-30T10:03:03Z"
+    },
+    {
+      "epoch": 998,
+      "goalDiff": 93.0,
+      "session": "session-6",
+      "updatedAt": "2026-04-30T10:07:05Z"
+    },
+    {
+      "epoch": 93,
+      "goalDiff": 961.0,
+      "session": "session-7",
+      "updatedAt": "2026-04-30T10:10:22Z"
+    }
+  ],
+  "latestGoalDiff": 961.0,
+  "name": "baseline",
+  "parameters": {
+    "forwardPassMinGain": 18.0,
+    "markDistance": 67.0,
+    "passChanceDefault": 0.004999999888241291,
+    "passChanceForward": 0.18000000715255737,
+    "passChancePressured": 0.36899998784065247,
+    "passChanceWing": 0.009999999776482582,
+    "shootProgressThreshold": 0.8133999705314636,
+    "tackleChance": 0.21739999949932098
+  },
+  "type": "rule-policy",
+  "updatedAt": "2026-04-30T10:10:22Z",
+  "updatedByEpoch": 93,
+  "updatedBySession": "session-7",
+  "version": 7
+}
