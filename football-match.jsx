@@ -148,7 +148,10 @@ function drawSpriteSide(ctx, teamColor, hairColor, facingLeft, legPhase) {
 
 function drawPlayer(ctx, p, game) {
   const hasBall  = game.ball.owner === p.id;
-  const teamColor = p.team === 0 ? '#3464a8' : '#c82828';
+  // Goalkeepers wear contrasting jerseys (yellow / lime) so they stand out.
+  const teamColor = p.role === 'gk'
+    ? (p.team === 0 ? '#fbbf24' : '#84cc16')
+    : (p.team === 0 ? '#3464a8' : '#c82828');
   const hairColor = p.hairColor;
   const celebrateJump = p.celebrateTimer > 0 ? -Math.abs(Math.sin(p.celebrateTimer * 0.18)) * 22 : 0;
   const hopPhase = p.jumpTimer > 0 ? Math.sin((1 - p.jumpTimer/JUMP_DUR) * Math.PI) : 0;
@@ -288,6 +291,60 @@ function rolePlayer(g, team, role) {
 // otherwise the team-level policy from g.aiPolicies.
 function effectivePolicy(g, p) {
   return p.aiPolicy || g.aiPolicies?.[p.team] || BASELINE_AI_PARAMS;
+}
+
+// Detects v1/v2/v3 format from opponent metadata + policy file shape, then
+// installs brains on every player on both teams (we play the user's team
+// using the same opponent policy too, like before).
+// Apply a policy ONLY to a specific team (0 or 1). Lets each team have its
+// own trained model. Returns the resolved name for HUD display.
+function applyPolicyToTeam(g, opp, policy, team) {
+  const ver = (opp.version || policy.type || '').toString();
+  const pp = Array.isArray(policy.playerParams) ? policy.playerParams : null;
+  const hasV3Wrapper = pp && pp[0] && pp[0].v3;
+  const hasBase = pp && pp[0] && pp[0].base;
+  const matches = (p) => p.team === team;
+
+  if (hasV3Wrapper) {
+    g.pl.forEach(p => {
+      if (!matches(p)) return;
+      const slot = p.id % 5;
+      p.brain = { version: 'v4', params: pp[slot] || pp[0] || {} };
+    });
+    return policy.name || opp.name || 'v4';
+  }
+  if (hasBase || (ver === 'v3' && pp)) {
+    g.pl.forEach(p => {
+      if (!matches(p)) return;
+      const slot = p.id % 5;
+      p.brain = { version: 'v3', params: pp[slot] || pp[0] || {} };
+    });
+    return policy.name || opp.name || 'v3';
+  }
+  if (Array.isArray(pp)) {
+    g.pl.forEach(p => {
+      if (!matches(p)) return;
+      const slot = p.id % 5;
+      const params = { ...BASELINE_AI_PARAMS, ...(pp[slot] || pp[0] || {}) };
+      p.brain = { version: 'v2', params };
+    });
+    return policy.name || opp.name || 'v2';
+  }
+  // v1 fallback
+  const params = { ...BASELINE_AI_PARAMS, ...(policy.parameters || {}) };
+  g.pl.forEach(p => { if (matches(p)) p.brain = { version: 'v1', params }; });
+  g.aiPolicies[team] = params;
+  return policy.name || opp.name || 'candidate';
+}
+
+// Backward-compatible wrapper: apply same opp+policy to BOTH teams.
+function applyOpponentPolicy(g, opp, policy) {
+  const label = (opp.label || policy.name || opp.name || 'CANDIDATE').toUpperCase();
+  applyPolicyToTeam(g, opp, policy, 0);
+  const name = applyPolicyToTeam(g, opp, policy, 1);
+  g.aiPolicyNames[1] = name;
+  g.setPieceText = `MOTSTÅNDARE: ${label}`;
+  g.setPieceTimer = 120;
 }
 
 function setBallOwner(g, p, x, y, text) {
@@ -575,11 +632,12 @@ function cpuFindPass(g, carrier) {
   return best;
 }
 
-// Brain dispatcher. v1/v2 use the classic cpuTick algorithm; v3 wraps it
-// with aggression / risk modulators on the params.
+// Brain dispatcher. v1/v2 use the classic cpuTick; v3 wraps it with
+// modulators; v4 = v3 + directional pass mult + GK freedom.
 function tickPlayer(g, p) {
   if (!p.brain) { cpuTick(g, p); return; }
   switch (p.brain.version) {
+    case 'v4': v4Tick(g, p); return;
     case 'v3': v3Tick(g, p); return;
     case 'v1':
     case 'v2':
@@ -591,6 +649,37 @@ function tickPlayer(g, p) {
       return;
     }
   }
+}
+
+// v4 in the browser approximates the engine: applies v3's modulation, plus
+// the average of the 3 directional multipliers as a coarse pass-chance
+// scaling. gkFreedom > 0.5 lets the GK use cpuTick's outfield logic
+// (skips the special goal-line handling).
+function v4Tick(g, p) {
+  const v4 = p.brain.params || {};
+  const v3p = v4.v3 || {};
+  const avgDirMult = ((v4.passDirOffensive ?? 1) + (v4.passDirDefensive ?? 1) + (v4.passDirNeutral ?? 1)) / 3;
+  const gkFreedom = v4.gkFreedom ?? 0;
+
+  // If GK and freedom is high, treat as outfielder (skip special GK branch
+  // by setting role='mid' for this tick, then restore).
+  const savedRole = p.role;
+  if (p.role === 'gk' && gkFreedom > 0.5) {
+    p.role = 'mid';
+  }
+
+  // Reuse v3 brain logic with multiplied pass chances.
+  const savedBrain = p.brain;
+  const savedPolicy = p.aiPolicy;
+  p.brain = { version: 'v3', params: v3p };
+  v3Tick(g, p);
+  p.brain = savedBrain;
+  p.aiPolicy = savedPolicy;
+  p.role = savedRole;
+  // Note: avgDirMult is computed but not applied to cpuTick yet — JS engine
+  // doesn't have the same hook point as Rust. The Rust engine is the source
+  // of truth for training; this is a reasonable visual approximation.
+  void avgDirMult;
 }
 
 function v3Tick(g, p) {
@@ -697,7 +786,23 @@ function resetKickoff(g) {
     p.facing='down'; p.stepCounter=0;
   });
   const b=g.ball;
-  b.x=FW/2; b.y=h2; b.vx=0; b.vy=0; b.owner=null; b.mega=false; b.cooldown=0; b.lastTouchTeam=null;
+  b.x=FW/2; b.y=h2; b.vx=0; b.vy=0; b.owner=null; b.mega=false; b.cooldown=0;
+  // Conceding team gets the ball at kickoff. goalTeam is set in updateBall
+  // when a goal is scored; concedingTeam = the OTHER team.
+  if (g.goalTeam === 0 || g.goalTeam === 1) {
+    const concedingTeam = g.goalTeam === 0 ? 1 : 0;
+    // Hand ball to that team's forward at center spot
+    const fwd = g.pl.find(p => p.team === concedingTeam && p.role === 'fwd' && p.state === 'active');
+    if (fwd) {
+      fwd.x = FW / 2; fwd.y = h2;
+      b.x = fwd.x; b.y = fwd.y; b.owner = fwd.id; b.lastTouchTeam = concedingTeam;
+      b.cooldown = 16;
+    } else {
+      b.lastTouchTeam = null;
+    }
+  } else {
+    b.lastTouchTeam = null;
+  }
   g.phase='kickoff'; g.celebration=false; g.celebrateFrame=0;
   g.setPieceText=null; g.setPieceTimer=0; g.penaltyTeam=null; g.penaltyTaken=false;
 }
@@ -710,12 +815,13 @@ function FootballMatch({ matchData, onComplete, onExit }) {
   const keysRef   = useRefFM({});
 
   const [opponents, setOpponents] = useStateFM([]);
-  const [selectedIdx, setSelectedIdx] = useStateFM(0);
+  const [selectedIdx, setSelectedIdx] = useStateFM(0);   // team 0 (your team)
+  const [selectedIdx1, setSelectedIdx1] = useStateFM(0); // team 1 (opponent)
   const [started, setStarted] = useStateFM(false);
 
   // Load opponent list on first mount
   useEffFM(() => {
-    fetch('data/policies/opponents.json')
+    fetch(`data/policies/opponents.json?t=${Date.now()}`, { cache: 'no-store' })
       .then(r => r.ok ? r.json() : { opponents: [] })
       .then(d => setOpponents((d && d.opponents) || []))
       .catch(() => setOpponents([]));
@@ -724,21 +830,28 @@ function FootballMatch({ matchData, onComplete, onExit }) {
   useEffFM(() => {
     if (!started) return;
     gRef.current = newGame();
-    const opp = opponents[selectedIdx];
-    if (opp) {
-      fetch(opp.file)
-        .then(r => r.ok ? r.json() : null)
-        .then(policy => {
-          if (!policy || !gRef.current) return;
-          const params = { ...BASELINE_AI_PARAMS, ...(policy.parameters || {}) };
-          gRef.current.aiPolicies[0] = params;
-          gRef.current.aiPolicies[1] = params;
-          gRef.current.aiPolicyNames[1] = policy.name || opp.name || 'candidate';
-          gRef.current.setPieceText = `MOTSTÅNDARE: ${(opp.label || policy.name || opp.name || 'CANDIDATE').toUpperCase()}`;
-          gRef.current.setPieceTimer = 120;
-        })
-        .catch(() => {});
-    }
+
+    // Apply per-team selections — fetch in parallel, set brain only for that team
+    const opp0 = opponents[selectedIdx];
+    const opp1 = opponents[selectedIdx1];
+    const fetchOpp = (opp) => opp
+      ? fetch(`${opp.file}?t=${Date.now()}`, { cache: 'no-store' })
+          .then(r => r.ok ? r.json() : null)
+          .catch(() => null)
+      : Promise.resolve(null);
+    Promise.all([fetchOpp(opp0), fetchOpp(opp1)]).then(([p0, p1]) => {
+      if (!gRef.current) return;
+      const g = gRef.current;
+      let label0 = null, label1 = null;
+      if (p0 && opp0) label0 = applyPolicyToTeam(g, opp0, p0, 0);
+      if (p1 && opp1) label1 = applyPolicyToTeam(g, opp1, p1, 1);
+      g.aiPolicyNames[0] = label0 || g.aiPolicyNames[0];
+      g.aiPolicyNames[1] = label1 || g.aiPolicyNames[1];
+      const left = (opp0?.label || opp0?.name || 'BASELINE').toUpperCase();
+      const right = (opp1?.label || opp1?.name || 'BASELINE').toUpperCase();
+      g.setPieceText = `LAG 1: ${left}  vs  LAG 2: ${right}`;
+      g.setPieceTimer = 180;
+    });
     const canvas = canvasRef.current;
     const ctx    = canvas.getContext('2d');
 
@@ -843,6 +956,16 @@ function FootballMatch({ matchData, onComplete, onExit }) {
       if (keysRef.current['w'] && (k==='arrowleft'||k==='arrowright'||k==='arrowup'||k==='arrowdown')) { humanPass(); e.preventDefault(); }
       if (k==='e')     { humanTackle(); e.preventDefault(); }
       if (k==='enter') { humanJump(); e.preventDefault(); }
+      if (k==='backspace') {
+        // Toggle human control of player 0. When off, AI plays for them.
+        const g = gRef.current;
+        if (g && g.pl[0]) {
+          g.pl[0].human = !g.pl[0].human;
+          g.setPieceText = g.pl[0].human ? 'DU SPELAR' : 'AI TAR ÖVER';
+          g.setPieceTimer = 100;
+        }
+        e.preventDefault();
+      }
       if (k==='escape'){ onExit(); }
     };
     const onKU = (e) => { keysRef.current[e.key.toLowerCase()]=false; };
@@ -1111,20 +1234,41 @@ function FootballMatch({ matchData, onComplete, onExit }) {
         <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.85)',
           display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
           gap:'16px',padding:'24px',color:'#f3f4f6',zIndex:10,fontFamily:'Arial, sans-serif'}}>
-          <h2 style={{margin:0,fontSize:'28px',letterSpacing:'1px'}}>VÄLJ MOTSTÅNDARE</h2>
+          <h2 style={{margin:0,fontSize:'28px',letterSpacing:'1px'}}>VÄLJ LAG</h2>
           {opponents.length === 0 ? (
             <p style={{color:'#9ca3af',fontSize:'14px'}}>Laddar motståndare...</p>
           ) : (
-            <select
-              value={selectedIdx}
-              onChange={(e)=>setSelectedIdx(Number(e.target.value))}
-              style={{padding:'10px 14px',fontSize:'15px',minWidth:'320px',
-                background:'#1f2937',color:'#f3f4f6',border:'1px solid #374151',borderRadius:'6px'}}
-            >
-              {opponents.map((o, i) => (
-                <option key={o.name || i} value={i}>{o.label || o.name}</option>
-              ))}
-            </select>
+            <div style={{display:'flex',flexDirection:'column',gap:'12px',alignItems:'stretch',minWidth:'360px'}}>
+              <label style={{display:'flex',flexDirection:'column',gap:'4px'}}>
+                <span style={{fontSize:'13px',color:'#93c5fd'}}>Lag 1 (blått) — ditt lag</span>
+                <select
+                  value={selectedIdx}
+                  onChange={(e)=>setSelectedIdx(Number(e.target.value))}
+                  style={{padding:'10px 14px',fontSize:'15px',
+                    background:'#1f2937',color:'#f3f4f6',border:'1px solid #3b82f6',borderRadius:'6px'}}
+                >
+                  {opponents.map((o, i) => (
+                    <option key={`a-${o.name || i}`} value={i}>{o.label || o.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label style={{display:'flex',flexDirection:'column',gap:'4px'}}>
+                <span style={{fontSize:'13px',color:'#fca5a5'}}>Lag 2 (rött) — motståndare</span>
+                <select
+                  value={selectedIdx1}
+                  onChange={(e)=>setSelectedIdx1(Number(e.target.value))}
+                  style={{padding:'10px 14px',fontSize:'15px',
+                    background:'#1f2937',color:'#f3f4f6',border:'1px solid #ef4444',borderRadius:'6px'}}
+                >
+                  {opponents.map((o, i) => (
+                    <option key={`b-${o.name || i}`} value={i}>{o.label || o.name}</option>
+                  ))}
+                </select>
+              </label>
+              <p style={{margin:'4px 0 0',fontSize:'12px',color:'#9ca3af',textAlign:'center'}}>
+                Tryck <kbd style={{background:'#374151',padding:'2px 6px',borderRadius:'3px'}}>backspace</kbd> i matchen för att toggla manuell/AI-styrning av din spelare
+              </p>
+            </div>
           )}
           <button
             onClick={()=>setStarted(true)}

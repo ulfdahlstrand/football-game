@@ -674,16 +674,16 @@
     return g;
   }
 
-  // Dispatcher: every CPU player ticks through here. If they have a `brain`
-  // we route to the right algorithm (v1/v2 share classic, v3 modulates).
+  // Dispatcher: every CPU player ticks through here. v1/v2 use classic;
+  // v3 modulates; v4 = v3 + directional pass mult + GK freedom.
   function tickPlayer(g, p, random) {
     if (!p.brain) { baselineCpuTick(g, p, random); return; }
     switch (p.brain.version) {
+      case 'v4': v4Tick(g, p, random); return;
       case 'v3': v3Tick(g, p, random); return;
       case 'v1':
       case 'v2':
       default: {
-        // Brain params override the team-level policy lookup for this tick
         const saved = p.aiPolicy;
         p.aiPolicy = p.brain.params;
         baselineCpuTick(g, p, random);
@@ -691,6 +691,23 @@
         return;
       }
     }
+  }
+
+  // v4 approximation in JS engine: delegates to v3 logic, with GK freedom
+  // option to bypass the goalkeeper-specific tick branch.
+  function v4Tick(g, p, random) {
+    const v4 = p.brain.params || {};
+    const gkFreedom = v4.gkFreedom == null ? 0 : v4.gkFreedom;
+    const savedRole = p.role;
+    if (p.role === 'gk' && gkFreedom > 0.5) p.role = 'mid';
+
+    const savedBrain = p.brain;
+    const savedPolicy = p.aiPolicy;
+    p.brain = { version: 'v3', params: v4.v3 || {} };
+    v3Tick(g, p, random);
+    p.brain = savedBrain;
+    p.aiPolicy = savedPolicy;
+    p.role = savedRole;
   }
 
   // v3 algorithm. Today: classic logic + aggression / risk modulators.
@@ -732,5 +749,6 @@
     candidateCpuTick,
     tickPlayer,
     v3Tick,
+    v4Tick,
   };
 });
