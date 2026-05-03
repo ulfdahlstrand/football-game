@@ -1,7 +1,25 @@
 use rand::Rng;
 
 use crate::game::Game;
-use crate::policy::{PolicyParams, V3Params};
+use crate::policy::{PolicyParams, V3Params, V4Params};
+
+/// Optional hooks that classic_tick reads to alter behavior for v4 brains.
+/// V1/V2/V3 brains pass the default (no-op) and behave exactly as before.
+#[derive(Clone, Copy, Debug)]
+pub struct TickHooks {
+    /// Multipliers applied to the pass-chance based on best-target direction:
+    /// [offensive, defensive, neutral]. 1.0 each = unchanged classic behavior.
+    pub pass_dir_mult: [f32; 3],
+    /// 0..1. 0 = goalkeeper locked to goal line (classic). 1 = GK roams up
+    /// to half-line, following the ball.
+    pub gk_freedom: f32,
+}
+
+impl Default for TickHooks {
+    fn default() -> Self {
+        Self { pass_dir_mult: [1.0, 1.0, 1.0], gk_freedom: 0.0 }
+    }
+}
 
 /// Each player carries a brain that determines BOTH their parameters AND the
 /// algorithm used to make decisions. This lets v1, v2 and v3 players coexist
@@ -18,6 +36,7 @@ pub enum PlayerBrain {
     V1(PolicyParams),
     V2(PolicyParams),
     V3(V3Params),
+    V4(V4Params),
 }
 
 impl PlayerBrain {
@@ -26,6 +45,7 @@ impl PlayerBrain {
         match self {
             PlayerBrain::V1(p) | PlayerBrain::V2(p) => *p,
             PlayerBrain::V3(p) => p.base,
+            PlayerBrain::V4(p) => p.v3.base,
         }
     }
 
@@ -34,6 +54,7 @@ impl PlayerBrain {
             PlayerBrain::V1(_) => "v1",
             PlayerBrain::V2(_) => "v2",
             PlayerBrain::V3(_) => "v3",
+            PlayerBrain::V4(_) => "v4",
         }
     }
 }
@@ -49,10 +70,13 @@ pub fn tick_player(game: &mut Game, player_idx: usize, rng: &mut impl Rng) {
     let brain = game.pl[player_idx].brain;
     match brain {
         PlayerBrain::V1(p) | PlayerBrain::V2(p) => {
-            crate::ai::classic_tick(game, player_idx, &p, rng);
+            crate::ai::classic_tick(game, player_idx, &p, &TickHooks::default(), rng);
         }
         PlayerBrain::V3(p) => {
             v3_tick(game, player_idx, &p, rng);
+        }
+        PlayerBrain::V4(p) => {
+            v4_tick(game, player_idx, &p, rng);
         }
     }
 }
@@ -111,5 +135,49 @@ pub fn v3_tick(game: &mut Game, player_idx: usize, params: &V3Params, rng: &mut 
     // Vision/chemistry/corridor/goal-attraction will hook into classic_tick
     // and cpu_find_pass once we wire feature-aware pass scoring.
 
-    crate::ai::classic_tick(game, player_idx, &p, rng);
+    crate::ai::classic_tick(game, player_idx, &p, &TickHooks::default(), rng);
+}
+
+/// V4 algorithm: v3 spatial logic + directional pass multipliers + GK freedom.
+pub fn v4_tick(game: &mut Game, player_idx: usize, params: &V4Params, rng: &mut impl Rng) {
+    // Reuse all of v3's modulation by computing the modulated PolicyParams the
+    // same way v3_tick does, then call classic_tick with v4-specific hooks.
+    let v3p = &params.v3;
+    let feats = crate::spatial::compute_features_with(
+        game, player_idx, v3p.pressure_radius, v3p.block_distance,
+    );
+    let mut p = v3p.base;
+
+    // (same modulations as v3_tick — kept in sync intentionally)
+    let zone_mult = v3p.zone_aggression[feats.zone.index()];
+    p.tackle_chance = (p.tackle_chance * v3p.aggression * zone_mult).clamp(0.01, 0.5);
+    let risk = v3p.risk_appetite.clamp(0.0, 1.0);
+    p.shoot_progress_threshold = (p.shoot_progress_threshold - 0.05 * (risk - 0.5)).clamp(0.5, 0.95);
+    let pressure_factor = (feats.opp_within_pressure as f32).min(3.0) / 3.0;
+    p.pass_chance_pressured = (p.pass_chance_pressured * (1.0 + 0.5 * pressure_factor)).clamp(0.02, 0.6);
+    if !feats.direct_shot_blocked && v3p.clear_shot_bonus > 0.0
+        && (feats.zone == crate::spatial::FieldZone::OppHalf
+            || feats.zone == crate::spatial::FieldZone::OppPenaltyArea)
+    {
+        p.shoot_progress_threshold =
+            (p.shoot_progress_threshold - 0.10 * v3p.clear_shot_bonus).clamp(0.4, 0.95);
+    }
+    if v3p.block_avoidance > 0.0 && feats.lane_to_ball_blockers >= 1 {
+        let bump = 4.0 * v3p.block_avoidance * feats.lane_to_ball_blockers as f32;
+        p.forward_pass_min_gain = (p.forward_pass_min_gain + bump).clamp(0.0, 30.0);
+    }
+    if v3p.edge_avoidance > 0.0 && feats.dist_nearest_edge < 60.0 {
+        let pull = v3p.edge_avoidance * (1.0 - feats.dist_nearest_edge / 60.0);
+        p.mark_distance = (p.mark_distance * (1.0 - 0.25 * pull)).clamp(20.0, 90.0);
+    }
+
+    let hooks = TickHooks {
+        pass_dir_mult: [
+            params.pass_dir_offensive.clamp(0.0, 2.0),
+            params.pass_dir_defensive.clamp(0.0, 2.0),
+            params.pass_dir_neutral.clamp(0.0, 2.0),
+        ],
+        gk_freedom: params.gk_freedom.clamp(0.0, 1.0),
+    };
+    crate::ai::classic_tick(game, player_idx, &p, &hooks, rng);
 }

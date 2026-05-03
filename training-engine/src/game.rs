@@ -1,6 +1,6 @@
 use crate::constants::*;
 use crate::brain::PlayerBrain;
-use crate::policy::{PolicyParams, TeamPolicy, TeamPolicyV3};
+use crate::policy::{PolicyParams, TeamPolicy, TeamPolicyV3, TeamPolicyV4};
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Phase {
@@ -180,6 +180,17 @@ impl Game {
             let slot = player.id % 5;
             let p = if player.team == 0 { team0[slot] } else { team1[slot] };
             player.brain = PlayerBrain::V3(p);
+        }
+        game
+    }
+
+    /// Sets up a v4 team-vs-team match: per-position V4Params, V4 brain.
+    pub fn for_team_battle_v4(team0: &TeamPolicyV4, team1: &TeamPolicyV4) -> Self {
+        let mut game = Self::new(team0[0].v3.base, team1[0].v3.base);
+        for player in &mut game.pl {
+            let slot = player.id % 5;
+            let p = if player.team == 0 { team0[slot] } else { team1[slot] };
+            player.brain = PlayerBrain::V4(p);
         }
         game
     }

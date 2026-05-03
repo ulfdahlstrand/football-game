@@ -160,6 +160,88 @@ pub type TeamPolicy = [PolicyParams; 5];
 /// v3 team policy: 5 V3Params, one per slot.
 pub type TeamPolicyV3 = [V3Params; 5];
 
+/// V4 layers two new dimensions on top of v3:
+/// 1. Pass-direction multipliers (offensive/defensive/neutral) on top of the
+///    existing pass-chance to bias which directions the AI prefers.
+/// 2. Goalkeeper freedom: 0 = locked to goal line (v3 behavior), 1 = full
+///    roaming up to half-line.
+///
+/// All new fields default to "v3-equivalent" so a V4Params built from a
+/// V3Params (with defaults on the new fields) plays identically to v3.
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct V4Params {
+    pub v3: V3Params,
+    /// [0, 2], default 1.0. Multiplied with the pass-chance when the best
+    /// pass candidate would move the ball toward opponent goal.
+    pub pass_dir_offensive: f32,
+    /// [0, 2], default 1.0. Multiplied when best pass is backward.
+    pub pass_dir_defensive: f32,
+    /// [0, 2], default 1.0. Multiplied when best pass is sideways/cross.
+    pub pass_dir_neutral: f32,
+    /// [0, 1], default 0.0. 0 = locked to goal line. 1 = roam freely.
+    pub gk_freedom: f32,
+}
+
+impl Default for V4Params {
+    fn default() -> Self {
+        Self {
+            v3: V3Params::default(),
+            pass_dir_offensive: 1.0,
+            pass_dir_defensive: 1.0,
+            pass_dir_neutral: 1.0,
+            gk_freedom: 0.0,
+        }
+    }
+}
+
+pub type TeamPolicyV4 = [V4Params; 5];
+
+/// Mutate ONE V4Params instance: 50% chance to mutate the underlying v3
+/// (which itself recurses to base + modulators), plus independent ~30%
+/// chance per new v4 field.
+pub fn mutate_v4(p: &V4Params, rng: &mut impl Rng, scale: f32) -> V4Params {
+    let mut next = *p;
+    let scale = scale.max(0.05).min(2.0);
+
+    if rng.gen::<f32>() < 0.5 {
+        next.v3 = mutate_v3(&p.v3, rng, scale);
+    }
+
+    macro_rules! perturb {
+        ($field:expr, $sigma:expr, $lo:expr, $hi:expr) => {
+            if rng.gen::<f32>() < 0.3 {
+                let dist = Normal::new(0.0f32, $sigma * scale).unwrap();
+                let delta: f32 = rng.sample(dist);
+                $field = ($field + delta).max($lo).min($hi);
+            }
+        };
+    }
+
+    perturb!(next.pass_dir_offensive, 0.15, 0.0, 2.0);
+    perturb!(next.pass_dir_defensive, 0.15, 0.0, 2.0);
+    perturb!(next.pass_dir_neutral, 0.15, 0.0, 2.0);
+    perturb!(next.gk_freedom, 0.10, 0.0, 1.0);
+
+    next
+}
+
+pub fn mutate_team_v4(team: &TeamPolicyV4, rng: &mut impl Rng, scale: f32) -> TeamPolicyV4 {
+    let mut next = *team;
+    let mut any = false;
+    for i in 0..5 {
+        if rng.gen::<f32>() < 0.4 {
+            next[i] = mutate_v4(&team[i], rng, scale);
+            any = true;
+        }
+    }
+    if !any {
+        let i = rng.gen_range(0..5);
+        next[i] = mutate_v4(&team[i], rng, scale);
+    }
+    next
+}
+
 /// Mutate ONE V3Params instance. With p_base=0.5 we mutate the underlying
 /// classic params (same logic as v1/v2), and we ALSO mutate v3 modulator
 /// fields (aggression, risk_appetite, edge_avoidance, etc.) with their own

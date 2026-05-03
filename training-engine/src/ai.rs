@@ -267,9 +267,14 @@ fn loose_ball_chaser(game: &Game) -> Option<usize> {
         .map(|p| p.id)
 }
 
-/// Classic decision algorithm shared by V1 and V2 brains. The caller
-/// (`brain::tick_player`) supplies `params` from whichever source.
-pub fn classic_tick(game: &mut Game, player_idx: usize, params: &PolicyParams, rng: &mut impl Rng) {
+/// Classic decision algorithm shared by V1, V2, V3 and V4 brains. The caller
+/// supplies `params` (modulated PolicyParams) and `hooks` for v4-specific
+/// behavior. V1/V2/V3 callers pass `&TickHooks::default()` for identical
+/// classic behavior.
+pub fn classic_tick(
+    game: &mut Game, player_idx: usize, params: &PolicyParams,
+    hooks: &crate::brain::TickHooks, rng: &mut impl Rng,
+) {
     let p_id = game.pl[player_idx].id;
     let p_team = game.pl[player_idx].team;
     let p_role = game.pl[player_idx].role;
@@ -297,15 +302,32 @@ pub fn classic_tick(game: &mut Game, player_idx: usize, params: &PolicyParams, r
     // Goalkeeper
     if p_role == Role::Gk {
         if has_ball {
-            let (_, _) = (FW / 2.0, H2);
             crate::physics::do_shoot(game, player_idx, false, FW / 2.0, H2, None, false);
         } else {
-            let gx = if p_team == 0 { PR * 1.8 } else { FW - PR * 1.8 };
+            // Base position on the goal line, follow ball's Y inside the goal mouth.
+            let line_x = if p_team == 0 { PR * 1.8 } else { FW - PR * 1.8 };
             let by = game.ball.y;
-            let target_y = by.max(H2 - GH / 2.0 + PR).min(H2 + GH / 2.0 - PR);
-            let (px, py) = (game.pl[player_idx].x, game.pl[player_idx].y);
-            let _ = (px, py);
-            move_to(&mut game.pl[player_idx], gx, target_y, CSPEED * 0.88);
+            let line_y = by.max(H2 - GH / 2.0 + PR).min(H2 + GH / 2.0 - PR);
+
+            // gk_freedom (v4 only) lets the keeper drift forward toward the
+            // ball, capped at half-line. v1/v2/v3 pass freedom=0 → identical.
+            let freedom = hooks.gk_freedom.clamp(0.0, 1.0);
+            let (target_x, target_y) = if freedom < 1e-3 {
+                (line_x, line_y)
+            } else {
+                let half_x = FW * 0.5;
+                let max_drift = (half_x - line_x).abs() * freedom;
+                let want_x = game.ball.x;
+                let drift_x = if p_team == 0 {
+                    want_x.min(line_x + max_drift).max(line_x)
+                } else {
+                    want_x.max(line_x - max_drift).min(line_x)
+                };
+                // When drifting, follow ball Y less restrictively than goal mouth.
+                let drift_y = by.max(PR).min(FH - PR);
+                (drift_x, drift_y)
+            };
+            move_to(&mut game.pl[player_idx], target_x, target_y, CSPEED * 0.88);
         }
         return;
     }
@@ -355,6 +377,18 @@ pub fn classic_tick(game: &mut Game, player_idx: usize, params: &PolicyParams, r
             if gain > params.forward_pass_min_gain { Some((pt.tx, pt.ty)) } else { None }
         });
         let safe_pass = if pressured { pass_opt.as_ref().map(|pt| (pt.tx, pt.ty)) } else { forward_pass };
+
+        // v4 directional pass-chance multiplier. For v1/v2/v3 hooks=defaults
+        // (all 1.0) → no change. For v4, classify the chosen pass target as
+        // offensive / defensive / neutral and scale pass_chance accordingly.
+        let dir_threshold: f32 = 30.0;
+        let pass_chance = if let Some((tx, _ty)) = safe_pass {
+            let gain = (tx - game.pl[player_idx].x) * team_dir(p_team);
+            let mult = if gain > dir_threshold { hooks.pass_dir_mult[0] }       // offensive
+                       else if gain < -dir_threshold { hooks.pass_dir_mult[1] } // defensive
+                       else { hooks.pass_dir_mult[2] };                          // neutral
+            (pass_chance * mult).clamp(0.0, 1.0)
+        } else { pass_chance };
 
         if p_role == Role::Mid && !reached_half {
             let dir = team_dir(p_team);
