@@ -1,0 +1,17 @@
+{
+  "name": "baseline-genesis",
+  "version": 1,
+  "description": "Original hand-tuned baseline. Never modified. Used as anchor to measure total improvement across all sessions.",
+  "type": "rule-policy",
+  "createdAt": "2026-04-30T00:00:00Z",
+  "parameters": {
+    "passChancePressured": 0.16,
+    "passChanceWing": 0.07,
+    "passChanceForward": 0.04,
+    "passChanceDefault": 0.055,
+    "shootProgressThreshold": 0.76,
+    "tackleChance": 0.08,
+    "forwardPassMinGain": 8,
+    "markDistance": 48
+  }
+}
