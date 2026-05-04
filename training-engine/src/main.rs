@@ -854,6 +854,8 @@ fn run_v4_rough_all(policies_root: &Path, games: usize, max_depth: usize) {
             v3: v3_file.player_params[i],
             pass_dir_offensive: 1.0, pass_dir_defensive: 1.0,
             pass_dir_neutral: 1.0, gk_freedom: 0.0,
+            // Sensible per-slot defaults: GK glued to box, others free.
+            max_distance_from_goal: if i == 4 { 0.10 } else { 1.0 },
         });
         let bootstrap = serde_json::json!({
             "name": "v4-baseline", "version": 1,
@@ -1242,6 +1244,7 @@ fn run_v4_training(policies_dir: &Path, epochs: usize, games_per_epoch: usize, s
             pass_dir_defensive: 1.0,
             pass_dir_neutral: 1.0,
             gk_freedom: 0.0,
+            max_distance_from_goal: if i == 4 { 0.10 } else { 1.0 },
         });
         let bootstrap = serde_json::json!({
             "name": "v4-baseline", "version": 1,

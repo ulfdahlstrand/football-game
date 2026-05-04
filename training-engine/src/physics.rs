@@ -42,34 +42,64 @@ pub fn knock_player(game: &mut Game, idx: usize, duration: i32) {
     }
 }
 
+pub fn slow_player(game: &mut Game, idx: usize, dur: i32) {
+    game.pl[idx].slow_timer = dur;
+}
+
 pub fn tackle_player(game: &mut Game, tackler_idx: usize, target_idx: usize) -> bool {
     if game.pl[tackler_idx].state != PlayerState::Active
         || game.pl[target_idx].state != PlayerState::Active {
         return false;
     }
     game.stats.tackles += 1;
+    game.pl[tackler_idx].tackle_cooldown = TACKLE_COOL;
 
+    let target_has_ball = game.ball.owner == Some(game.pl[target_idx].id);
     let tackler_in_own_area = is_in_own_penalty_area(&game.pl[tackler_idx]);
     let target_team = game.pl[target_idx].team;
     let tackler_team = game.pl[tackler_idx].team;
 
-    if target_team != tackler_team && tackler_in_own_area {
-        start_penalty(game, target_team);
-        game.pl[tackler_idx].tackle_cooldown = TACKLE_COOL;
+    if is_jumping(&game.pl[target_idx]) {
+        knock_player(game, tackler_idx, TACKLE_MISS_DUR);
         return true;
     }
 
-    if is_jumping(&game.pl[target_idx]) {
-        knock_player(game, tackler_idx, TACKLE_MISS_DUR);
-    } else {
-        knock_player(game, target_idx, KNOCK_DUR);
+    if target_has_ball {
+        // On-ball tackle: strip ball, nudge it forward in tackler's direction
+        let (tx, ty) = (game.pl[tackler_idx].x, game.pl[tackler_idx].y);
+        let (gx, gy) = (game.pl[target_idx].x, game.pl[target_idx].y);
+        let (nx, ny) = norm(gx - tx, gy - ty);
+        game.ball.owner = None;
+        game.ball.x = gx;
+        game.ball.y = gy;
+        game.ball.vx = nx * TACKLE_BALL_NUDGE_POW;
+        game.ball.vy = ny * TACKLE_BALL_NUDGE_POW;
+        game.ball.cooldown = BALL_COOL;
+        slow_player(game, target_idx, SLOW_DUR);
         game.stats.tackle_success += 1;
+    } else {
+        // Off-ball tackle: foul. No pause, no knock — slow target briefly,
+        // free kick at foul spot.
+        if target_team != tackler_team && tackler_in_own_area {
+            start_penalty(game, target_team);
+            return true;
+        }
+        let fx = game.pl[target_idx].x;
+        let fy = game.pl[target_idx].y;
+        let fouled_id = game.pl[target_idx].id;
+        slow_player(game, target_idx, SLOW_DUR * 4);
+        start_free_kick(game, fouled_id, fx, fy);
+        game.stats.tackle_success += 1;
+        game.stats.fouls += 1;
     }
-    game.pl[tackler_idx].tackle_cooldown = TACKLE_COOL;
     true
 }
 
 pub fn do_shoot(game: &mut Game, shooter_idx: usize, mega: bool, tx: f32, ty: f32, pow: Option<f32>, is_pass: bool) {
+    // Indirect free kick: taker cannot shoot directly
+    if game.free_kick_active && !is_pass {
+        if game.free_kick_shooter_id == Some(game.pl[shooter_idx].id) { return; }
+    }
     let p = pow.unwrap_or(if mega { MEGA_POW } else { SHOOT_POW });
     let (nx, ny) = norm(tx - game.pl[shooter_idx].x, ty - game.pl[shooter_idx].y);
     game.ball.vx = nx * p;
@@ -107,6 +137,27 @@ fn set_ball_owner(game: &mut Game, player_idx: usize, x: f32, y: f32) {
     game.ball.last_touch_team = Some(p_team);
     game.phase = Phase::Playing;
     game.set_piece_timer = 90;
+    game.set_piece_taker_id = None;
+}
+
+// Place ball at set-piece spot, mark a specific taker. Match continues.
+fn award_set_piece(game: &mut Game, taker_id: usize, sx: f32, sy: f32) {
+    game.ball.x = sx; game.ball.y = sy;
+    game.ball.vx = 0.0; game.ball.vy = 0.0;
+    game.ball.owner = None; game.ball.mega = false;
+    game.ball.cooldown = 0;
+    game.set_piece_taker_id = Some(taker_id);
+    game.set_piece_x = sx;
+    game.set_piece_y = sy;
+    game.set_piece_timer = 120;
+    game.phase = Phase::Playing;
+}
+
+pub fn start_free_kick(game: &mut Game, fouled_id: usize, fx: f32, fy: f32) {
+    award_set_piece(game, fouled_id, fx, fy);
+    game.free_kick_shooter_id = Some(fouled_id);
+    game.free_kick_active = true;
+    game.stats.free_kicks += 1;
 }
 
 fn goal_line_teams(x: f32) -> (usize, usize) {
@@ -123,10 +174,11 @@ fn find_role_player(game: &Game, team: usize, role: Role) -> Option<usize> {
 fn restart_goal_kick(game: &mut Game, team: usize) {
     let keeper_id = find_role_player(game, team, Role::Gk);
     if let Some(kid) = keeper_id {
-        let kidx = game.pl.iter().position(|p| p.id == kid).unwrap();
-        let x = if team == 0 { PR * 2.3 } else { FW - PR * 2.3 };
-        set_ball_owner(game, kidx, x, H2);
+        let sx = if team == 0 { FIELD_LINE + PR * 2.3 } else { FW - FIELD_LINE - PR * 2.3 };
+        game.gk_has_ball[team] = false;
+        award_set_piece(game, kid, sx, H2);
     }
+    game.stats.out_of_bounds += 1;
 }
 
 fn restart_kick_in(game: &mut Game, team: usize, bx: f32, by: f32) {
@@ -142,45 +194,58 @@ fn restart_kick_in(game: &mut Game, team: usize, bx: f32, by: f32) {
             .map(|p| p.id)
     };
     if let Some(tid) = taker_id {
-        let tidx = game.pl.iter().position(|p| p.id == tid).unwrap();
-        set_ball_owner(game, tidx, tx, ty);
+        award_set_piece(game, tid, tx, ty);
     }
     game.stats.out_of_bounds += 1;
 }
 
 fn restart_corner(game: &mut Game, team: usize, bx: f32, by: f32) {
-    let corner_x = if bx < FW / 2.0 { PR } else { FW - PR };
+    let corner_x = if bx < FW / 2.0 { FIELD_LINE + PR } else { FW - FIELD_LINE - PR };
     let corner_y = if by < H2 { PR } else { FH - PR };
     let taker_id = find_role_player(game, team, Role::Mid)
         .or_else(|| find_role_player(game, team, Role::Fwd));
     if let Some(tid) = taker_id {
-        let tidx = game.pl.iter().position(|p| p.id == tid).unwrap();
-        set_ball_owner(game, tidx, corner_x, corner_y);
+        award_set_piece(game, tid, corner_x, corner_y);
     }
     game.stats.out_of_bounds += 1;
+    game.stats.corners += 1;
 }
 
 pub fn start_penalty(game: &mut Game, team: usize) {
-    for p in &mut game.pl {
-        p.state = PlayerState::Active;
-        p.knock_timer = 0;
-        p.jump_timer = 0;
-        if p.tackle_cooldown < 35 { p.tackle_cooldown = 35; }
-    }
     let shooter_id = if team == 0 {
         Some(game.pl[0].id)
     } else {
         find_role_player(game, team, Role::Fwd)
             .or_else(|| find_role_player(game, team, Role::Mid))
     };
+    let min_cooldown = FOUL_PAUSE + SET_PIECE_DELAY;
+    for p in &mut game.pl {
+        p.state = PlayerState::Active;
+        p.knock_timer = 0;
+        p.jump_timer = 0;
+        if p.tackle_cooldown < min_cooldown { p.tackle_cooldown = min_cooldown; }
+        // Clear non-shooter/non-opposing-GK from penalty area
+        if let Some(sid) = shooter_id {
+            if p.id == sid { continue; }
+        }
+        let opp_gk = p.role == Role::Gk && p.team != team;
+        if !opp_gk {
+            if team == 0 && p.x > FW - FIELD_LINE - PENALTY_AREA_W - 20.0 {
+                p.x = FW - FIELD_LINE - PENALTY_AREA_W - 20.0;
+            } else if team == 1 && p.x < FIELD_LINE + PENALTY_AREA_W + 20.0 {
+                p.x = FIELD_LINE + PENALTY_AREA_W + 20.0;
+            }
+        }
+    }
     if let Some(sid) = shooter_id {
         let sidx = game.pl.iter().position(|p| p.id == sid).unwrap();
-        let x = if team == 0 { FW - PENALTY_SPOT_D } else { PENALTY_SPOT_D };
-        set_ball_owner(game, sidx, x, H2);
+        let sx = if team == 0 { FW - FIELD_LINE - PENALTY_SPOT_D } else { FIELD_LINE + PENALTY_SPOT_D };
+        set_ball_owner(game, sidx, sx, H2);
     }
     game.phase = Phase::Penalty;
     game.penalty_team = Some(team);
     game.penalty_taken = false;
+    game.stats.penalties += 1;
 }
 
 fn handle_ball_out(game: &mut Game) {
@@ -193,7 +258,7 @@ fn handle_ball_out(game: &mut Game) {
         restart_kick_in(game, restart_team, bx, by);
         return;
     }
-    if bx - BR <= 0.0 || bx + BR >= FW {
+    if bx - BR <= FIELD_LINE || bx + BR >= FW - FIELD_LINE {
         let (attacking, defending) = goal_line_teams(bx);
         if last_touch == Some(attacking) {
             restart_goal_kick(game, defending);
@@ -227,25 +292,27 @@ pub fn update_ball(game: &mut Game) {
 
     let in_goal_y = (game.ball.y - H2).abs() < GH / 2.0;
 
-    if game.ball.x - BR <= 0.0 {
+    if game.ball.x - BR <= FIELD_LINE {
         if in_goal_y {
             game.score[1] += 1;
             game.phase = Phase::Goal;
             game.goal_anim = 160;
             game.goal_team = Some(1);
             game.stats.goals += 1;
+            game.gk_has_ball[0] = false;
         } else {
             handle_ball_out(game);
         }
         return;
     }
-    if game.ball.x + BR >= FW {
+    if game.ball.x + BR >= FW - FIELD_LINE {
         if in_goal_y {
             game.score[0] += 1;
             game.phase = Phase::Goal;
             game.goal_anim = 160;
             game.goal_team = Some(0);
             game.stats.goals += 1;
+            game.gk_has_ball[1] = false;
         } else {
             handle_ball_out(game);
         }
@@ -279,6 +346,10 @@ pub fn update_ball(game: &mut Game) {
         let mut near_d2 = CAPTURE_DIST2;
         for p in &game.pl {
             if p.state != PlayerState::Active { continue; }
+            // During an active set piece, only the designated taker can pick up
+            if let Some(tid) = game.set_piece_taker_id {
+                if p.id != tid { continue; }
+            }
             let dd = (p.x - bx) * (p.x - bx) + (p.y - by) * (p.y - by);
             if dd < near_d2 {
                 near_d2 = dd;
@@ -286,14 +357,64 @@ pub fn update_ball(game: &mut Game) {
             }
         }
         if let Some(pid) = near_id {
+            let pidx = game.pl.iter().position(|p| p.id == pid).unwrap();
+            let p_team = game.pl[pidx].team;
+            let p_role = game.pl[pidx].role;
+            let p_x = game.pl[pidx].x;
+            let p_y = game.pl[pidx].y;
+
+            // GK using hands outside goal area = handball foul → free kick to opponents
+            if p_role == Role::Gk {
+                let in_goal_area = if p_team == 0 {
+                    p_x <= FIELD_LINE + GOAL_AREA_W
+                } else {
+                    p_x >= FW - FIELD_LINE - GOAL_AREA_W
+                };
+                if !in_goal_area {
+                    let opp_team = 1 - p_team;
+                    let fk_taker = game.pl.iter()
+                        .filter(|q| q.team == opp_team && q.state == PlayerState::Active && q.role != Role::Gk)
+                        .min_by(|a,b| {
+                            (a.x - p_x).hypot(a.y - p_y)
+                                .partial_cmp(&(b.x - p_x).hypot(b.y - p_y)).unwrap()
+                        })
+                        .map(|q| q.id);
+                    if let Some(tid) = fk_taker {
+                        award_set_piece(game, tid, p_x, p_y);
+                        game.free_kick_shooter_id = Some(tid);
+                        game.free_kick_active = true;
+                        game.stats.fouls += 1;
+                    }
+                    return; // skip normal pickup
+                }
+            }
+
             let prev_team = game.ball.last_touch_team;
             game.ball.owner = Some(pid);
-            let owner_idx = game.pl.iter().position(|p| p.id == pid).unwrap();
-            let owner_team = game.pl[owner_idx].team;
-            if prev_team == Some(owner_team) {
+            if game.set_piece_taker_id == Some(pid) { game.set_piece_taker_id = None; }
+            if prev_team == Some(p_team) {
                 game.stats.pass_completed += 1;
             }
-            game.ball.last_touch_team = Some(owner_team);
+            game.ball.last_touch_team = Some(p_team);
+
+            if game.free_kick_active && game.free_kick_shooter_id != Some(pid) {
+                game.free_kick_active = false;
+            }
+
+            // GK in goal area gets hands privilege
+            if p_role == Role::Gk {
+                game.gk_has_ball[p_team] = true;
+                game.pl[pidx].gk_hold_timer = GK_HOLD_DELAY;
+            }
+        }
+    }
+
+    // Clear gkHasBall if GK no longer has ball
+    for t in 0..2 {
+        if game.gk_has_ball[t] {
+            let gk_owns = game.pl.iter()
+                .any(|p| p.role == Role::Gk && p.team == t && game.ball.owner == Some(p.id));
+            if !gk_owns { game.gk_has_ball[t] = false; }
         }
     }
 }
@@ -305,6 +426,7 @@ pub fn reset_kickoff(game: &mut Game) {
         p.state = PlayerState::Active; p.knock_timer = 0;
         p.tackle_cooldown = 0; p.jump_timer = 0;
         p.ai_jitter_x = 0.0; p.ai_jitter_y = 0.0; p.ai_jitter_timer = 0;
+        p.slow_timer = 0; p.gk_dive_dir = None; p.gk_dive_timer = 0; p.gk_hold_timer = 0;
     }
     game.ball.x = FW / 2.0; game.ball.y = H2;
     game.ball.vx = 0.0; game.ball.vy = 0.0;
@@ -314,6 +436,10 @@ pub fn reset_kickoff(game: &mut Game) {
     game.set_piece_timer = 0;
     game.penalty_team = None;
     game.penalty_taken = false;
+    game.free_kick_active = false;
+    game.free_kick_shooter_id = None;
+    game.gk_has_ball = [false; 2];
+    game.set_piece_taker_id = None;
 }
 
 pub fn step_game(game: &mut Game, rng: &mut impl Rng) {
@@ -326,7 +452,6 @@ pub fn step_game(game: &mut Game, rng: &mut impl Rng) {
     }
 
     if game.phase == Phase::Penalty {
-        // AI takes penalty automatically
         if let Some(owner_id) = game.ball.owner {
             let owner_idx = game.pl.iter().position(|p| p.id == owner_id);
             if let Some(idx) = owner_idx {
@@ -334,10 +459,9 @@ pub fn step_game(game: &mut Game, rng: &mut impl Rng) {
                     game.set_piece_timer -= 1;
                     if game.set_piece_timer <= 35 {
                         let team = game.penalty_team.unwrap_or(1);
-                        let tx = if team == 0 { FW + GD } else { -GD };
+                        let tx = if team == 0 { FW - FIELD_LINE } else { FIELD_LINE };
                         let jitter = (rng.gen::<f32>() * 2.0 - 1.0) * 48.0;
-                        let pow = SHOOT_POW;
-                        do_shoot(game, idx, false, tx, H2 + jitter, Some(pow), false);
+                        do_shoot(game, idx, false, tx, H2 + jitter, Some(SHOOT_POW), false);
                         game.phase = Phase::Playing;
                         game.penalty_taken = true;
                     }
@@ -359,21 +483,47 @@ pub fn step_game(game: &mut Game, rng: &mut impl Rng) {
         return;
     }
 
-    if game.set_piece_timer > 0 {
-        game.set_piece_timer -= 1;
-    }
+    if game.set_piece_timer > 0 { game.set_piece_timer -= 1; }
 
-    // Tick all CPU players (player 0 is CPU too in AI-only mode)
+    // Tick all CPU players
     for i in 0..game.pl.len() {
         if game.pl[i].tackle_cooldown > 0 { game.pl[i].tackle_cooldown -= 1; }
         if game.pl[i].jump_timer > 0 { game.pl[i].jump_timer -= 1; }
+        if game.pl[i].slow_timer > 0 { game.pl[i].slow_timer -= 1; }
+        if game.pl[i].gk_dive_timer < 0 {
+            game.pl[i].gk_dive_timer += 1; // counting up from negative toward 0
+            continue;
+        }
         if game.pl[i].state != PlayerState::Active {
             game.pl[i].knock_timer -= 1;
-            if game.pl[i].knock_timer <= 0 { game.pl[i].state = PlayerState::Active; }
+            if game.pl[i].knock_timer <= 0 {
+                game.pl[i].state = PlayerState::Active;
+                game.pl[i].gk_dive_dir = None;
+            }
             continue;
         }
         crate::brain::tick_player(game, i, rng);
+        apply_roam_limit(&mut game.pl[i]);
     }
 
     update_ball(game);
+}
+
+/// Enforce per-player max_distance_from_goal: clamp x toward own goal line.
+/// Only applies for V4 brains; v1/v2/v3 are unaffected (max_dist defaults to 1.0).
+fn apply_roam_limit(p: &mut Player) {
+    use crate::brain::PlayerBrain;
+    let max_dist = match &p.brain {
+        PlayerBrain::V4(v4) => v4.max_distance_from_goal.clamp(0.0, 1.0),
+        _ => 1.0,
+    };
+    if max_dist >= 1.0 { return; }
+    let span = FW - 2.0 * FIELD_LINE;
+    let limit = max_dist * span;
+    if p.team == 0 {
+        if p.x > FIELD_LINE + limit { p.x = FIELD_LINE + limit; }
+    } else {
+        let min_x = FW - FIELD_LINE - limit;
+        if p.x < min_x { p.x = min_x; }
+    }
 }

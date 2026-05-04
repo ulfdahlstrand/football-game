@@ -1,6 +1,6 @@
 #!/bin/bash
-# Runs v3 training sessions back-to-back until 05:00 (next morning if it's
-# currently between 05:00 and 23:59, or today if already past midnight).
+# Runs v3 training sessions back-to-back until 06:00 (next morning if it's
+# currently between 06:00 and 23:59, or today if already past midnight).
 # Each session: 100 epochs × 100 000 games (~30 min).
 # Picks the next free session-N number automatically.
 
@@ -22,16 +22,16 @@ LAST=$(ls -d "$SESSIONS_DIR"/session-* 2>/dev/null \
   | sed 's/.*session-//' | sort -n | tail -1)
 N=$(( ${LAST:-0} + 1 ))
 
-# Compute stop timestamp = next occurrence of 05:00
+# Compute stop timestamp = next occurrence of 06:00
 HOUR=$(date +%H)
 if [ "$HOUR" -ge 5 ]; then
-  STOP_DATE=$(date -v+1d +%Y-%m-%d)   # past 05:00 → tomorrow's 05:00
+  STOP_DATE=$(date -v+1d +%Y-%m-%d)   # past 06:00 → tomorrow's 06:00
 else
-  STOP_DATE=$(date +%Y-%m-%d)         # before 05:00 → today's 05:00
+  STOP_DATE=$(date +%Y-%m-%d)         # before 06:00 → today's 06:00
 fi
-STOP_TS=$(date -j -f "%Y-%m-%d %H:%M" "$STOP_DATE 05:00" +%s)
+STOP_TS=$(date -j -f "%Y-%m-%d %H:%M" "$STOP_DATE 06:00" +%s)
 
-echo "$(date '+%Y-%m-%d %H:%M:%S'): auto-training until $STOP_DATE 05:00, starting from session-$N"
+echo "$(date '+%Y-%m-%d %H:%M:%S'): auto-training until $STOP_DATE 06:00, starting from session-$N"
 
 while [ "$(date +%s)" -lt "$STOP_TS" ]; do
   REMAINING=$(( STOP_TS - $(date +%s) ))

@@ -1,0 +1,597 @@
+{
+  "accepted": true,
+  "candidate": {
+    "playerParams": [
+      {
+        "gkFreedom": 0.5082571506500244,
+        "passDirDefensive": 1.845001459121704,
+        "passDirNeutral": 1.2301561832427979,
+        "passDirOffensive": 0.5651877522468567,
+        "v3": {
+          "aggression": 1.6795635223388672,
+          "base": {
+            "forwardPassMinGain": 8.0,
+            "markDistance": 70.0,
+            "passChanceDefault": 0.051100000739097595,
+            "passChanceForward": 0.07859999686479568,
+            "passChancePressured": 0.4000000059604645,
+            "passChanceWing": 0.21160000562667847,
+            "shootProgressThreshold": 0.6844000220298767,
+            "tackleChance": 0.20100000500679016
+          },
+          "blockAvoidance": 0.3883301019668579,
+          "blockDistance": 24.50298309326172,
+          "chemistryBonus": 0.0,
+          "chemistryTargetId": -1,
+          "clearShotBonus": 0.10580908507108688,
+          "corridorPreference": 1,
+          "edgeAvoidance": 0.044971153140068054,
+          "goalAttraction": 0.04876350238919258,
+          "pressureRadius": 52.94229507446289,
+          "riskAppetite": 0.5213220119476318,
+          "visionRadius": 1000000000.0,
+          "zoneAggression": [
+            1.2731369733810425,
+            0.8672115802764893,
+            1.6559208631515503,
+            0.6095151305198669,
+            0.8484081625938416
+          ]
+        }
+      },
+      {
+        "gkFreedom": 0.5613160133361816,
+        "passDirDefensive": 0.5336230993270874,
+        "passDirNeutral": 1.1349918842315674,
+        "passDirOffensive": 0.14789631962776184,
+        "v3": {
+          "aggression": 1.3738831281661987,
+          "base": {
+            "forwardPassMinGain": 17.0,
+            "markDistance": 85.0,
+            "passChanceDefault": 0.004999999888241291,
+            "passChanceForward": 0.0430000014603138,
+            "passChancePressured": 0.043699998408555984,
+            "passChanceWing": 0.06080000102519989,
+            "shootProgressThreshold": 0.771399974822998,
+            "tackleChance": 0.09679999947547913
+          },
+          "blockAvoidance": 0.33236509561538696,
+          "blockDistance": 25.143693923950195,
+          "chemistryBonus": 0.0,
+          "chemistryTargetId": -1,
+          "clearShotBonus": 0.29399099946022034,
+          "corridorPreference": -1,
+          "edgeAvoidance": 0.060675591230392456,
+          "goalAttraction": 0.09552101790904999,
+          "pressureRadius": 82.66355895996094,
+          "riskAppetite": 0.7518936991691589,
+          "visionRadius": 1000000000.0,
+          "zoneAggression": [
+            0.7180107831954956,
+            0.5380158424377441,
+            1.1566780805587769,
+            1.2753918170928955,
+            1.1614629030227661
+          ]
+        }
+      },
+      {
+        "gkFreedom": 0.3066861629486084,
+        "passDirDefensive": 0.4140622019767761,
+        "passDirNeutral": 0.5396009683609009,
+        "passDirOffensive": 0.021473044529557228,
+        "v3": {
+          "aggression": 2.0,
+          "base": {
+            "forwardPassMinGain": 18.0,
+            "markDistance": 82.0,
+            "passChanceDefault": 0.15970000624656677,
+            "passChanceForward": 0.17910000681877136,
+            "passChancePressured": 0.12960000336170197,
+            "passChanceWing": 0.009999999776482582,
+            "shootProgressThreshold": 0.6301000118255615,
+            "tackleChance": 0.1615000069141388
+          },
+          "blockAvoidance": 0.09905460476875305,
+          "blockDistance": 36.56912612915039,
+          "chemistryBonus": 0.0,
+          "chemistryTargetId": -1,
+          "clearShotBonus": 0.23126435279846191,
+          "corridorPreference": 0,
+          "edgeAvoidance": 0.38212525844573975,
+          "goalAttraction": 0.29874011874198914,
+          "pressureRadius": 66.95893859863281,
+          "riskAppetite": 0.7419439554214478,
+          "visionRadius": 1000000000.0,
+          "zoneAggression": [
+            1.9202090501785278,
+            1.6396548748016357,
+            0.3325473368167877,
+            0.928075909614563,
+            0.6478152275085449
+          ]
+        }
+      },
+      {
+        "gkFreedom": 0.5157505869865417,
+        "passDirDefensive": 0.5796306729316711,
+        "passDirNeutral": 0.46167171001434326,
+        "passDirOffensive": 0.04081839323043823,
+        "v3": {
+          "aggression": 0.7042927145957947,
+          "base": {
+            "forwardPassMinGain": 14.0,
+            "markDistance": 67.0,
+            "passChanceDefault": 0.1428000032901764,
+            "passChanceForward": 0.07989999651908875,
+            "passChancePressured": 0.2547000050544739,
+            "passChanceWing": 0.05900000035762787,
+            "shootProgressThreshold": 0.5849999785423279,
+            "tackleChance": 0.14550000429153442
+          },
+          "blockAvoidance": 0.7173417806625366,
+          "blockDistance": 26.600271224975586,
+          "chemistryBonus": 0.0,
+          "chemistryTargetId": -1,
+          "clearShotBonus": 0.6196376085281372,
+          "corridorPreference": -1,
+          "edgeAvoidance": 0.8717672824859619,
+          "goalAttraction": 0.0,
+          "pressureRadius": 119.00325775146484,
+          "riskAppetite": 0.5161525011062622,
+          "visionRadius": 1000000000.0,
+          "zoneAggression": [
+            1.473501205444336,
+            1.3885447978973389,
+            0.5820696949958801,
+            1.6879332065582275,
+            0.30000001192092896
+          ]
+        }
+      },
+      {
+        "gkFreedom": 0.6603868007659912,
+        "passDirDefensive": 0.7810893654823303,
+        "passDirNeutral": 1.8836852312088013,
+        "passDirOffensive": 1.6384785175323486,
+        "v3": {
+          "aggression": 1.8161758184432983,
+          "base": {
+            "forwardPassMinGain": 0.0,
+            "markDistance": 72.0,
+            "passChanceDefault": 0.0575999990105629,
+            "passChanceForward": 0.0575999990105629,
+            "passChancePressured": 0.05999999865889549,
+            "passChanceWing": 0.038600001484155655,
+            "shootProgressThreshold": 0.8781999945640564,
+            "tackleChance": 0.14380000531673431
+          },
+          "blockAvoidance": 0.7329498529434204,
+          "blockDistance": 10.054012298583984,
+          "chemistryBonus": 0.0,
+          "chemistryTargetId": -1,
+          "clearShotBonus": 0.018599435687065125,
+          "corridorPreference": 0,
+          "edgeAvoidance": 0.4338211119174957,
+          "goalAttraction": 0.428871750831604,
+          "pressureRadius": 85.73993682861328,
+          "riskAppetite": 0.12819455564022064,
+          "visionRadius": 1000000000.0,
+          "zoneAggression": [
+            0.8975256085395813,
+            1.2508939504623413,
+            1.9727054834365845,
+            0.8793815970420837,
+            0.783371090888977
+          ]
+        }
+      }
+    ]
+  },
+  "championEpoch": 54,
+  "championPlayerParams": [
+    {
+      "gkFreedom": 0.5082571506500244,
+      "passDirDefensive": 1.845001459121704,
+      "passDirNeutral": 1.2301561832427979,
+      "passDirOffensive": 0.5651877522468567,
+      "v3": {
+        "aggression": 1.6795635223388672,
+        "base": {
+          "forwardPassMinGain": 8.0,
+          "markDistance": 70.0,
+          "passChanceDefault": 0.051100000739097595,
+          "passChanceForward": 0.07859999686479568,
+          "passChancePressured": 0.4000000059604645,
+          "passChanceWing": 0.21160000562667847,
+          "shootProgressThreshold": 0.6844000220298767,
+          "tackleChance": 0.20100000500679016
+        },
+        "blockAvoidance": 0.3883301019668579,
+        "blockDistance": 24.50298309326172,
+        "chemistryBonus": 0.0,
+        "chemistryTargetId": -1,
+        "clearShotBonus": 0.10580908507108688,
+        "corridorPreference": 1,
+        "edgeAvoidance": 0.044971153140068054,
+        "goalAttraction": 0.04876350238919258,
+        "pressureRadius": 52.94229507446289,
+        "riskAppetite": 0.5213220119476318,
+        "visionRadius": 1000000000.0,
+        "zoneAggression": [
+          1.2731369733810425,
+          0.8672115802764893,
+          1.6559208631515503,
+          0.6095151305198669,
+          0.8484081625938416
+        ]
+      }
+    },
+    {
+      "gkFreedom": 0.5613160133361816,
+      "passDirDefensive": 0.5336230993270874,
+      "passDirNeutral": 1.1349918842315674,
+      "passDirOffensive": 0.14789631962776184,
+      "v3": {
+        "aggression": 1.3738831281661987,
+        "base": {
+          "forwardPassMinGain": 17.0,
+          "markDistance": 85.0,
+          "passChanceDefault": 0.004999999888241291,
+          "passChanceForward": 0.0430000014603138,
+          "passChancePressured": 0.043699998408555984,
+          "passChanceWing": 0.06080000102519989,
+          "shootProgressThreshold": 0.771399974822998,
+          "tackleChance": 0.09679999947547913
+        },
+        "blockAvoidance": 0.33236509561538696,
+        "blockDistance": 25.143693923950195,
+        "chemistryBonus": 0.0,
+        "chemistryTargetId": -1,
+        "clearShotBonus": 0.29399099946022034,
+        "corridorPreference": -1,
+        "edgeAvoidance": 0.060675591230392456,
+        "goalAttraction": 0.09552101790904999,
+        "pressureRadius": 82.66355895996094,
+        "riskAppetite": 0.7518936991691589,
+        "visionRadius": 1000000000.0,
+        "zoneAggression": [
+          0.7180107831954956,
+          0.5380158424377441,
+          1.1566780805587769,
+          1.2753918170928955,
+          1.1614629030227661
+        ]
+      }
+    },
+    {
+      "gkFreedom": 0.3066861629486084,
+      "passDirDefensive": 0.4140622019767761,
+      "passDirNeutral": 0.5396009683609009,
+      "passDirOffensive": 0.021473044529557228,
+      "v3": {
+        "aggression": 2.0,
+        "base": {
+          "forwardPassMinGain": 18.0,
+          "markDistance": 82.0,
+          "passChanceDefault": 0.15970000624656677,
+          "passChanceForward": 0.17910000681877136,
+          "passChancePressured": 0.12960000336170197,
+          "passChanceWing": 0.009999999776482582,
+          "shootProgressThreshold": 0.6301000118255615,
+          "tackleChance": 0.1615000069141388
+        },
+        "blockAvoidance": 0.09905460476875305,
+        "blockDistance": 36.56912612915039,
+        "chemistryBonus": 0.0,
+        "chemistryTargetId": -1,
+        "clearShotBonus": 0.23126435279846191,
+        "corridorPreference": 0,
+        "edgeAvoidance": 0.38212525844573975,
+        "goalAttraction": 0.29874011874198914,
+        "pressureRadius": 66.95893859863281,
+        "riskAppetite": 0.7419439554214478,
+        "visionRadius": 1000000000.0,
+        "zoneAggression": [
+          1.9202090501785278,
+          1.6396548748016357,
+          0.3325473368167877,
+          0.928075909614563,
+          0.6478152275085449
+        ]
+      }
+    },
+    {
+      "gkFreedom": 0.5157505869865417,
+      "passDirDefensive": 0.5796306729316711,
+      "passDirNeutral": 0.46167171001434326,
+      "passDirOffensive": 0.04081839323043823,
+      "v3": {
+        "aggression": 0.7042927145957947,
+        "base": {
+          "forwardPassMinGain": 14.0,
+          "markDistance": 67.0,
+          "passChanceDefault": 0.1428000032901764,
+          "passChanceForward": 0.07989999651908875,
+          "passChancePressured": 0.2547000050544739,
+          "passChanceWing": 0.05900000035762787,
+          "shootProgressThreshold": 0.5849999785423279,
+          "tackleChance": 0.14550000429153442
+        },
+        "blockAvoidance": 0.7173417806625366,
+        "blockDistance": 26.600271224975586,
+        "chemistryBonus": 0.0,
+        "chemistryTargetId": -1,
+        "clearShotBonus": 0.6196376085281372,
+        "corridorPreference": -1,
+        "edgeAvoidance": 0.8717672824859619,
+        "goalAttraction": 0.0,
+        "pressureRadius": 119.00325775146484,
+        "riskAppetite": 0.5161525011062622,
+        "visionRadius": 1000000000.0,
+        "zoneAggression": [
+          1.473501205444336,
+          1.3885447978973389,
+          0.5820696949958801,
+          1.6879332065582275,
+          0.30000001192092896
+        ]
+      }
+    },
+    {
+      "gkFreedom": 0.6603868007659912,
+      "passDirDefensive": 0.7810893654823303,
+      "passDirNeutral": 1.8836852312088013,
+      "passDirOffensive": 1.6384785175323486,
+      "v3": {
+        "aggression": 1.8161758184432983,
+        "base": {
+          "forwardPassMinGain": 0.0,
+          "markDistance": 72.0,
+          "passChanceDefault": 0.0575999990105629,
+          "passChanceForward": 0.0575999990105629,
+          "passChancePressured": 0.05999999865889549,
+          "passChanceWing": 0.038600001484155655,
+          "shootProgressThreshold": 0.8781999945640564,
+          "tackleChance": 0.14380000531673431
+        },
+        "blockAvoidance": 0.7329498529434204,
+        "blockDistance": 10.054012298583984,
+        "chemistryBonus": 0.0,
+        "chemistryTargetId": -1,
+        "clearShotBonus": 0.018599435687065125,
+        "corridorPreference": 0,
+        "edgeAvoidance": 0.4338211119174957,
+        "goalAttraction": 0.428871750831604,
+        "pressureRadius": 85.73993682861328,
+        "riskAppetite": 0.12819455564022064,
+        "visionRadius": 1000000000.0,
+        "zoneAggression": [
+          0.8975256085395813,
+          1.2508939504623413,
+          1.9727054834365845,
+          0.8793815970420837,
+          0.783371090888977
+        ]
+      }
+    }
+  ],
+  "createdAt": "2026-05-03T22:54:53Z",
+  "epoch": 54,
+  "evaluation": {
+    "avgGoals": 2.25,
+    "avgOutOfBounds": 4.99,
+    "avgPasses": 151.68,
+    "avgShots": 26.01,
+    "avgTackles": 10.83,
+    "baselineAvgGoals": 1.04,
+    "candidateAvgGoals": 1.211,
+    "candidateWon": true,
+    "earlyStop": "better",
+    "elapsedMs": 394,
+    "games": 550,
+    "gamesPerSecond": 1395.94,
+    "goalDiff": 94.0,
+    "maxGames": 100000,
+    "passCompletionRate": 0.827,
+    "tackleSuccessRate": 1.0,
+    "zScore": 2.734
+  },
+  "gamesPerEpoch": 100000,
+  "mutatedSlots": [
+    2
+  ],
+  "name": "epoch-054",
+  "opponent": {
+    "playerParams": [
+      {
+        "gkFreedom": 0.5082571506500244,
+        "passDirDefensive": 1.845001459121704,
+        "passDirNeutral": 1.2301561832427979,
+        "passDirOffensive": 0.5651877522468567,
+        "v3": {
+          "aggression": 1.6795635223388672,
+          "base": {
+            "forwardPassMinGain": 8.0,
+            "markDistance": 70.0,
+            "passChanceDefault": 0.051100000739097595,
+            "passChanceForward": 0.07859999686479568,
+            "passChancePressured": 0.4000000059604645,
+            "passChanceWing": 0.21160000562667847,
+            "shootProgressThreshold": 0.6844000220298767,
+            "tackleChance": 0.20100000500679016
+          },
+          "blockAvoidance": 0.3883301019668579,
+          "blockDistance": 24.50298309326172,
+          "chemistryBonus": 0.0,
+          "chemistryTargetId": -1,
+          "clearShotBonus": 0.10580908507108688,
+          "corridorPreference": 1,
+          "edgeAvoidance": 0.044971153140068054,
+          "goalAttraction": 0.04876350238919258,
+          "pressureRadius": 52.94229507446289,
+          "riskAppetite": 0.5213220119476318,
+          "visionRadius": 1000000000.0,
+          "zoneAggression": [
+            1.2731369733810425,
+            0.8672115802764893,
+            1.6559208631515503,
+            0.6095151305198669,
+            0.8484081625938416
+          ]
+        }
+      },
+      {
+        "gkFreedom": 0.5613160133361816,
+        "passDirDefensive": 0.5336230993270874,
+        "passDirNeutral": 1.1349918842315674,
+        "passDirOffensive": 0.14789631962776184,
+        "v3": {
+          "aggression": 1.3738831281661987,
+          "base": {
+            "forwardPassMinGain": 17.0,
+            "markDistance": 85.0,
+            "passChanceDefault": 0.004999999888241291,
+            "passChanceForward": 0.0430000014603138,
+            "passChancePressured": 0.043699998408555984,
+            "passChanceWing": 0.06080000102519989,
+            "shootProgressThreshold": 0.771399974822998,
+            "tackleChance": 0.09679999947547913
+          },
+          "blockAvoidance": 0.33236509561538696,
+          "blockDistance": 25.143693923950195,
+          "chemistryBonus": 0.0,
+          "chemistryTargetId": -1,
+          "clearShotBonus": 0.29399099946022034,
+          "corridorPreference": -1,
+          "edgeAvoidance": 0.060675591230392456,
+          "goalAttraction": 0.09552101790904999,
+          "pressureRadius": 82.66355895996094,
+          "riskAppetite": 0.7518936991691589,
+          "visionRadius": 1000000000.0,
+          "zoneAggression": [
+            0.7180107831954956,
+            0.5380158424377441,
+            1.1566780805587769,
+            1.2753918170928955,
+            1.1614629030227661
+          ]
+        }
+      },
+      {
+        "gkFreedom": 0.4871880114078522,
+        "passDirDefensive": 0.4140622019767761,
+        "passDirNeutral": 0.22614121437072754,
+        "passDirOffensive": 0.021473044529557228,
+        "v3": {
+          "aggression": 2.0,
+          "base": {
+            "forwardPassMinGain": 18.0,
+            "markDistance": 82.0,
+            "passChanceDefault": 0.15970000624656677,
+            "passChanceForward": 0.17910000681877136,
+            "passChancePressured": 0.12960000336170197,
+            "passChanceWing": 0.009999999776482582,
+            "shootProgressThreshold": 0.6301000118255615,
+            "tackleChance": 0.1615000069141388
+          },
+          "blockAvoidance": 0.09905460476875305,
+          "blockDistance": 36.56912612915039,
+          "chemistryBonus": 0.0,
+          "chemistryTargetId": -1,
+          "clearShotBonus": 0.23126435279846191,
+          "corridorPreference": 0,
+          "edgeAvoidance": 0.38212525844573975,
+          "goalAttraction": 0.29874011874198914,
+          "pressureRadius": 66.95893859863281,
+          "riskAppetite": 0.7419439554214478,
+          "visionRadius": 1000000000.0,
+          "zoneAggression": [
+            1.9202090501785278,
+            1.6396548748016357,
+            0.3325473368167877,
+            0.928075909614563,
+            0.6478152275085449
+          ]
+        }
+      },
+      {
+        "gkFreedom": 0.5157505869865417,
+        "passDirDefensive": 0.5796306729316711,
+        "passDirNeutral": 0.46167171001434326,
+        "passDirOffensive": 0.04081839323043823,
+        "v3": {
+          "aggression": 0.7042927145957947,
+          "base": {
+            "forwardPassMinGain": 14.0,
+            "markDistance": 67.0,
+            "passChanceDefault": 0.1428000032901764,
+            "passChanceForward": 0.07989999651908875,
+            "passChancePressured": 0.2547000050544739,
+            "passChanceWing": 0.05900000035762787,
+            "shootProgressThreshold": 0.5849999785423279,
+            "tackleChance": 0.14550000429153442
+          },
+          "blockAvoidance": 0.7173417806625366,
+          "blockDistance": 26.600271224975586,
+          "chemistryBonus": 0.0,
+          "chemistryTargetId": -1,
+          "clearShotBonus": 0.6196376085281372,
+          "corridorPreference": -1,
+          "edgeAvoidance": 0.8717672824859619,
+          "goalAttraction": 0.0,
+          "pressureRadius": 119.00325775146484,
+          "riskAppetite": 0.5161525011062622,
+          "visionRadius": 1000000000.0,
+          "zoneAggression": [
+            1.473501205444336,
+            1.3885447978973389,
+            0.5820696949958801,
+            1.6879332065582275,
+            0.30000001192092896
+          ]
+        }
+      },
+      {
+        "gkFreedom": 0.6603868007659912,
+        "passDirDefensive": 0.7810893654823303,
+        "passDirNeutral": 1.8836852312088013,
+        "passDirOffensive": 1.6384785175323486,
+        "v3": {
+          "aggression": 1.8161758184432983,
+          "base": {
+            "forwardPassMinGain": 0.0,
+            "markDistance": 72.0,
+            "passChanceDefault": 0.0575999990105629,
+            "passChanceForward": 0.0575999990105629,
+            "passChancePressured": 0.05999999865889549,
+            "passChanceWing": 0.038600001484155655,
+            "shootProgressThreshold": 0.8781999945640564,
+            "tackleChance": 0.14380000531673431
+          },
+          "blockAvoidance": 0.7329498529434204,
+          "blockDistance": 10.054012298583984,
+          "chemistryBonus": 0.0,
+          "chemistryTargetId": -1,
+          "clearShotBonus": 0.018599435687065125,
+          "corridorPreference": 0,
+          "edgeAvoidance": 0.4338211119174957,
+          "goalAttraction": 0.428871750831604,
+          "pressureRadius": 85.73993682861328,
+          "riskAppetite": 0.12819455564022064,
+          "visionRadius": 1000000000.0,
+          "zoneAggression": [
+            0.8975256085395813,
+            1.2508939504623413,
+            1.9727054834365845,
+            0.8793815970420837,
+            0.783371090888977
+          ]
+        }
+      }
+    ],
+    "sourceEpoch": 53
+  },
+  "session": "session-8"
+}

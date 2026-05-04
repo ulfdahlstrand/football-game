@@ -28,3 +28,17 @@ pub const GAME_SECS: i32 = 150;
 
 pub const H2: f32 = FH / 2.0;
 pub const CAPTURE_DIST2: f32 = (PR + BR + 7.0) * (PR + BR + 7.0);
+
+// Set pieces & new mechanics
+pub const SLOW_DUR: i32 = 6;
+pub const SLOW_FACTOR: f32 = 0.5;
+pub const FOUL_PAUSE: i32 = 30;
+pub const FREE_KICK_WALL_DIST: f32 = 55.0;
+pub const GK_DIVE_DUR: i32 = 6;
+pub const GK_DIVE_COMMIT_DIST: f32 = 160.0;
+pub const GK_DIVE_JITTER: f32 = 40.0;
+pub const GK_HOLD_DELAY: i32 = 60;
+pub const SET_PIECE_DELAY: i32 = 60;
+pub const FIELD_LINE: f32 = 18.0;
+pub const GOAL_AREA_W: f32 = 54.0;
+pub const TACKLE_BALL_NUDGE_POW: f32 = 6.0;

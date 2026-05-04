@@ -168,6 +168,8 @@ pub type TeamPolicyV3 = [V3Params; 5];
 ///
 /// All new fields default to "v3-equivalent" so a V4Params built from a
 /// V3Params (with defaults on the new fields) plays identically to v3.
+fn default_max_distance_from_goal() -> f32 { 1.0 }
+
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct V4Params {
@@ -179,8 +181,16 @@ pub struct V4Params {
     pub pass_dir_defensive: f32,
     /// [0, 2], default 1.0. Multiplied when best pass is sideways/cross.
     pub pass_dir_neutral: f32,
-    /// [0, 1], default 0.0. 0 = locked to goal line. 1 = roam freely.
+    /// DEPRECATED. Replaced by `max_distance_from_goal`. Kept for backward
+    /// compat with old baseline.json files. Not used in logic.
+    #[serde(default)]
     pub gk_freedom: f32,
+    /// [0, 1], default 1.0. Per-slot roaming cap. Limits how far forward (toward
+    /// opponent goal) this player may move from their own goal line.
+    /// 0 = stuck on goal line; 1 = full freedom up to opponent goal.
+    /// Replaces gk_freedom semantically and applies to ALL players.
+    #[serde(default = "default_max_distance_from_goal")]
+    pub max_distance_from_goal: f32,
 }
 
 impl Default for V4Params {
@@ -191,6 +201,7 @@ impl Default for V4Params {
             pass_dir_defensive: 1.0,
             pass_dir_neutral: 1.0,
             gk_freedom: 0.0,
+            max_distance_from_goal: 1.0,
         }
     }
 }
@@ -221,7 +232,7 @@ pub fn mutate_v4(p: &V4Params, rng: &mut impl Rng, scale: f32) -> V4Params {
     perturb!(next.pass_dir_offensive, 0.15, 0.0, 2.0);
     perturb!(next.pass_dir_defensive, 0.15, 0.0, 2.0);
     perturb!(next.pass_dir_neutral, 0.15, 0.0, 2.0);
-    perturb!(next.gk_freedom, 0.10, 0.0, 1.0);
+    perturb!(next.max_distance_from_goal, 0.08, 0.0, 1.0);
 
     next
 }

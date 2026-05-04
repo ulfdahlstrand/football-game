@@ -3,3 +3,7 @@
 node_modules/
 .env
 .env.*
+
+# Rust build artifacts
+training-engine/target/
+**/target/

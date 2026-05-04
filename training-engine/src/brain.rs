@@ -10,14 +10,16 @@ pub struct TickHooks {
     /// Multipliers applied to the pass-chance based on best-target direction:
     /// [offensive, defensive, neutral]. 1.0 each = unchanged classic behavior.
     pub pass_dir_mult: [f32; 3],
-    /// 0..1. 0 = goalkeeper locked to goal line (classic). 1 = GK roams up
-    /// to half-line, following the ball.
+    /// DEPRECATED. Kept for source-compat; behavior moved to max_distance_from_goal.
     pub gk_freedom: f32,
+    /// 0..1. Per-player roaming cap. 0 = stuck on own goal line.
+    /// 1 = can advance to opponent goal. Applied uniformly to all roles.
+    pub max_distance_from_goal: f32,
 }
 
 impl Default for TickHooks {
     fn default() -> Self {
-        Self { pass_dir_mult: [1.0, 1.0, 1.0], gk_freedom: 0.0 }
+        Self { pass_dir_mult: [1.0, 1.0, 1.0], gk_freedom: 0.0, max_distance_from_goal: 1.0 }
     }
 }
 
@@ -177,7 +179,8 @@ pub fn v4_tick(game: &mut Game, player_idx: usize, params: &V4Params, rng: &mut 
             params.pass_dir_defensive.clamp(0.0, 2.0),
             params.pass_dir_neutral.clamp(0.0, 2.0),
         ],
-        gk_freedom: params.gk_freedom.clamp(0.0, 1.0),
+        gk_freedom: 0.0,
+        max_distance_from_goal: params.max_distance_from_goal.clamp(0.0, 1.0),
     };
     crate::ai::classic_tick(game, player_idx, &p, &hooks, rng);
 }

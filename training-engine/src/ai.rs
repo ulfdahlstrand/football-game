@@ -284,6 +284,15 @@ pub fn classic_tick(
     let carrier_team = ball_owner.and_then(|id| game.pl.get(id)).map(|c| c.team);
     let team_has_ball = carrier_team == Some(p_team);
 
+    // Set-piece taker override: run to the ball
+    if game.set_piece_taker_id == Some(p_id) && !has_ball {
+        let slow_mult = if game.pl[player_idx].slow_timer > 0 { SLOW_FACTOR } else { 1.0 };
+        let bx = game.ball.x;
+        let by = game.ball.y;
+        move_to(&mut game.pl[player_idx], bx, by, CSPEED * 1.18 * slow_mult);
+        return;
+    }
+
     // Attempt tackle
     if !has_ball {
         if let Some(c_id) = ball_owner {
@@ -301,16 +310,58 @@ pub fn classic_tick(
 
     // Goalkeeper
     if p_role == Role::Gk {
+        // On ground after missed dive
+        if game.pl[player_idx].gk_dive_timer < 0 { return; }
+
         if has_ball {
+            // Hold ball briefly then distribute
+            if game.pl[player_idx].gk_hold_timer > 0 {
+                game.pl[player_idx].gk_hold_timer -= 1;
+                return;
+            }
+            game.gk_has_ball[p_team] = false;
             crate::physics::do_shoot(game, player_idx, false, FW / 2.0, H2, None, false);
         } else {
+            // Try to dive for incoming shot
+            if game.pl[player_idx].gk_dive_timer == 0 && game.ball.owner.is_none() {
+                let is_incoming = if p_team == 0 { game.ball.vx < -8.0 } else { game.ball.vx > 8.0 };
+                let goal_x = if p_team == 0 { FIELD_LINE } else { FW - FIELD_LINE };
+                let dist_to_goal = (game.pl[player_idx].x - goal_x).abs();
+                if is_incoming && dist_to_goal < GK_DIVE_COMMIT_DIST {
+                    let frames_until_goal = if game.ball.vx.abs() > 0.1 {
+                        (goal_x - game.ball.x) / game.ball.vx
+                    } else { 0.0 };
+                    let predicted_y = game.ball.y + game.ball.vy * frames_until_goal.max(0.0);
+                    let jitter = GK_DIVE_JITTER * (1.0 - dist_to_goal / GK_DIVE_COMMIT_DIST);
+                    let effective_y = predicted_y + (rng.gen::<f32>() * 2.0 - 1.0) * jitter;
+                    game.pl[player_idx].gk_dive_dir = Some(effective_y < H2); // true = up
+                    game.pl[player_idx].gk_dive_timer = GK_DIVE_DUR;
+                }
+            }
+
+            if game.pl[player_idx].gk_dive_timer > 0 {
+                let dive_up = game.pl[player_idx].gk_dive_dir.unwrap_or(true);
+                let dive_y = if dive_up { H2 - GH / 2.0 + PR } else { H2 + GH / 2.0 - PR };
+                let cur_x = game.pl[player_idx].x;
+                move_to(&mut game.pl[player_idx], cur_x, dive_y, CSPEED * 3.5);
+                game.pl[player_idx].gk_dive_timer -= 1;
+                if game.pl[player_idx].gk_dive_timer <= 0 {
+                    // Check if caught ball
+                    let caught = game.ball.owner.is_none()
+                        && (game.pl[player_idx].x - game.ball.x)
+                            .hypot(game.pl[player_idx].y - game.ball.y) < PR + BR + 8.0;
+                    if !caught {
+                        game.pl[player_idx].gk_dive_timer = -GK_DIVE_DUR;
+                    }
+                }
+                return;
+            }
+
             // Base position on the goal line, follow ball's Y inside the goal mouth.
-            let line_x = if p_team == 0 { PR * 1.8 } else { FW - PR * 1.8 };
+            let line_x = if p_team == 0 { FIELD_LINE + PR * 1.5 } else { FW - FIELD_LINE - PR * 1.5 };
             let by = game.ball.y;
             let line_y = by.max(H2 - GH / 2.0 + PR).min(H2 + GH / 2.0 - PR);
 
-            // gk_freedom (v4 only) lets the keeper drift forward toward the
-            // ball, capped at half-line. v1/v2/v3 pass freedom=0 → identical.
             let freedom = hooks.gk_freedom.clamp(0.0, 1.0);
             let (target_x, target_y) = if freedom < 1e-3 {
                 (line_x, line_y)
@@ -323,12 +374,24 @@ pub fn classic_tick(
                 } else {
                     want_x.max(line_x - max_drift).min(line_x)
                 };
-                // When drifting, follow ball Y less restrictively than goal mouth.
                 let drift_y = by.max(PR).min(FH - PR);
                 (drift_x, drift_y)
             };
             move_to(&mut game.pl[player_idx], target_x, target_y, CSPEED * 0.88);
         }
+        return;
+    }
+
+    // Retreat to midline when opposing GK holds ball
+    let enemy_team = 1 - p_team;
+    if game.gk_has_ball[enemy_team] {
+        let retreat_x = if p_team == 0 {
+            game.pl[player_idx].x.min(FW / 2.0 - PR)
+        } else {
+            game.pl[player_idx].x.max(FW / 2.0 + PR)
+        };
+        let cur_y = game.pl[player_idx].y;
+        move_to(&mut game.pl[player_idx], retreat_x, cur_y, CSPEED * 0.9);
         return;
     }
 
@@ -355,6 +418,14 @@ pub fn classic_tick(
 
     // Has ball
     if has_ball {
+        // Indirect free kick: must pass first
+        if game.free_kick_active && game.free_kick_shooter_id == Some(p_id) {
+            let pass_opt = cpu_find_pass(game, player_idx);
+            if let Some(pt) = pass_opt {
+                crate::physics::do_shoot(game, player_idx, false, pt.tx, pt.ty, Some(CPU_PASS_POW), true);
+            }
+            return;
+        }
         let (opp_gx, _) = opp_goal_point(p_team);
         let in_shoot_zone = attack_progress(p_team, game.pl[player_idx].x) > params.shoot_progress_threshold;
         let reached_half = if p_team == 0 { game.pl[player_idx].x > FW * 0.50 } else { game.pl[player_idx].x < FW * 0.50 };
@@ -442,6 +513,7 @@ pub fn classic_tick(
     };
     let loose = if p_role == Role::Def || p_role == Role::Gk { 7.0 } else { 18.0 };
     let (ntx, nty) = natural_target(&mut game.pl[player_idx], tx, ty, loose, rng);
-    let spd = if team_has_ball { CSPEED * 0.82 } else { CSPEED };
+    let slow_mult = if game.pl[player_idx].slow_timer > 0 { SLOW_FACTOR } else { 1.0 };
+    let spd = (if team_has_ball { CSPEED * 0.82 } else { CSPEED }) * slow_mult;
     move_to(&mut game.pl[player_idx], ntx, nty, spd);
 }
