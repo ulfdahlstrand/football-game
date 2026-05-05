@@ -319,22 +319,54 @@ pub fn classic_tick(
                 game.pl[player_idx].gk_hold_timer -= 1;
                 return;
             }
+            // Optionally wait if opponents haven't cleared own half yet.
+            let opponents_on_own_half = game.pl.iter().any(|q| {
+                q.team != p_team && q.state == PlayerState::Active
+                    && if p_team == 0 { q.x < FW / 2.0 } else { q.x > FW / 2.0 }
+            });
+            if opponents_on_own_half && rng.gen::<f32>() > hooks.gk_risk_clearance {
+                game.pl[player_idx].gk_hold_timer = 5;
+                return;
+            }
             game.gk_has_ball[p_team] = false;
-            crate::physics::do_shoot(game, player_idx, false, FW / 2.0, H2, None, false);
+            // Prefer a short pass if a teammate is close enough.
+            let gk_x = game.pl[player_idx].x;
+            let gk_y = game.pl[player_idx].y;
+            let pass_target = game.pl.iter().enumerate()
+                .filter(|(_, q)| q.team == p_team && q.id != game.pl[player_idx].id && q.state == PlayerState::Active)
+                .filter(|(_, q)| (q.x - gk_x).hypot(q.y - gk_y) <= hooks.gk_pass_target_dist)
+                .filter(|(_, q)| pass_line_open(game, gk_x, gk_y, q.x, q.y, p_team))
+                .min_by(|(_, a), (_, b)| {
+                    let da = (a.x - gk_x).hypot(a.y - gk_y);
+                    let db = (b.x - gk_x).hypot(b.y - gk_y);
+                    da.partial_cmp(&db).unwrap()
+                })
+                .map(|(_, q)| (q.x, q.y));
+            if let Some((tx, ty)) = pass_target {
+                crate::physics::do_shoot(game, player_idx, false, tx, ty, None, false);
+            } else {
+                // Distribute to preferred zone.
+                let target_y = if hooks.gk_distribution_zone > 0.5 {
+                    if gk_y < H2 { PR * 2.0 } else { FH - PR * 2.0 }
+                } else { H2 };
+                crate::physics::do_shoot(game, player_idx, false, FW / 2.0, target_y, None, false);
+            }
         } else {
             // Try to dive for incoming shot
             if game.pl[player_idx].gk_dive_timer == 0 && game.ball.owner.is_none() {
                 let is_incoming = if p_team == 0 { game.ball.vx < -8.0 } else { game.ball.vx > 8.0 };
                 let goal_x = if p_team == 0 { FIELD_LINE } else { FW - FIELD_LINE };
                 let dist_to_goal = (game.pl[player_idx].x - goal_x).abs();
-                if is_incoming && dist_to_goal < GK_DIVE_COMMIT_DIST {
+                if is_incoming && dist_to_goal < hooks.gk_dive_commit_dist
+                    && rng.gen::<f32>() < hooks.gk_dive_chance
+                {
                     let frames_until_goal = if game.ball.vx.abs() > 0.1 {
                         (goal_x - game.ball.x) / game.ball.vx
                     } else { 0.0 };
                     let predicted_y = game.ball.y + game.ball.vy * frames_until_goal.max(0.0);
-                    let jitter = GK_DIVE_JITTER * (1.0 - dist_to_goal / GK_DIVE_COMMIT_DIST);
+                    let jitter = GK_DIVE_JITTER * (1.0 - dist_to_goal / hooks.gk_dive_commit_dist);
                     let effective_y = predicted_y + (rng.gen::<f32>() * 2.0 - 1.0) * jitter;
-                    game.pl[player_idx].gk_dive_dir = Some(effective_y < H2); // true = up
+                    game.pl[player_idx].gk_dive_dir = Some(effective_y < H2);
                     game.pl[player_idx].gk_dive_timer = GK_DIVE_DUR;
                 }
             }
@@ -618,7 +650,7 @@ pub fn v6_tick(
 
     // GK keeps role-specific behavior (dive, hand-pickup, patrol)
     if p_role == Role::Gk {
-        // Reuse classic_tick GK branch via hooks (passes through to GK logic)
+        let gkp = params.gk.unwrap_or_default();
         let hooks = crate::brain::TickHooks {
             pass_dir_mult: [
                 params.decisions.pass_dir_offensive.clamp(0.0, 2.0),
@@ -627,6 +659,11 @@ pub fn v6_tick(
             ],
             gk_freedom: 0.0,
             max_distance_from_goal: (params.spatial.own_goal.max / 880.0).clamp(0.0, 1.0),
+            gk_dive_chance: gkp.gk_dive_chance,
+            gk_dive_commit_dist: gkp.gk_dive_commit_dist,
+            gk_risk_clearance: gkp.gk_risk_clearance,
+            gk_distribution_zone: gkp.gk_distribution_zone,
+            gk_pass_target_dist: gkp.gk_pass_target_dist,
         };
         crate::ai::classic_tick(game, player_idx, &policy, &hooks, rng);
         return;
@@ -642,6 +679,7 @@ pub fn v6_tick(
             ],
             gk_freedom: 0.0,
             max_distance_from_goal: 1.0,
+            ..crate::brain::TickHooks::default()
         };
         crate::ai::classic_tick(game, player_idx, &policy, &hooks, rng);
         return;

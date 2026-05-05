@@ -3,7 +3,7 @@ use rand::Rng;
 use crate::game::Game;
 use crate::policy::{PolicyParams, V3Params, V4Params, V6Params};
 
-/// Optional hooks that classic_tick reads to alter behavior for v4 brains.
+/// Optional hooks that classic_tick reads to alter behavior for v4+ brains.
 /// V1/V2/V3 brains pass the default (no-op) and behave exactly as before.
 #[derive(Clone, Copy, Debug)]
 pub struct TickHooks {
@@ -13,13 +13,33 @@ pub struct TickHooks {
     /// DEPRECATED. Kept for source-compat; behavior moved to max_distance_from_goal.
     pub gk_freedom: f32,
     /// 0..1. Per-player roaming cap. 0 = stuck on own goal line.
-    /// 1 = can advance to opponent goal. Applied uniformly to all roles.
     pub max_distance_from_goal: f32,
+
+    // ── GK-specific hooks (only read inside Role::Gk branch) ──────────────
+    /// Probability 0..1 that the GK commits to a dive on an incoming shot.
+    pub gk_dive_chance: f32,
+    /// Pixel distance to ball at which the GK locks in dive direction.
+    pub gk_dive_commit_dist: f32,
+    /// Willingness 0..1 to clear when opponents are still on own half.
+    pub gk_risk_clearance: f32,
+    /// Distribution bias: 0.0 = centre, 1.0 = wings.
+    pub gk_distribution_zone: f32,
+    /// Max pixel distance to a teammate for the GK to prefer a short pass.
+    pub gk_pass_target_dist: f32,
 }
 
 impl Default for TickHooks {
     fn default() -> Self {
-        Self { pass_dir_mult: [1.0, 1.0, 1.0], gk_freedom: 0.0, max_distance_from_goal: 1.0 }
+        Self {
+            pass_dir_mult: [1.0, 1.0, 1.0],
+            gk_freedom: 0.0,
+            max_distance_from_goal: 1.0,
+            gk_dive_chance: 0.9,
+            gk_dive_commit_dist: 160.0,
+            gk_risk_clearance: 0.5,
+            gk_distribution_zone: 0.0,
+            gk_pass_target_dist: 200.0,
+        }
     }
 }
 
@@ -187,6 +207,7 @@ pub fn v4_tick(game: &mut Game, player_idx: usize, params: &V4Params, rng: &mut 
         ],
         gk_freedom: 0.0,
         max_distance_from_goal: params.max_distance_from_goal.clamp(0.0, 1.0),
+        ..TickHooks::default()
     };
     crate::ai::classic_tick(game, player_idx, &p, &hooks, rng);
 }

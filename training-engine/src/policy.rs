@@ -457,11 +457,44 @@ impl DecisionParams {
     }
 }
 
+/// GK-only behavioral parameters. Only slot 4 has this populated; outfield
+/// slots carry `None` and never read it.
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GkDecisionParams {
+    /// Probability (0..1) that the GK commits to a dive on an incoming shot.
+    pub gk_dive_chance: f32,
+    /// Pixel distance to the ball at which the GK locks in dive direction.
+    pub gk_dive_commit_dist: f32,
+    /// Willingness (0..1) to clear when opponents are still on own half.
+    /// 0 = always waits for them to retreat; 1 = kicks immediately.
+    pub gk_risk_clearance: f32,
+    /// Distribution bias: 0.0 = kick to centre, 1.0 = kick to wings.
+    pub gk_distribution_zone: f32,
+    /// Max pixel distance to a teammate for the GK to prefer a short pass.
+    pub gk_pass_target_dist: f32,
+}
+
+impl Default for GkDecisionParams {
+    fn default() -> Self {
+        Self {
+            gk_dive_chance: 0.9,
+            gk_dive_commit_dist: 160.0,
+            gk_risk_clearance: 0.5,
+            gk_distribution_zone: 0.0,
+            gk_pass_target_dist: 200.0,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct V6Params {
     pub spatial: V6Spatial,
     pub decisions: DecisionParams,
+    /// GK-specific params. `None` for outfield slots.
+    #[serde(default)]
+    pub gk: Option<GkDecisionParams>,
 }
 
 pub type TeamPolicyV6 = [V6Params; 5];
@@ -506,7 +539,8 @@ pub fn v6_default_for_slot(slot: usize) -> V6Params {
             opponent: DistancePref::new(20.0,  90.0,  280.0),
         },
     };
-    V6Params { spatial, decisions: DecisionParams::default() }
+    let gk = if slot == 4 { Some(GkDecisionParams::default()) } else { None };
+    V6Params { spatial, decisions: DecisionParams::default(), gk }
 }
 
 /// Mutate a single DistancePref. Each of {min, max, preferred} has ~30% chance.
@@ -532,7 +566,6 @@ pub fn mutate_v6(p: &V6Params, rng: &mut impl Rng, scale: f32) -> V6Params {
     next.spatial.teammate = mutate_distance_pref(&next.spatial.teammate,  0.0, 400.0, rng, scale);
     next.spatial.opponent = mutate_distance_pref(&next.spatial.opponent,  0.0, 400.0, rng, scale);
 
-    // Decisions — reuse the existing classic mutation bounds.
     macro_rules! perturb_dec {
         ($field:expr, $sigma:expr, $lo:expr, $hi:expr) => {
             if rng.gen::<f32>() < 0.25 {
@@ -542,19 +575,30 @@ pub fn mutate_v6(p: &V6Params, rng: &mut impl Rng, scale: f32) -> V6Params {
             }
         };
     }
-    perturb_dec!(next.decisions.pass_chance_pressured, 0.035, 0.02, 0.4);
-    perturb_dec!(next.decisions.pass_chance_wing,      0.025, 0.01, 0.25);
-    perturb_dec!(next.decisions.pass_chance_forward,   0.018, 0.005, 0.18);
-    perturb_dec!(next.decisions.pass_chance_default,   0.018, 0.005, 0.2);
-    perturb_dec!(next.decisions.shoot_progress_threshold, 0.035, 0.55, 0.9);
-    perturb_dec!(next.decisions.tackle_chance,         0.025, 0.01, 0.22);
-    perturb_dec!(next.decisions.forward_pass_min_gain, 2.0, 0.0, 18.0);
-    perturb_dec!(next.decisions.mark_distance,         5.0, 25.0, 85.0);
-    perturb_dec!(next.decisions.aggression,            0.10, 0.0, 2.0);
-    perturb_dec!(next.decisions.risk_appetite,         0.08, 0.0, 1.0);
-    perturb_dec!(next.decisions.pass_dir_offensive,    0.15, 0.0, 2.0);
-    perturb_dec!(next.decisions.pass_dir_defensive,    0.15, 0.0, 2.0);
-    perturb_dec!(next.decisions.pass_dir_neutral,      0.15, 0.0, 2.0);
+
+    if let Some(ref mut gk) = next.gk {
+        // GK slot: mutate GK-specific params only, skip outfield decisions.
+        perturb_dec!(gk.gk_dive_chance,        0.07, 0.2, 1.0);
+        perturb_dec!(gk.gk_dive_commit_dist,   15.0, 60.0, 280.0);
+        perturb_dec!(gk.gk_risk_clearance,     0.08, 0.0, 1.0);
+        perturb_dec!(gk.gk_distribution_zone,  0.12, 0.0, 1.0);
+        perturb_dec!(gk.gk_pass_target_dist,   20.0, 80.0, 400.0);
+    } else {
+        // Outfield slot: mutate decision params only.
+        perturb_dec!(next.decisions.pass_chance_pressured, 0.035, 0.02, 0.4);
+        perturb_dec!(next.decisions.pass_chance_wing,      0.025, 0.01, 0.25);
+        perturb_dec!(next.decisions.pass_chance_forward,   0.018, 0.005, 0.18);
+        perturb_dec!(next.decisions.pass_chance_default,   0.018, 0.005, 0.2);
+        perturb_dec!(next.decisions.shoot_progress_threshold, 0.035, 0.55, 0.9);
+        perturb_dec!(next.decisions.tackle_chance,         0.025, 0.01, 0.22);
+        perturb_dec!(next.decisions.forward_pass_min_gain, 2.0, 0.0, 18.0);
+        perturb_dec!(next.decisions.mark_distance,         5.0, 25.0, 85.0);
+        perturb_dec!(next.decisions.aggression,            0.10, 0.0, 2.0);
+        perturb_dec!(next.decisions.risk_appetite,         0.08, 0.0, 1.0);
+        perturb_dec!(next.decisions.pass_dir_offensive,    0.15, 0.0, 2.0);
+        perturb_dec!(next.decisions.pass_dir_defensive,    0.15, 0.0, 2.0);
+        perturb_dec!(next.decisions.pass_dir_neutral,      0.15, 0.0, 2.0);
+    }
     next
 }
 

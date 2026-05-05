@@ -218,6 +218,11 @@
     return p.aiPolicy || g.aiPolicies?.[p.team] || {};
   }
 
+  // Returns GK-specific params. Only meaningful when p.role === 'gk'.
+  function effectiveGkPolicy(g, p) {
+    return p.aiPolicy?.gk || g.gkPolicies?.[p.team] || {};
+  }
+
   function rolePlayer(g, team, role) {
     return teamPlayers(g, team).find(p => p.role===role) || teamPlayers(g, team)[0];
   }
@@ -547,19 +552,46 @@
           p.gkHoldTimer--;
           return;
         }
+        const gkp = effectiveGkPolicy(g, p);
+        const riskClearance = gkp.gkRiskClearance ?? 0.5;
+        const opponentsOnOwnHalf = g.pl.some(q =>
+          q.team !== p.team && q.state === 'active' &&
+          (p.team === 0 ? q.x < FW/2 : q.x > FW/2)
+        );
+        if (opponentsOnOwnHalf && rng() > riskClearance) {
+          p.gkHoldTimer = 5;
+          return;
+        }
         g.gkHasBall[p.team] = false;
-        doShoot(g, p, false, FW/2, h2, undefined, 'shot');
+        // Prefer a short pass to a nearby teammate.
+        const passTargetDist = gkp.gkPassTargetDist ?? 200;
+        const passTarget = g.pl
+          .filter(q => q.team === p.team && q.id !== p.id && q.state === 'active')
+          .filter(q => Math.hypot(q.x - p.x, q.y - p.y) <= passTargetDist)
+          .filter(q => passLineOpen(g, p, q, p.team))
+          .sort((a, b) => Math.hypot(a.x-p.x,a.y-p.y) - Math.hypot(b.x-p.x,b.y-p.y))[0];
+        if (passTarget) {
+          doShoot(g, p, false, passTarget.x, passTarget.y, CPU_PASS_POW, 'pass');
+          return;
+        }
+        // Distribute to preferred zone.
+        const distZone = gkp.gkDistributionZone ?? 0;
+        const targetY = distZone > 0.5 ? (ball.y < h2 ? PR*2 : FH-PR*2) : h2;
+        doShoot(g, p, false, FW/2, targetY, undefined, 'shot');
         return;
       }
       // Try to dive for incoming shot
       if (p.gkDiveTimer === 0 && ball.owner === null) {
+        const gkp = effectiveGkPolicy(g, p);
+        const diveCommitDist = gkp.gkDiveCommitDist ?? GK_DIVE_COMMIT_DIST;
+        const diveChance = gkp.gkDiveChance ?? 0.9;
         const isIncoming = p.team===0 ? ball.vx < -8 : ball.vx > 8;
         const goalX = p.team===0 ? FIELD_LINE : FW - FIELD_LINE;
         const distToGoal = Math.abs(p.x - goalX);
-        if (isIncoming && distToGoal < GK_DIVE_COMMIT_DIST) {
+        if (isIncoming && distToGoal < diveCommitDist && rng() < diveChance) {
           const framesUntilGoal = ball.vx !== 0 ? (goalX - ball.x) / ball.vx : 0;
           const predictedY = ball.y + ball.vy * Math.max(0, framesUntilGoal);
-          const jitter = GK_DIVE_JITTER * (1 - distToGoal / GK_DIVE_COMMIT_DIST);
+          const jitter = GK_DIVE_JITTER * (1 - distToGoal / diveCommitDist);
           const effectiveY = predictedY + (rng()*2-1) * jitter;
           p.gkDiveDir = effectiveY < h2 ? 'up' : 'down';
           p.gkDiveTimer = GK_DIVE_DUR;
