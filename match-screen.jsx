@@ -1,6 +1,127 @@
 // Matchvy - frågor + straffar
 const { useState: useStateM, useEffect: useEffectM, useRef: useRefM } = React;
 
+const ROLE_BADGE = { fwd: 'ANF', mid: 'MIT', def: 'BAC', gk: 'MÅL' };
+
+function LineupScreen({ matchData, onKickoff }) {
+  const [roster, setRoster] = useStateM(null);
+
+  useEffectM(() => {
+    if (!matchData.team) { onKickoff(); return; }
+    fetch(`data/teams/${matchData.team}/roster.json?t=${Date.now()}`, { cache: 'no-store' })
+      .then(r => r.json())
+      .then(setRoster)
+      .catch(onKickoff);
+  }, []);
+
+  if (!roster) {
+    return (
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: `linear-gradient(180deg, ${matchData.color} 0%, #1a1a1a 100%)`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center'
+      }}>
+        <div style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 11, letterSpacing: '0.2em' }}>
+          LADDAR LAG…
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      position: 'absolute', inset: 0,
+      background: `linear-gradient(180deg, ${matchData.color} 0%, #1a1a1a 100%)`,
+      display: 'flex', flexDirection: 'column', overflow: 'auto'
+    }}>
+      {/* Planlinjer-bakgrund */}
+      <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.08, pointerEvents: 'none' }}>
+        <line x1="50%" y1="0" x2="50%" y2="100%" stroke="#fff" strokeWidth="2" />
+        <circle cx="50%" cy="50%" r="80" fill="none" stroke="#fff" strokeWidth="2" />
+      </svg>
+
+      <div style={{ position: 'relative', maxWidth: 580, width: '100%', margin: '0 auto', padding: '32px 24px 24px' }}>
+        {/* Match-header */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.65)', marginBottom: 12 }}>
+            {matchData.level.toUpperCase()} · {matchData.name.toUpperCase()}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <img
+              src={`data/teams/${matchData.team}/logo.svg`}
+              style={{ width: 64, height: 64, objectFit: 'contain', flexShrink: 0 }}
+              alt=""
+            />
+            <div>
+              <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.65)' }}>
+                MOTSTÅNDARE
+              </div>
+              <div style={{ fontFamily: 'Georgia, serif', fontSize: 32, fontWeight: 700, color: '#fff', lineHeight: 1.1, marginTop: 2 }}>
+                {matchData.team.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Lagbeskrivning */}
+        {roster.description && (
+          <div style={{
+            background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.15)',
+            padding: '14px 16px', marginBottom: 20
+          }}>
+            <div style={{ fontFamily: 'Georgia, serif', fontSize: 14, color: 'rgba(255,255,255,0.9)', lineHeight: 1.6, fontStyle: 'italic' }}>
+              {roster.description}
+            </div>
+          </div>
+        )}
+
+        {/* Spelarlista */}
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.5)', marginBottom: 12 }}>
+            UPPSTÄLLNING
+          </div>
+          {roster.players.map(p => (
+            <div key={p.id} style={{
+              display: 'flex', gap: 12, marginBottom: 12,
+              background: 'rgba(0,0,0,0.25)', padding: '10px 12px',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+              <div style={{
+                flexShrink: 0, width: 36, height: 36,
+                background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 8,
+                fontWeight: 700, color: '#fff', letterSpacing: '0.05em'
+              }}>
+                {ROLE_BADGE[p.role]}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: 'Georgia, serif', fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 2 }}>
+                  {p.name}
+                </div>
+                <div style={{ fontFamily: 'Georgia, serif', fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 1.45, fontStyle: 'italic' }}>
+                  {p.description}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Kickoff-knapp */}
+        <button onClick={onKickoff} style={{
+          width: '100%', background: '#fff', color: '#1a1a1a',
+          border: '3px solid #1a1a1a', padding: '16px 24px',
+          fontFamily: 'ui-monospace, Menlo, monospace', fontWeight: 700,
+          fontSize: 14, letterSpacing: '0.2em', cursor: 'pointer',
+          boxShadow: '5px 5px 0 rgba(0,0,0,0.4)'
+        }}>
+          SPARKA AV ▸
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function QuestionCard({ question, qIndex, total, onAnswer, locked, selected, correct }) {
   return (
     <div style={{
@@ -85,7 +206,7 @@ function MatchScreen({ matchData, onComplete, onExit }) {
   const [selected, setSelected] = useStateM(null);
   const [locked, setLocked] = useStateM(false);
   const [score, setScore] = useStateM(0);
-  const [phase, setPhase] = useStateM('question'); // question | feedback | penalty | done
+  const [phase, setPhase] = useStateM('lineup'); // lineup | question | feedback | penalty | done
   const [result, setResult] = useStateM(null); // 'win' | 'loss' | 'penalty'
 
   const q = matchData.questions[qIndex];
@@ -118,6 +239,10 @@ function MatchScreen({ matchData, onComplete, onExit }) {
       }
     }
   };
+
+  if (phase === 'lineup') {
+    return <LineupScreen matchData={matchData} onKickoff={() => setPhase('question')} />;
+  }
 
   if (phase === 'penalty') {
     return <PenaltyShootout matchData={matchData} onFinish={(won) => {
