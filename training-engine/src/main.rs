@@ -12,7 +12,7 @@ mod svg;
 use std::path::Path;
 use std::time::SystemTime;
 
-use policy::{mutate, mutate_team, mutate_team_v3, mutate_team_v4, mutate_team_v6,
+use policy::{mutate, mutate_team, mutate_team_v3, mutate_team_v4, mutate_team_v6, mutate_gk_only,
               v6_from_v4, PolicyParams, TeamPolicy, TeamPolicyV3, TeamPolicyV4, TeamPolicyV6,
               V3Params, V4Params, V6Params};
 use session::{
@@ -1855,6 +1855,16 @@ fn main() {
                       else if args.iter().any(|s| s == "--quick") { AnnealVariant::Quick }
                       else { AnnealVariant::Short };
         run_v6_team_train(&project_root, &team_name, variant);
+        return;
+    }
+    // --gk-train [epochs] [games_per_epoch]
+    // Train only the GK slot (slot 4) for all teams in data/teams/.
+    // Outfield params are frozen. GK params (diveChance, diveCommitDist,
+    // riskClearance, distributionZone, passTargetDist) are mutated and evaluated.
+    if args.get(1).map(|s| s.as_str()) == Some("--gk-train") {
+        let epochs: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(100);
+        let games_per_epoch: usize = args.get(3).and_then(|s| s.parse().ok()).unwrap_or(1_000_000);
+        run_gk_train_all(&project_root, epochs, games_per_epoch);
         return;
     }
     if args.get(1).map(|s| s.as_str()) == Some("--v6-from-v4") {
@@ -3941,6 +3951,111 @@ fn run_v6_team_train(project_root: &Path, team_name: &str, variant: AnnealVarian
     write_team_info_md(&team_dir, team_name, team_desc, &final_team);
     write_team_layout_svg(&team_dir.join("layout.svg"), team_name, team_desc, &final_team);
     println!("\nUpdated baseline + info.md + layout.svg for {}", team_name);
+}
+
+/// GK-only training across all teams in data/teams/.
+/// Outfield slots (0-3) are frozen; only slot 4 (GK) is mutated.
+/// Each team trains independently, evaluation is the team vs itself with
+/// only the GK slot swapped.
+fn run_gk_train_all(project_root: &Path, epochs: usize, games_per_epoch: usize) {
+    let teams_dir = project_root.join("data").join("teams");
+
+    // Load all team baselines
+    let mut teams: Vec<(String, std::path::PathBuf, TeamPolicyV6)> = vec![];
+    if let Ok(entries) = std::fs::read_dir(&teams_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if !path.is_dir() { continue; }
+            let baseline = path.join("baseline.json");
+            if !baseline.exists() { continue; }
+            let team_name = path.file_name().unwrap().to_string_lossy().into_owned();
+            match read_team_baseline_v6(&baseline) {
+                Ok(b) => teams.push((team_name, path, b.player_params)),
+                Err(e) => eprintln!("  ! skip {}: {}", team_name, e),
+            }
+        }
+    }
+    teams.sort_by(|a, b| a.0.cmp(&b.0));
+
+    if teams.is_empty() {
+        eprintln!("No teams found in data/teams/. Run --v6-population first.");
+        std::process::exit(1);
+    }
+
+    crate::game::CLUSTER_START.store(true, std::sync::atomic::Ordering::Relaxed);
+
+    println!("=== GK-ONLY TRAINING: {} teams × {} epochs × {} games ===",
+        teams.len(), epochs, games_per_epoch);
+    println!("Only slot 4 (GK params: diveChance, diveCommitDist, riskClearance,");
+    println!("  distributionZone, passTargetDist) is mutated. Outfield frozen.");
+    println!();
+
+    let total_start = std::time::Instant::now();
+
+    for (team_name, team_dir, initial) in &teams {
+        let mut champion = *initial;
+        let mut scale_factor: f32 = 1.0;
+        let mut rejection_streak: usize = 0;
+        let mut accepted_count = 0usize;
+        let team_start = std::time::Instant::now();
+
+        println!("[{}] starting GK anneal ({} epochs × {} games)", team_name, epochs, games_per_epoch);
+
+        for epoch in 1..=epochs {
+            let opponent = champion;
+            let mut rng = rand::thread_rng();
+            let candidate = mutate_gk_only(&champion, &mut rng, scale_factor);
+            let eval = evaluate_team_policies_v6(&opponent, &candidate, games_per_epoch);
+
+            if eval.candidate_won {
+                champion = candidate;
+                accepted_count += 1;
+                rejection_streak = 0;
+                scale_factor = (scale_factor * 1.5).min(1.0);
+            } else {
+                rejection_streak += 1;
+                if rejection_streak % 20 == 0 {
+                    scale_factor = (scale_factor * 0.75).max(0.1);
+                }
+            }
+
+            if epoch % 10 == 0 || epoch == epochs {
+                let gk = champion[4].gk.unwrap_or_default();
+                println!("  epoch {:>4}/{} | accepted {} | scale {:.2} | gk: dive={:.2} dist={:.0} risk={:.2} zone={:.2} pass={:.0}",
+                    epoch, epochs, accepted_count, scale_factor,
+                    gk.gk_dive_chance, gk.gk_dive_commit_dist,
+                    gk.gk_risk_clearance, gk.gk_distribution_zone,
+                    gk.gk_pass_target_dist);
+            }
+        }
+
+        // Persist updated baseline
+        let baseline_path = team_dir.join("baseline.json");
+        let existing = read_team_baseline_v6(&baseline_path).ok();
+        let name = existing.as_ref().and_then(|b| b.name.clone()).unwrap_or_else(|| team_name.clone());
+        let version = existing.as_ref().and_then(|b| b.version).unwrap_or(1) + 1;
+        let doc = serde_json::json!({
+            "name": name, "version": version,
+            "type": "team-policy-v6",
+            "description": format!("{}: GK-only training, {} epochs", team_name, epochs),
+            "playerParams": champion,
+            "trainedAt": iso_now(),
+            "trainingMethod": "gk-only-anneal",
+        });
+        let _ = std::fs::write(&baseline_path,
+            format!("{}\n", serde_json::to_string_pretty(&doc).unwrap()));
+
+        let team_desc_idx = TEAM_NAMES.iter().position(|n| *n == team_name.as_str());
+        let team_desc = team_desc_idx.and_then(|i| TEAM_DESCRIPTIONS.get(i)).copied().unwrap_or(team_name.as_str());
+        write_team_info_md(team_dir, team_name, team_desc, &champion);
+        write_team_layout_svg(&team_dir.join("layout.svg"), team_name, team_desc, &champion);
+
+        println!("  -> done in {:.1}s, {} accepted, baseline saved\n",
+            team_start.elapsed().as_secs_f32(), accepted_count);
+    }
+
+    println!("=== GK training complete: {} teams in {:.1}s ===",
+        teams.len(), total_start.elapsed().as_secs_f32());
 }
 
 fn run_v6_from_v4(project_root: &Path, team_name: &str, variant: AnnealVariant) {

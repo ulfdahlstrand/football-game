@@ -618,6 +618,13 @@ pub fn mutate_team_v6(team: &TeamPolicyV6, rng: &mut impl Rng, scale: f32) -> Te
     next
 }
 
+/// Mutate only the GK slot (slot 4). Outfield slots are untouched.
+pub fn mutate_gk_only(team: &TeamPolicyV6, rng: &mut impl Rng, scale: f32) -> TeamPolicyV6 {
+    let mut next = *team;
+    next[4] = mutate_v6(&team[4], rng, scale);
+    next
+}
+
 /// Build a V6Params from V4Params: copy decision-relevant fields, infer spatial
 /// preferences from V4's max_distance_from_goal and slot-default fallback.
 pub fn v6_from_v4(v4: &V4Params, slot: usize) -> V6Params {
