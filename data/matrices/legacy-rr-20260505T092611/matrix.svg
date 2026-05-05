@@ -1,0 +1,607 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1566" height="918" viewBox="0 0 1566 918">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <text x="24" y="34" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#111827">V6 Round-robin tournament</text>
+  <text x="24" y="54" font-family="Arial, sans-serif" font-size="12" fill="#6b7280">1000 games per matchup · 13 teams · color = z-score (red=loss, yellow=neutral, green=win)</text>
+  <text x="178.0" y="132.0" transform="rotate(-40 178.0 132.0)" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#374151">aurora-fc</text>
+  <text x="266.0" y="132.0" transform="rotate(-40 266.0 132.0)" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#374151">eclipse-town</text>
+  <text x="354.0" y="132.0" transform="rotate(-40 354.0 132.0)" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#374151">forge-fc</text>
+  <text x="442.0" y="132.0" transform="rotate(-40 442.0 132.0)" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#374151">glacier-fc</text>
+  <text x="530.0" y="132.0" transform="rotate(-40 530.0 132.0)" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#374151">granite-athletic</text>
+  <text x="618.0" y="132.0" transform="rotate(-40 618.0 132.0)" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#374151">mirage-sc</text>
+  <text x="706.0" y="132.0" transform="rotate(-40 706.0 132.0)" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#374151">nebula-rangers</text>
+  <text x="794.0" y="132.0" transform="rotate(-40 794.0 132.0)" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#374151">phoenix-rovers</text>
+  <text x="882.0" y="132.0" transform="rotate(-40 882.0 132.0)" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#374151">tempest-united</text>
+  <text x="970.0" y="132.0" transform="rotate(-40 970.0 132.0)" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#374151">v1-baseline</text>
+  <text x="1058.0" y="132.0" transform="rotate(-40 1058.0 132.0)" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#374151">v2-baseline</text>
+  <text x="1146.0" y="132.0" transform="rotate(-40 1146.0 132.0)" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#374151">v3-baseline</text>
+  <text x="1234.0" y="132.0" transform="rotate(-40 1234.0 132.0)" text-anchor="start" font-family="Arial, sans-serif" font-size="12" fill="#374151">v4-baseline</text>
+  <text x="126.0" y="174.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#374151">aurora-fc</text>
+  <text x="126.0" y="230.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#374151">eclipse-town</text>
+  <text x="126.0" y="286.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#374151">forge-fc</text>
+  <text x="126.0" y="342.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#374151">glacier-fc</text>
+  <text x="126.0" y="398.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#374151">granite-athletic</text>
+  <text x="126.0" y="454.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#374151">mirage-sc</text>
+  <text x="126.0" y="510.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#374151">nebula-rangers</text>
+  <text x="126.0" y="566.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#374151">phoenix-rovers</text>
+  <text x="126.0" y="622.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#374151">tempest-united</text>
+  <text x="126.0" y="678.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#374151">v1-baseline</text>
+  <text x="126.0" y="734.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#374151">v2-baseline</text>
+  <text x="126.0" y="790.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#374151">v3-baseline</text>
+  <text x="126.0" y="846.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" fill="#374151">v4-baseline</text>
+  <rect x="134.0" y="142.0" width="88.0" height="56.0" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="178.0" y="176.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af">—</text>
+  <rect x="222.0" y="142.0" width="88.0" height="56.0" fill="#3dd32e" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="266.0" y="169.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1697</text>
+  <text x="266.0" y="184.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+43.4</text>
+  <rect x="310.0" y="142.0" width="88.0" height="56.0" fill="#86d537" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="354.0" y="169.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+890</text>
+  <text x="354.0" y="184.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+23.6</text>
+  <rect x="398.0" y="142.0" width="88.0" height="56.0" fill="#d6bf3e" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="442.0" y="169.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-317</text>
+  <text x="442.0" y="184.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-7.4</text>
+  <rect x="486.0" y="142.0" width="88.0" height="56.0" fill="#b9d63e" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="530.0" y="169.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+364</text>
+  <text x="530.0" y="184.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+8.9</text>
+  <rect x="574.0" y="142.0" width="88.0" height="56.0" fill="#d6ab3c" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="618.0" y="169.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-661</text>
+  <text x="618.0" y="184.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-13.1</text>
+  <rect x="662.0" y="142.0" width="88.0" height="56.0" fill="#91d539" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="706.0" y="169.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+915</text>
+  <text x="706.0" y="184.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+20.5</text>
+  <rect x="750.0" y="142.0" width="88.0" height="56.0" fill="#d6c33f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="794.0" y="169.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-326</text>
+  <text x="794.0" y="184.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-6.0</text>
+  <rect x="838.0" y="142.0" width="88.0" height="56.0" fill="#cad640" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="882.0" y="169.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+174</text>
+  <text x="882.0" y="184.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+3.9</text>
+  <rect x="926.0" y="142.0" width="88.0" height="56.0" fill="#2dd22d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="970.0" y="169.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1496</text>
+  <text x="970.0" y="184.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+47.5</text>
+  <rect x="1014.0" y="142.0" width="88.0" height="56.0" fill="#45d32f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1058.0" y="169.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1271</text>
+  <text x="1058.0" y="184.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+41.3</text>
+  <rect x="1102.0" y="142.0" width="88.0" height="56.0" fill="#51d331" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1146.0" y="169.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1185</text>
+  <text x="1146.0" y="184.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+38.0</text>
+  <rect x="1190.0" y="142.0" width="88.0" height="56.0" fill="#7cd436" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1234.0" y="169.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+1140</text>
+  <text x="1234.0" y="184.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+26.6</text>
+  <rect x="134.0" y="198.0" width="88.0" height="56.0" fill="#d33d2e" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="178.0" y="225.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1697</text>
+  <text x="178.0" y="240.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-43.4</text>
+  <rect x="222.0" y="198.0" width="88.0" height="56.0" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="266.0" y="232.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af">—</text>
+  <rect x="310.0" y="198.0" width="88.0" height="56.0" fill="#b9d63e" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="354.0" y="225.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+297</text>
+  <text x="354.0" y="240.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+9.0</text>
+  <rect x="398.0" y="198.0" width="88.0" height="56.0" fill="#d5a73b" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="442.0" y="225.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-676</text>
+  <text x="442.0" y="240.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-14.4</text>
+  <rect x="486.0" y="198.0" width="88.0" height="56.0" fill="#d6aa3c" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="530.0" y="225.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-575</text>
+  <text x="530.0" y="240.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-13.4</text>
+  <rect x="574.0" y="198.0" width="88.0" height="56.0" fill="#d35131" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="618.0" y="225.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1482</text>
+  <text x="618.0" y="240.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-38.1</text>
+  <rect x="662.0" y="198.0" width="88.0" height="56.0" fill="#ced740" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="706.0" y="225.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+148</text>
+  <text x="706.0" y="240.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+2.7</text>
+  <rect x="750.0" y="198.0" width="88.0" height="56.0" fill="#d59a3a" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="794.0" y="225.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-1228</text>
+  <text x="794.0" y="240.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-18.0</text>
+  <rect x="838.0" y="198.0" width="88.0" height="56.0" fill="#d5a33b" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="882.0" y="225.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-570</text>
+  <text x="882.0" y="240.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-15.4</text>
+  <rect x="926.0" y="198.0" width="88.0" height="56.0" fill="#5ad332" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="970.0" y="225.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1162</text>
+  <text x="970.0" y="240.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+35.7</text>
+  <rect x="1014.0" y="198.0" width="88.0" height="56.0" fill="#6ad434" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1058.0" y="225.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1062</text>
+  <text x="1058.0" y="240.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+31.3</text>
+  <rect x="1102.0" y="198.0" width="88.0" height="56.0" fill="#51d331" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1146.0" y="225.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1106</text>
+  <text x="1146.0" y="240.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+38.2</text>
+  <rect x="1190.0" y="198.0" width="88.0" height="56.0" fill="#69d434" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1234.0" y="225.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+946</text>
+  <text x="1234.0" y="240.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+31.7</text>
+  <rect x="134.0" y="254.0" width="88.0" height="56.0" fill="#d58637" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="178.0" y="281.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-890</text>
+  <text x="178.0" y="296.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-23.6</text>
+  <rect x="222.0" y="254.0" width="88.0" height="56.0" fill="#d6b93e" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="266.0" y="281.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-297</text>
+  <text x="266.0" y="296.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-9.0</text>
+  <rect x="310.0" y="254.0" width="88.0" height="56.0" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="354.0" y="288.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af">—</text>
+  <rect x="398.0" y="254.0" width="88.0" height="56.0" fill="#d59e3a" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="442.0" y="281.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-514</text>
+  <text x="442.0" y="296.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-17.0</text>
+  <rect x="486.0" y="254.0" width="88.0" height="56.0" fill="#d6ab3c" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="530.0" y="281.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-396</text>
+  <text x="530.0" y="296.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-13.3</text>
+  <rect x="574.0" y="254.0" width="88.0" height="56.0" fill="#d46233" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="618.0" y="281.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1439</text>
+  <text x="618.0" y="296.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-33.7</text>
+  <rect x="662.0" y="254.0" width="88.0" height="56.0" fill="#c4d63f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="706.0" y="281.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+780</text>
+  <text x="706.0" y="296.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+5.9</text>
+  <rect x="750.0" y="254.0" width="88.0" height="56.0" fill="#d6ba3e" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="794.0" y="281.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-278</text>
+  <text x="794.0" y="296.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-8.7</text>
+  <rect x="838.0" y="254.0" width="88.0" height="56.0" fill="#d59e3a" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="882.0" y="281.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-592</text>
+  <text x="882.0" y="296.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-16.9</text>
+  <rect x="926.0" y="254.0" width="88.0" height="56.0" fill="#c0d63f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="970.0" y="281.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+158</text>
+  <text x="970.0" y="296.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+7.0</text>
+  <rect x="1014.0" y="254.0" width="88.0" height="56.0" fill="#c7d640" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1058.0" y="281.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+113</text>
+  <text x="1058.0" y="296.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+4.8</text>
+  <rect x="1102.0" y="254.0" width="88.0" height="56.0" fill="#c4d63f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1146.0" y="281.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+129</text>
+  <text x="1146.0" y="296.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+5.8</text>
+  <rect x="1190.0" y="254.0" width="88.0" height="56.0" fill="#99d539" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1234.0" y="281.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+1098</text>
+  <text x="1234.0" y="296.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+18.5</text>
+  <rect x="134.0" y="310.0" width="88.0" height="56.0" fill="#bfd63e" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="178.0" y="337.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+317</text>
+  <text x="178.0" y="352.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+7.4</text>
+  <rect x="222.0" y="310.0" width="88.0" height="56.0" fill="#a7d53b" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="266.0" y="337.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+676</text>
+  <text x="266.0" y="352.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+14.4</text>
+  <rect x="310.0" y="310.0" width="88.0" height="56.0" fill="#9ed53a" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="354.0" y="337.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+514</text>
+  <text x="354.0" y="352.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+17.0</text>
+  <rect x="398.0" y="310.0" width="88.0" height="56.0" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="442.0" y="344.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af">—</text>
+  <rect x="486.0" y="310.0" width="88.0" height="56.0" fill="#b3d63d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="530.0" y="337.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+492</text>
+  <text x="530.0" y="352.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+10.9</text>
+  <rect x="574.0" y="310.0" width="88.0" height="56.0" fill="#d59739" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="618.0" y="337.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-791</text>
+  <text x="618.0" y="352.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-19.0</text>
+  <rect x="662.0" y="310.0" width="88.0" height="56.0" fill="#d7cd40" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="706.0" y="337.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-199</text>
+  <text x="706.0" y="352.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-2.9</text>
+  <rect x="750.0" y="310.0" width="88.0" height="56.0" fill="#b7d63d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="794.0" y="337.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+409</text>
+  <text x="794.0" y="352.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+9.5</text>
+  <rect x="838.0" y="310.0" width="88.0" height="56.0" fill="#a2d53b" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="882.0" y="337.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+678</text>
+  <text x="882.0" y="352.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+15.8</text>
+  <rect x="926.0" y="310.0" width="88.0" height="56.0" fill="#72d435" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="970.0" y="337.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1741</text>
+  <text x="970.0" y="352.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+29.1</text>
+  <rect x="1014.0" y="310.0" width="88.0" height="56.0" fill="#88d537" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1058.0" y="337.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+1742</text>
+  <text x="1058.0" y="352.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+23.2</text>
+  <rect x="1102.0" y="310.0" width="88.0" height="56.0" fill="#85d537" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1146.0" y="337.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+1480</text>
+  <text x="1146.0" y="352.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+24.0</text>
+  <rect x="1190.0" y="310.0" width="88.0" height="56.0" fill="#8cd538" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1234.0" y="337.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+1537</text>
+  <text x="1234.0" y="352.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+22.2</text>
+  <rect x="134.0" y="366.0" width="88.0" height="56.0" fill="#d6b93e" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="178.0" y="393.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-364</text>
+  <text x="178.0" y="408.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-8.9</text>
+  <rect x="222.0" y="366.0" width="88.0" height="56.0" fill="#aad63c" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="266.0" y="393.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+575</text>
+  <text x="266.0" y="408.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+13.4</text>
+  <rect x="310.0" y="366.0" width="88.0" height="56.0" fill="#abd63c" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="354.0" y="393.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+396</text>
+  <text x="354.0" y="408.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+13.3</text>
+  <rect x="398.0" y="366.0" width="88.0" height="56.0" fill="#d6b33d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="442.0" y="393.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-492</text>
+  <text x="442.0" y="408.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-10.9</text>
+  <rect x="486.0" y="366.0" width="88.0" height="56.0" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="530.0" y="400.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af">—</text>
+  <rect x="574.0" y="366.0" width="88.0" height="56.0" fill="#d6c03f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="618.0" y="393.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-573</text>
+  <text x="618.0" y="408.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-7.1</text>
+  <rect x="662.0" y="366.0" width="88.0" height="56.0" fill="#d7d642" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="706.0" y="393.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-9</text>
+  <text x="706.0" y="408.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-0.2</text>
+  <rect x="750.0" y="366.0" width="88.0" height="56.0" fill="#d6c73f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="794.0" y="393.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-165</text>
+  <text x="794.0" y="408.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-4.9</text>
+  <rect x="838.0" y="366.0" width="88.0" height="56.0" fill="#d6c43f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="882.0" y="393.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-206</text>
+  <text x="882.0" y="408.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-5.9</text>
+  <rect x="926.0" y="366.0" width="88.0" height="56.0" fill="#43d32f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="970.0" y="393.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+820</text>
+  <text x="970.0" y="408.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+41.9</text>
+  <rect x="1014.0" y="366.0" width="88.0" height="56.0" fill="#4fd331" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1058.0" y="393.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+827</text>
+  <text x="1058.0" y="408.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+38.7</text>
+  <rect x="1102.0" y="366.0" width="88.0" height="56.0" fill="#4bd330" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1146.0" y="393.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+794</text>
+  <text x="1146.0" y="408.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+39.7</text>
+  <rect x="1190.0" y="366.0" width="88.0" height="56.0" fill="#b9d63e" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1234.0" y="393.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+326</text>
+  <text x="1234.0" y="408.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+9.1</text>
+  <rect x="134.0" y="422.0" width="88.0" height="56.0" fill="#abd63c" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="178.0" y="449.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+661</text>
+  <text x="178.0" y="464.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+13.1</text>
+  <rect x="222.0" y="422.0" width="88.0" height="56.0" fill="#51d331" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="266.0" y="449.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1482</text>
+  <text x="266.0" y="464.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+38.1</text>
+  <rect x="310.0" y="422.0" width="88.0" height="56.0" fill="#62d433" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="354.0" y="449.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1439</text>
+  <text x="354.0" y="464.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+33.7</text>
+  <rect x="398.0" y="422.0" width="88.0" height="56.0" fill="#97d539" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="442.0" y="449.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+791</text>
+  <text x="442.0" y="464.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+19.0</text>
+  <rect x="486.0" y="422.0" width="88.0" height="56.0" fill="#c0d63f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="530.0" y="449.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+573</text>
+  <text x="530.0" y="464.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+7.1</text>
+  <rect x="574.0" y="422.0" width="88.0" height="56.0" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="618.0" y="456.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af">—</text>
+  <rect x="662.0" y="422.0" width="88.0" height="56.0" fill="#5ed432" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="706.0" y="449.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1322</text>
+  <text x="706.0" y="464.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+34.6</text>
+  <rect x="750.0" y="422.0" width="88.0" height="56.0" fill="#6dd434" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="794.0" y="449.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1393</text>
+  <text x="794.0" y="464.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+30.5</text>
+  <rect x="838.0" y="422.0" width="88.0" height="56.0" fill="#81d437" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="882.0" y="449.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+1228</text>
+  <text x="882.0" y="464.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+25.1</text>
+  <rect x="926.0" y="422.0" width="88.0" height="56.0" fill="#57d332" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="970.0" y="449.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+2573</text>
+  <text x="970.0" y="464.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+36.4</text>
+  <rect x="1014.0" y="422.0" width="88.0" height="56.0" fill="#73d435" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1058.0" y="449.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+2454</text>
+  <text x="1058.0" y="464.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+28.8</text>
+  <rect x="1102.0" y="422.0" width="88.0" height="56.0" fill="#7cd436" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1146.0" y="449.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+2279</text>
+  <text x="1146.0" y="464.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+26.6</text>
+  <rect x="1190.0" y="422.0" width="88.0" height="56.0" fill="#7dd436" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1234.0" y="449.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+2407</text>
+  <text x="1234.0" y="464.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+26.2</text>
+  <rect x="134.0" y="478.0" width="88.0" height="56.0" fill="#d59139" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="178.0" y="505.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-915</text>
+  <text x="178.0" y="520.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-20.5</text>
+  <rect x="222.0" y="478.0" width="88.0" height="56.0" fill="#d7ce40" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="266.0" y="505.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-148</text>
+  <text x="266.0" y="520.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-2.7</text>
+  <rect x="310.0" y="478.0" width="88.0" height="56.0" fill="#d6c43f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="354.0" y="505.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-780</text>
+  <text x="354.0" y="520.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-5.9</text>
+  <rect x="398.0" y="478.0" width="88.0" height="56.0" fill="#cdd740" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="442.0" y="505.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+199</text>
+  <text x="442.0" y="520.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+2.9</text>
+  <rect x="486.0" y="478.0" width="88.0" height="56.0" fill="#d6d742" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="530.0" y="505.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+9</text>
+  <text x="530.0" y="520.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+0.2</text>
+  <rect x="574.0" y="478.0" width="88.0" height="56.0" fill="#d45e32" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="618.0" y="505.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1322</text>
+  <text x="618.0" y="520.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-34.6</text>
+  <rect x="662.0" y="478.0" width="88.0" height="56.0" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="706.0" y="512.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af">—</text>
+  <rect x="750.0" y="478.0" width="88.0" height="56.0" fill="#d6b43d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="794.0" y="505.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-527</text>
+  <text x="794.0" y="520.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-10.4</text>
+  <rect x="838.0" y="478.0" width="88.0" height="56.0" fill="#d6c940" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="882.0" y="505.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-182</text>
+  <text x="882.0" y="520.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-4.4</text>
+  <rect x="926.0" y="478.0" width="88.0" height="56.0" fill="#2dd22d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="970.0" y="505.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1561</text>
+  <text x="970.0" y="520.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+50.2</text>
+  <rect x="1014.0" y="478.0" width="88.0" height="56.0" fill="#2dd22d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1058.0" y="505.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1943</text>
+  <text x="1058.0" y="520.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+50.6</text>
+  <rect x="1102.0" y="478.0" width="88.0" height="56.0" fill="#4dd330" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1146.0" y="505.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1373</text>
+  <text x="1146.0" y="520.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+39.2</text>
+  <rect x="1190.0" y="478.0" width="88.0" height="56.0" fill="#2dd22d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1234.0" y="505.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1816</text>
+  <text x="1234.0" y="520.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+71.2</text>
+  <rect x="134.0" y="534.0" width="88.0" height="56.0" fill="#c3d63f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="178.0" y="561.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+326</text>
+  <text x="178.0" y="576.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+6.0</text>
+  <rect x="222.0" y="534.0" width="88.0" height="56.0" fill="#9ad53a" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="266.0" y="561.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+1228</text>
+  <text x="266.0" y="576.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+18.0</text>
+  <rect x="310.0" y="534.0" width="88.0" height="56.0" fill="#bad63e" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="354.0" y="561.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+278</text>
+  <text x="354.0" y="576.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+8.7</text>
+  <rect x="398.0" y="534.0" width="88.0" height="56.0" fill="#d6b73d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="442.0" y="561.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-409</text>
+  <text x="442.0" y="576.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-9.5</text>
+  <rect x="486.0" y="534.0" width="88.0" height="56.0" fill="#c7d63f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="530.0" y="561.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+165</text>
+  <text x="530.0" y="576.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+4.9</text>
+  <rect x="574.0" y="534.0" width="88.0" height="56.0" fill="#d46d34" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="618.0" y="561.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1393</text>
+  <text x="618.0" y="576.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-30.5</text>
+  <rect x="662.0" y="534.0" width="88.0" height="56.0" fill="#b4d63d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="706.0" y="561.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+527</text>
+  <text x="706.0" y="576.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+10.4</text>
+  <rect x="750.0" y="534.0" width="88.0" height="56.0" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="794.0" y="568.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af">—</text>
+  <rect x="838.0" y="534.0" width="88.0" height="56.0" fill="#d7d742" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="882.0" y="561.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+3</text>
+  <text x="882.0" y="576.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+0.1</text>
+  <rect x="926.0" y="534.0" width="88.0" height="56.0" fill="#90d538" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="970.0" y="561.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+867</text>
+  <text x="970.0" y="576.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+21.0</text>
+  <rect x="1014.0" y="534.0" width="88.0" height="56.0" fill="#6bd434" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1058.0" y="561.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+904</text>
+  <text x="1058.0" y="576.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+31.1</text>
+  <rect x="1102.0" y="534.0" width="88.0" height="56.0" fill="#85d537" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1146.0" y="561.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+727</text>
+  <text x="1146.0" y="576.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+23.9</text>
+  <rect x="1190.0" y="534.0" width="88.0" height="56.0" fill="#97d539" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1234.0" y="561.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+551</text>
+  <text x="1234.0" y="576.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+19.0</text>
+  <rect x="134.0" y="590.0" width="88.0" height="56.0" fill="#d6ca40" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="178.0" y="617.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-174</text>
+  <text x="178.0" y="632.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-3.9</text>
+  <rect x="222.0" y="590.0" width="88.0" height="56.0" fill="#a3d53b" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="266.0" y="617.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+570</text>
+  <text x="266.0" y="632.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+15.4</text>
+  <rect x="310.0" y="590.0" width="88.0" height="56.0" fill="#9ed53a" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="354.0" y="617.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+592</text>
+  <text x="354.0" y="632.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+16.9</text>
+  <rect x="398.0" y="590.0" width="88.0" height="56.0" fill="#d5a23b" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="442.0" y="617.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-678</text>
+  <text x="442.0" y="632.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-15.8</text>
+  <rect x="486.0" y="590.0" width="88.0" height="56.0" fill="#c4d63f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="530.0" y="617.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+206</text>
+  <text x="530.0" y="632.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+5.9</text>
+  <rect x="574.0" y="590.0" width="88.0" height="56.0" fill="#d48137" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="618.0" y="617.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-1228</text>
+  <text x="618.0" y="632.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-25.1</text>
+  <rect x="662.0" y="590.0" width="88.0" height="56.0" fill="#c9d640" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="706.0" y="617.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+182</text>
+  <text x="706.0" y="632.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+4.4</text>
+  <rect x="750.0" y="590.0" width="88.0" height="56.0" fill="#d7d742" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="794.0" y="617.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-3</text>
+  <text x="794.0" y="632.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-0.1</text>
+  <rect x="838.0" y="590.0" width="88.0" height="56.0" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="882.0" y="624.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af">—</text>
+  <rect x="926.0" y="590.0" width="88.0" height="56.0" fill="#2dd22d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="970.0" y="617.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1552</text>
+  <text x="970.0" y="632.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+54.2</text>
+  <rect x="1014.0" y="590.0" width="88.0" height="56.0" fill="#2dd22d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1058.0" y="617.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1790</text>
+  <text x="1058.0" y="632.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+84.6</text>
+  <rect x="1102.0" y="590.0" width="88.0" height="56.0" fill="#2dd22d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1146.0" y="617.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1534</text>
+  <text x="1146.0" y="632.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+60.1</text>
+  <rect x="1190.0" y="590.0" width="88.0" height="56.0" fill="#2dd22d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1234.0" y="617.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">+1631</text>
+  <text x="1234.0" y="632.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=+67.3</text>
+  <rect x="134.0" y="646.0" width="88.0" height="56.0" fill="#d22d2d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="178.0" y="673.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1496</text>
+  <text x="178.0" y="688.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-47.5</text>
+  <rect x="222.0" y="646.0" width="88.0" height="56.0" fill="#d35a32" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="266.0" y="673.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1162</text>
+  <text x="266.0" y="688.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-35.7</text>
+  <rect x="310.0" y="646.0" width="88.0" height="56.0" fill="#d6c03f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="354.0" y="673.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-158</text>
+  <text x="354.0" y="688.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-7.0</text>
+  <rect x="398.0" y="646.0" width="88.0" height="56.0" fill="#d47235" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="442.0" y="673.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1741</text>
+  <text x="442.0" y="688.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-29.1</text>
+  <rect x="486.0" y="646.0" width="88.0" height="56.0" fill="#d3432f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="530.0" y="673.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-820</text>
+  <text x="530.0" y="688.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-41.9</text>
+  <rect x="574.0" y="646.0" width="88.0" height="56.0" fill="#d35732" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="618.0" y="673.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-2573</text>
+  <text x="618.0" y="688.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-36.4</text>
+  <rect x="662.0" y="646.0" width="88.0" height="56.0" fill="#d22d2d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="706.0" y="673.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1561</text>
+  <text x="706.0" y="688.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-50.2</text>
+  <rect x="750.0" y="646.0" width="88.0" height="56.0" fill="#d59038" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="794.0" y="673.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-867</text>
+  <text x="794.0" y="688.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-21.0</text>
+  <rect x="838.0" y="646.0" width="88.0" height="56.0" fill="#d22d2d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="882.0" y="673.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1552</text>
+  <text x="882.0" y="688.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-54.2</text>
+  <rect x="926.0" y="646.0" width="88.0" height="56.0" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="970.0" y="680.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af">—</text>
+  <rect x="1014.0" y="646.0" width="88.0" height="56.0" fill="#d7d742" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1058.0" y="673.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-0</text>
+  <text x="1058.0" y="688.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-0.0</text>
+  <rect x="1102.0" y="646.0" width="88.0" height="56.0" fill="#d7d742" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1146.0" y="673.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-0</text>
+  <text x="1146.0" y="688.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-0.0</text>
+  <rect x="1190.0" y="646.0" width="88.0" height="56.0" fill="#d6b43d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1234.0" y="673.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-95</text>
+  <text x="1234.0" y="688.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-10.5</text>
+  <rect x="134.0" y="702.0" width="88.0" height="56.0" fill="#d3452f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="178.0" y="729.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1271</text>
+  <text x="178.0" y="744.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-41.3</text>
+  <rect x="222.0" y="702.0" width="88.0" height="56.0" fill="#d46a34" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="266.0" y="729.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1062</text>
+  <text x="266.0" y="744.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-31.3</text>
+  <rect x="310.0" y="702.0" width="88.0" height="56.0" fill="#d6c740" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="354.0" y="729.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-113</text>
+  <text x="354.0" y="744.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-4.8</text>
+  <rect x="398.0" y="702.0" width="88.0" height="56.0" fill="#d58837" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="442.0" y="729.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-1742</text>
+  <text x="442.0" y="744.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-23.2</text>
+  <rect x="486.0" y="702.0" width="88.0" height="56.0" fill="#d34f31" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="530.0" y="729.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-827</text>
+  <text x="530.0" y="744.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-38.7</text>
+  <rect x="574.0" y="702.0" width="88.0" height="56.0" fill="#d47335" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="618.0" y="729.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-2454</text>
+  <text x="618.0" y="744.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-28.8</text>
+  <rect x="662.0" y="702.0" width="88.0" height="56.0" fill="#d22d2d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="706.0" y="729.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1943</text>
+  <text x="706.0" y="744.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-50.6</text>
+  <rect x="750.0" y="702.0" width="88.0" height="56.0" fill="#d46b34" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="794.0" y="729.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-904</text>
+  <text x="794.0" y="744.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-31.1</text>
+  <rect x="838.0" y="702.0" width="88.0" height="56.0" fill="#d22d2d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="882.0" y="729.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1790</text>
+  <text x="882.0" y="744.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-84.6</text>
+  <rect x="926.0" y="702.0" width="88.0" height="56.0" fill="#d7d742" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="970.0" y="729.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+0</text>
+  <text x="970.0" y="744.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+0.0</text>
+  <rect x="1014.0" y="702.0" width="88.0" height="56.0" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="1058.0" y="736.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af">—</text>
+  <rect x="1102.0" y="702.0" width="88.0" height="56.0" fill="#d7d742" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1146.0" y="729.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-0</text>
+  <text x="1146.0" y="744.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-0.0</text>
+  <rect x="1190.0" y="702.0" width="88.0" height="56.0" fill="#d6ae3c" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1234.0" y="729.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-99</text>
+  <text x="1234.0" y="744.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-12.2</text>
+  <rect x="134.0" y="758.0" width="88.0" height="56.0" fill="#d35131" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="178.0" y="785.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1185</text>
+  <text x="178.0" y="800.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-38.0</text>
+  <rect x="222.0" y="758.0" width="88.0" height="56.0" fill="#d35131" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="266.0" y="785.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1106</text>
+  <text x="266.0" y="800.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-38.2</text>
+  <rect x="310.0" y="758.0" width="88.0" height="56.0" fill="#d6c43f" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="354.0" y="785.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-129</text>
+  <text x="354.0" y="800.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-5.8</text>
+  <rect x="398.0" y="758.0" width="88.0" height="56.0" fill="#d58537" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="442.0" y="785.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-1480</text>
+  <text x="442.0" y="800.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-24.0</text>
+  <rect x="486.0" y="758.0" width="88.0" height="56.0" fill="#d34b30" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="530.0" y="785.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-794</text>
+  <text x="530.0" y="800.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-39.7</text>
+  <rect x="574.0" y="758.0" width="88.0" height="56.0" fill="#d47c36" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="618.0" y="785.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-2279</text>
+  <text x="618.0" y="800.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-26.6</text>
+  <rect x="662.0" y="758.0" width="88.0" height="56.0" fill="#d34d30" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="706.0" y="785.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1373</text>
+  <text x="706.0" y="800.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-39.2</text>
+  <rect x="750.0" y="758.0" width="88.0" height="56.0" fill="#d58537" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="794.0" y="785.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-727</text>
+  <text x="794.0" y="800.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-23.9</text>
+  <rect x="838.0" y="758.0" width="88.0" height="56.0" fill="#d22d2d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="882.0" y="785.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1534</text>
+  <text x="882.0" y="800.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-60.1</text>
+  <rect x="926.0" y="758.0" width="88.0" height="56.0" fill="#d7d742" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="970.0" y="785.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+0</text>
+  <text x="970.0" y="800.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+0.0</text>
+  <rect x="1014.0" y="758.0" width="88.0" height="56.0" fill="#d7d742" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1058.0" y="785.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+0</text>
+  <text x="1058.0" y="800.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+0.0</text>
+  <rect x="1102.0" y="758.0" width="88.0" height="56.0" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="1146.0" y="792.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af">—</text>
+  <rect x="1190.0" y="758.0" width="88.0" height="56.0" fill="#d6af3c" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1234.0" y="785.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-105</text>
+  <text x="1234.0" y="800.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-12.1</text>
+  <rect x="134.0" y="814.0" width="88.0" height="56.0" fill="#d47c36" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="178.0" y="841.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-1140</text>
+  <text x="178.0" y="856.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-26.6</text>
+  <rect x="222.0" y="814.0" width="88.0" height="56.0" fill="#d46934" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="266.0" y="841.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-946</text>
+  <text x="266.0" y="856.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-31.7</text>
+  <rect x="310.0" y="814.0" width="88.0" height="56.0" fill="#d59939" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="354.0" y="841.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-1098</text>
+  <text x="354.0" y="856.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-18.5</text>
+  <rect x="398.0" y="814.0" width="88.0" height="56.0" fill="#d58c38" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="442.0" y="841.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-1537</text>
+  <text x="442.0" y="856.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-22.2</text>
+  <rect x="486.0" y="814.0" width="88.0" height="56.0" fill="#d6b93e" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="530.0" y="841.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-326</text>
+  <text x="530.0" y="856.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-9.1</text>
+  <rect x="574.0" y="814.0" width="88.0" height="56.0" fill="#d47d36" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="618.0" y="841.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-2407</text>
+  <text x="618.0" y="856.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-26.2</text>
+  <rect x="662.0" y="814.0" width="88.0" height="56.0" fill="#d22d2d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="706.0" y="841.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1816</text>
+  <text x="706.0" y="856.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-71.2</text>
+  <rect x="750.0" y="814.0" width="88.0" height="56.0" fill="#d59739" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="794.0" y="841.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">-551</text>
+  <text x="794.0" y="856.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=-19.0</text>
+  <rect x="838.0" y="814.0" width="88.0" height="56.0" fill="#d22d2d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="882.0" y="841.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#ffffff">-1631</text>
+  <text x="882.0" y="856.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#ffffff" opacity="0.85">z=-67.3</text>
+  <rect x="926.0" y="814.0" width="88.0" height="56.0" fill="#b4d63d" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="970.0" y="841.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+95</text>
+  <text x="970.0" y="856.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+10.5</text>
+  <rect x="1014.0" y="814.0" width="88.0" height="56.0" fill="#aed63c" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1058.0" y="841.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+99</text>
+  <text x="1058.0" y="856.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+12.2</text>
+  <rect x="1102.0" y="814.0" width="88.0" height="56.0" fill="#afd63c" stroke="#ffffff" stroke-width="1.5"/>
+  <text x="1146.0" y="841.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">+105</text>
+  <text x="1146.0" y="856.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#111827" opacity="0.85">z=+12.1</text>
+  <rect x="1190.0" y="814.0" width="88.0" height="56.0" fill="#f3f4f6" stroke="#d1d5db" stroke-width="1"/>
+  <text x="1234.0" y="848.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af">—</text>
+  <text x="1310.0" y="130.0" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#111827">Standings</text>
+  <text x="1310.0" y="146.0" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">#  Team</text>
+  <text x="1542.0" y="146.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">Δgoals   z-sum</text>
+  <line x1="1310.0" y1="150.0" x2="1550.0" y2="150.0" stroke="#e5e7eb" stroke-width="1"/>
+  <rect x="1310.0" y="149.0" width="20" height="18" rx="3" fill="#d97706"/>
+  <text x="1320.0" y="161.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#ffffff">1</text>
+  <text x="1336.0" y="162.0" font-family="Arial, sans-serif" font-size="12" fill="#111827">mirage-sc</text>
+  <text x="1480.0" y="162.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#16a34a">+18602</text>
+  <text x="1542.0" y="162.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">+319.2</text>
+  <line x1="1310.0" y1="170.0" x2="1550.0" y2="170.0" stroke="#f3f4f6" stroke-width="1"/>
+  <rect x="1310.0" y="177.0" width="20" height="18" rx="3" fill="#6b7280"/>
+  <text x="1320.0" y="189.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#ffffff">2</text>
+  <text x="1336.0" y="190.0" font-family="Arial, sans-serif" font-size="12" fill="#111827">glacier-fc</text>
+  <text x="1480.0" y="190.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#16a34a">+8596</text>
+  <text x="1542.0" y="190.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">+151.5</text>
+  <line x1="1310.0" y1="198.0" x2="1550.0" y2="198.0" stroke="#f3f4f6" stroke-width="1"/>
+  <rect x="1310.0" y="205.0" width="20" height="18" rx="3" fill="#92400e"/>
+  <text x="1320.0" y="217.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#ffffff">3</text>
+  <text x="1336.0" y="218.0" font-family="Arial, sans-serif" font-size="12" fill="#111827">aurora-fc</text>
+  <text x="1480.0" y="218.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#16a34a">+7828</text>
+  <text x="1542.0" y="218.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">+227.2</text>
+  <line x1="1310.0" y1="226.0" x2="1550.0" y2="226.0" stroke="#f3f4f6" stroke-width="1"/>
+  <rect x="1310.0" y="233.0" width="20" height="18" rx="3" fill="#e5e7eb"/>
+  <text x="1320.0" y="245.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#374151">4</text>
+  <text x="1336.0" y="246.0" font-family="Arial, sans-serif" font-size="12" fill="#111827">phoenix-rovers</text>
+  <text x="1480.0" y="246.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#16a34a">+3774</text>
+  <text x="1542.0" y="246.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">+103.1</text>
+  <line x1="1310.0" y1="254.0" x2="1550.0" y2="254.0" stroke="#f3f4f6" stroke-width="1"/>
+  <rect x="1310.0" y="261.0" width="20" height="18" rx="3" fill="#e5e7eb"/>
+  <text x="1320.0" y="273.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#374151">5</text>
+  <text x="1336.0" y="274.0" font-family="Arial, sans-serif" font-size="12" fill="#111827">tempest-united</text>
+  <text x="1480.0" y="274.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#16a34a">+5974</text>
+  <text x="1542.0" y="274.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">+263.8</text>
+  <line x1="1310.0" y1="282.0" x2="1550.0" y2="282.0" stroke="#f3f4f6" stroke-width="1"/>
+  <rect x="1310.0" y="289.0" width="20" height="18" rx="3" fill="#e5e7eb"/>
+  <text x="1320.0" y="301.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#374151">6</text>
+  <text x="1336.0" y="302.0" font-family="Arial, sans-serif" font-size="12" fill="#111827">nebula-rangers</text>
+  <text x="1480.0" y="302.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#16a34a">+3027</text>
+  <text x="1542.0" y="302.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">+135.9</text>
+  <line x1="1310.0" y1="310.0" x2="1550.0" y2="310.0" stroke="#f3f4f6" stroke-width="1"/>
+  <rect x="1310.0" y="317.0" width="20" height="18" rx="3" fill="#e5e7eb"/>
+  <text x="1320.0" y="329.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#374151">7</text>
+  <text x="1336.0" y="330.0" font-family="Arial, sans-serif" font-size="12" fill="#111827">granite-athletic</text>
+  <text x="1480.0" y="330.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#16a34a">+1929</text>
+  <text x="1542.0" y="330.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">+118.1</text>
+  <line x1="1310.0" y1="338.0" x2="1550.0" y2="338.0" stroke="#f3f4f6" stroke-width="1"/>
+  <rect x="1310.0" y="345.0" width="20" height="18" rx="3" fill="#e5e7eb"/>
+  <text x="1320.0" y="357.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#374151">8</text>
+  <text x="1336.0" y="358.0" font-family="Arial, sans-serif" font-size="12" fill="#111827">eclipse-town</text>
+  <text x="1480.0" y="358.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#dc2626">-1507</text>
+  <text x="1542.0" y="358.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">+5.8</text>
+  <line x1="1310.0" y1="366.0" x2="1550.0" y2="366.0" stroke="#f3f4f6" stroke-width="1"/>
+  <rect x="1310.0" y="373.0" width="20" height="18" rx="3" fill="#e5e7eb"/>
+  <text x="1320.0" y="385.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#374151">9</text>
+  <text x="1336.0" y="386.0" font-family="Arial, sans-serif" font-size="12" fill="#111827">forge-fc</text>
+  <text x="1480.0" y="386.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#dc2626">-2128</text>
+  <text x="1542.0" y="386.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">-80.2</text>
+  <line x1="1310.0" y1="394.0" x2="1550.0" y2="394.0" stroke="#f3f4f6" stroke-width="1"/>
+  <rect x="1310.0" y="401.0" width="20" height="18" rx="3" fill="#e5e7eb"/>
+  <text x="1320.0" y="413.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#374151">10</text>
+  <text x="1336.0" y="414.0" font-family="Arial, sans-serif" font-size="12" fill="#111827">v4-baseline</text>
+  <text x="1480.0" y="414.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#dc2626">-11153</text>
+  <text x="1542.0" y="414.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">-256.8</text>
+  <line x1="1310.0" y1="422.0" x2="1550.0" y2="422.0" stroke="#f3f4f6" stroke-width="1"/>
+  <rect x="1310.0" y="429.0" width="20" height="18" rx="3" fill="#e5e7eb"/>
+  <text x="1320.0" y="441.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#374151">11</text>
+  <text x="1336.0" y="442.0" font-family="Arial, sans-serif" font-size="12" fill="#111827">v2-baseline</text>
+  <text x="1480.0" y="442.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#dc2626">-12205</text>
+  <text x="1542.0" y="442.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">-346.6</text>
+  <line x1="1310.0" y1="450.0" x2="1550.0" y2="450.0" stroke="#f3f4f6" stroke-width="1"/>
+  <rect x="1310.0" y="457.0" width="20" height="18" rx="3" fill="#e5e7eb"/>
+  <text x="1320.0" y="469.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#374151">12</text>
+  <text x="1336.0" y="470.0" font-family="Arial, sans-serif" font-size="12" fill="#111827">v1-baseline</text>
+  <text x="1480.0" y="470.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#dc2626">-12025</text>
+  <text x="1542.0" y="470.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">-333.4</text>
+  <line x1="1310.0" y1="478.0" x2="1550.0" y2="478.0" stroke="#f3f4f6" stroke-width="1"/>
+  <rect x="1310.0" y="485.0" width="20" height="18" rx="3" fill="#e5e7eb"/>
+  <text x="1320.0" y="497.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#374151">13</text>
+  <text x="1336.0" y="498.0" font-family="Arial, sans-serif" font-size="12" fill="#111827">v3-baseline</text>
+  <text x="1480.0" y="498.0" text-anchor="end" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#dc2626">-10712</text>
+  <text x="1542.0" y="498.0" text-anchor="end" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">-307.5</text>
+</svg>
