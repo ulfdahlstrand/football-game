@@ -32,4 +32,12 @@ _(filled in after tournament analysis — see matrix in `data/matrices/`)_
 
 ## Tournament
 
-_(filled in after `--v6-tournament` run)_
+**Rank**: 7 / 9
+
+**Points**: 659 (W193 D80 L552)
+
+**Goal-diff**: -3217
+
+**Best vs**: nebula-rangers
+
+**Worst vs**: aurora-fc

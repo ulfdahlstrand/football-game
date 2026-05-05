@@ -32,4 +32,12 @@ _(filled in after tournament analysis — see matrix in `data/matrices/`)_
 
 ## Tournament
 
-_(filled in after `--v6-tournament` run)_
+**Rank**: 1 / 9
+
+**Points**: 2898 (W898 D204 L648)
+
+**Goal-diff**: +884
+
+**Best vs**: phoenix-rovers
+
+**Worst vs**: glacier-fc

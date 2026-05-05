@@ -32,4 +32,12 @@ _(filled in after tournament analysis — see matrix in `data/matrices/`)_
 
 ## Tournament
 
-_(filled in after `--v6-tournament` run)_
+**Rank**: 5 / 9
+
+**Points**: 1747 (W560 D67 L223)
+
+**Goal-diff**: +2106
+
+**Best vs**: eclipse-town
+
+**Worst vs**: mirage-sc

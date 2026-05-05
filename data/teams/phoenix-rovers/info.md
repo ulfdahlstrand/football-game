@@ -32,4 +32,12 @@ _(filled in after tournament analysis — see matrix in `data/matrices/`)_
 
 ## Tournament
 
-_(filled in after `--v6-tournament` run)_
+**Rank**: 2 / 9
+
+**Points**: 2644 (W830 D154 L516)
+
+**Goal-diff**: +2083
+
+**Best vs**: tempest-united
+
+**Worst vs**: glacier-fc

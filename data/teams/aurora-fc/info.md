@@ -32,4 +32,12 @@ _(filled in after tournament analysis — see matrix in `data/matrices/`)_
 
 ## Tournament
 
-_(filled in after `--v6-tournament` run)_
+**Rank**: 4 / 9
+
+**Points**: 2016 (W650 D66 L209)
+
+**Goal-diff**: +4135
+
+**Best vs**: phoenix-rovers
+
+**Worst vs**: glacier-fc
