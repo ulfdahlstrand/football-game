@@ -160,11 +160,17 @@ function drawSpriteSide(ctx, teamColor, hairColor, facingLeft, legPhase) {
   ctx.restore();
 }
 
+// NES-palett (Stil A — Pixel Retro)
+const NES_TEAM0  = '#2040e0';   // blå
+const NES_TEAM1  = '#e83030';   // röd
+const NES_GK0    = '#f0c030';   // gul GK
+const NES_GK1    = '#30c060';   // grön GK
+
 function drawPlayer(ctx, p, game) {
   const hasBall  = game.ball.owner === p.id;
-  const baseColors = game.teamColors || { 0: '#3464a8', 1: '#c82828' };
+  const baseColors = { 0: NES_TEAM0, 1: NES_TEAM1 };
   const teamColor = p.role === 'gk'
-    ? (p.team === 0 ? '#fbbf24' : '#84cc16')
+    ? (p.team === 0 ? NES_GK0 : NES_GK1)
     : baseColors[p.team];
   const hairColor = p.hairColor;
   const celebrateJump = p.celebrateTimer > 0 ? -Math.abs(Math.sin(p.celebrateTimer * 0.18)) * 22 : 0;
@@ -1546,133 +1552,148 @@ function FootballMatch({ matchData, onComplete, onExit }) {
       }
     }
 
+    // Boll-rotation för pentagon-animation
+    let _drawFrame = 0;
+
+    function drawFootballBall(ctx, x, y, radius, frame) {
+      const rot = frame * 0.018;
+      ctx.save();
+      ctx.translate(x, y);
+      // Skugga
+      ctx.fillStyle = 'rgba(0,0,0,0.22)';
+      ctx.beginPath(); ctx.ellipse(2, radius + 2, radius * 0.85, radius * 0.28, 0, 0, Math.PI*2); ctx.fill();
+      // Clip + vit boll
+      ctx.save();
+      ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI*2); ctx.clip();
+      ctx.fillStyle = '#f8f8f8';
+      ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI*2); ctx.fill();
+      // Pentagon-mönster
+      const drawPent = (cx, cy, r) => {
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          const a = (i/5)*Math.PI*2 - Math.PI/2 + rot;
+          i===0 ? ctx.moveTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r)
+                : ctx.lineTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r);
+        }
+        ctx.closePath();
+        ctx.fillStyle = '#1a1a1a'; ctx.fill();
+        ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = radius * 0.07; ctx.stroke();
+      };
+      drawPent(0, 0, radius * 0.38);
+      for (let i = 0; i < 5; i++) {
+        const a = (i/5)*Math.PI*2 - Math.PI/2 + rot;
+        const d = radius * 0.68;
+        drawPent(Math.cos(a)*d, Math.sin(a)*d, radius * 0.28);
+      }
+      ctx.restore(); // unclip
+      // Yttre outline
+      ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = radius * 0.1;
+      ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI*2); ctx.stroke();
+      // Highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.beginPath(); ctx.ellipse(-radius*0.28, -radius*0.3, radius*0.2, radius*0.12, -0.5, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+
+    // CRT-effekt (scanlines + vignette)
+    function drawCRT(ctx, w, h) {
+      ctx.fillStyle = 'rgba(0,0,0,0.11)';
+      for (let y = 0; y < h; y += 2) ctx.fillRect(0, y, w, 1);
+      const vg = ctx.createRadialGradient(w/2,h/2,h*0.28,w/2,h/2,h*0.72);
+      vg.addColorStop(0,'rgba(0,0,0,0)');
+      vg.addColorStop(1,'rgba(0,0,0,0.32)');
+      ctx.fillStyle = vg; ctx.fillRect(0, 0, w, h);
+    }
+
     function draw() {
       const g=gRef.current;
+      _drawFrame++;
 
-      // Plan
-      ctx.fillStyle='#2a6318'; ctx.fillRect(0,0,FW,FH);
-      for (let i=0;i<11;i++) {
-        ctx.fillStyle=i%2===0?'rgba(0,0,0,0.06)':'rgba(255,255,255,0.025)';
-        ctx.fillRect(i*(FW/11),0,FW/11,FH);
+      // Plan — NES-grönt med alternerande ränder
+      const stripeCount = 11;
+      const sw = FW / stripeCount;
+      for (let i = 0; i < stripeCount; i++) {
+        ctx.fillStyle = i % 2 === 0 ? '#1a4a1a' : '#1f5a1f';
+        ctx.fillRect(i * sw, 0, sw, FH);
       }
-      ctx.strokeStyle='rgba(255,255,255,0.82)'; ctx.lineWidth=2;
+      ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.lineWidth=2;
       ctx.strokeRect(18,8,FW-36,FH-16);
       ctx.beginPath();ctx.moveTo(FW/2,8);ctx.lineTo(FW/2,FH-8);ctx.stroke();
       ctx.beginPath();ctx.arc(FW/2,h2,62,0,Math.PI*2);ctx.stroke();
-      ctx.fillStyle='rgba(255,255,255,0.8)';
+      ctx.fillStyle='rgba(255,255,255,0.9)';
       ctx.beginPath();ctx.arc(FW/2,h2,3,0,Math.PI*2);ctx.fill();
       [[18,h2-88,106,176],[FW-124,h2-88,106,176],[18,h2-46,54,92],[FW-72,h2-46,54,92]].forEach(
         ([x,y,w,hh])=>ctx.strokeRect(x,y,w,hh));
 
-      // Mål (öppning vid planlinjerna FIELD_LINE och FW-FIELD_LINE)
+      // Mål
       [[FIELD_LINE-GD,h2-GH/2],[FW-FIELD_LINE,h2-GH/2]].forEach(([gx,gy])=>{
-        ctx.fillStyle='rgba(255,255,255,0.1)'; ctx.fillRect(gx,gy,GD,GH);
-        ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.lineWidth=3; ctx.strokeRect(gx,gy,GD,GH);
+        ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fillRect(gx,gy,GD,GH);
+        ctx.strokeStyle='rgba(255,255,255,0.92)'; ctx.lineWidth=3; ctx.strokeRect(gx,gy,GD,GH);
       });
 
       // Spelare (sorterade på y för djup-ordning)
       [...g.pl].sort((a,b)=>a.y-b.y).forEach(p => drawPlayer(ctx,p,g));
 
-      // Boll
+      // Boll — pentagon-mönster (Stil A)
       const b=g.ball;
-      ctx.save(); ctx.translate(b.x,b.y);
       if (b.mega) {
+        ctx.save(); ctx.translate(b.x,b.y);
         const grd=ctx.createRadialGradient(0,0,BR,0,0,BR*3.8);
         grd.addColorStop(0,'rgba(255,210,40,0.95)');
         grd.addColorStop(1,'rgba(255,80,0,0)');
         ctx.fillStyle=grd; ctx.beginPath();ctx.arc(0,0,BR*3.8,0,Math.PI*2);ctx.fill();
+        ctx.restore();
+        drawFootballBall(ctx, b.x, b.y, BR*1.5, _drawFrame);
+      } else {
+        drawFootballBall(ctx, b.x, b.y, BR, _drawFrame);
       }
-      ctx.fillStyle='rgba(0,0,0,0.2)'; ctx.beginPath();ctx.ellipse(2,BR+1,BR*0.8,BR*0.28,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle=b.mega?'#ffd43b':'#fff';
-      ctx.beginPath();ctx.arc(0,0,b.mega?BR*1.6:BR,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle='#1a1a1a';ctx.lineWidth=1.5;ctx.stroke();
-      if (!b.mega){ctx.fillStyle='rgba(0,0,0,0.2)';ctx.beginPath();ctx.arc(2,-2,BR*0.4,0,Math.PI*2);ctx.fill();}
-      ctx.restore();
 
-      // ── Canvas HUD (minimal — React MatchHUD overlay hanterar scoreboard) ──
+      // CRT-effekt (Stil A)
+      drawCRT(ctx, FW, FH);
+
       // Kontrolltips längst ned
       const tipBg = ctx.createLinearGradient(0,FH-32,0,FH);
       tipBg.addColorStop(0,'rgba(0,0,0,0)');
       tipBg.addColorStop(0.3,'rgba(0,0,0,0.7)');
-      tipBg.addColorStop(1,'rgba(0,0,0,0.82)');
+      tipBg.addColorStop(1,'rgba(0,0,0,0.85)');
       ctx.fillStyle=tipBg; ctx.fillRect(0,FH-32,FW,32);
       const tips=[
-        ['PILAR/ASD','rörelse'],['W','passa'],['SPACE','skjut'],
-        ['Q+SPACE','superskott'],['E','tackling'],['ENTER','hopp'],['BSP','AI toggle']
+        ['PILAR','rörelse'],['W','passa'],['SPACE','skjut'],
+        ['Q+SPC','superskott'],['E','tackling'],['ENTER','hopp'],['BSP','AI']
       ];
       const tipTotalW = tips.length * 110;
       const tipStartX = FW/2 - tipTotalW/2;
       ctx.textBaseline='middle';
       tips.forEach(([key,act],i) => {
         const tx = tipStartX + i*110 + 55;
+        ctx.font='bold 8px ui-monospace,monospace';
         const kw = ctx.measureText(key).width + 12;
-        ctx.fillStyle='rgba(255,255,255,0.12)';
+        ctx.fillStyle='rgba(255,255,255,0.14)';
         const bx = tx - kw/2 - 24;
-        ctx.beginPath();
-        ctx.roundRect(bx, FH-22, kw, 14, 3);
-        ctx.fill();
-        ctx.font='bold 8px ui-monospace,monospace'; ctx.fillStyle='rgba(255,255,255,0.75)';
+        ctx.beginPath(); ctx.roundRect(bx, FH-22, kw, 14, 3); ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,0.8)';
         ctx.textAlign='center'; ctx.fillText(key, bx + kw/2, FH-15);
         ctx.font='8px ui-monospace,monospace'; ctx.fillStyle='rgba(255,255,255,0.4)';
         ctx.fillText(act, bx + kw/2 + kw/2 + 20, FH-15);
       });
 
-      if (g.setPieceText) {
-        ctx.fillStyle='rgba(0,0,0,0.62)';
-        ctx.fillRect(FW/2-120,58,240,34);
-        ctx.strokeStyle='rgba(255,255,255,0.22)'; ctx.strokeRect(FW/2-120,58,240,34);
-        ctx.font='bold 16px ui-monospace,monospace'; ctx.fillStyle='#ffd43b';
-        ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(g.setPieceText,FW/2,75);
-        if (g.phase==='penalty' && g.penaltyTeam===0) {
-          ctx.font='10px ui-monospace,monospace'; ctx.fillStyle='rgba(255,255,255,0.75)';
-          ctx.fillText('Håll pil för riktning och tryck SPACE',FW/2,102);
-        }
-      }
-
-      // Fasöverlägg
+      // Avspark-överlägg (React HUD saknar detta)
       if (g.phase==='kickoff') {
-        ctx.fillStyle='rgba(0,0,0,0.58)'; ctx.fillRect(0,0,FW,FH);
-        ctx.font='bold 40px Georgia,serif'; ctx.fillStyle='#fff';
+        ctx.fillStyle='rgba(0,0,0,0.62)'; ctx.fillRect(0,0,FW,FH);
+        ctx.font='bold 44px Georgia,serif'; ctx.fillStyle='#fff';
         ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.fillText('AVSPARK',FW/2,h2-22);
-        ctx.font='16px ui-monospace,monospace'; ctx.fillStyle='rgba(255,255,255,0.7)';
+        ctx.font='15px ui-monospace,monospace'; ctx.fillStyle='rgba(255,255,255,0.7)';
         ctx.fillText('Tryck valfri tangent',FW/2,h2+18);
-        ctx.font='12px ui-monospace,monospace'; ctx.fillStyle='#ffd43b';
+        ctx.font='11px ui-monospace,monospace'; ctx.fillStyle='#ffd43b';
         ctx.fillText(`${matchData?.name||'Match'} · Du spelar i BLÅ`,FW/2,h2+50);
       }
 
-      if (g.phase==='goal') {
-        const t=g.goalAnim/160;
-        ctx.fillStyle=`rgba(0,0,0,${(1-t)*0.5})`; ctx.fillRect(0,0,FW,FH);
-        ctx.globalAlpha=Math.min(1,t*5);
-        ctx.font='bold 84px Georgia,serif';
-        ctx.fillStyle=g.goalTeam===0?'#ffd43b':'#ff4040';
-        ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText('MÅÅÅL!',FW/2,h2);
-        ctx.font='18px ui-monospace,monospace'; ctx.fillStyle='#fff';
-        ctx.fillText(g.goalTeam===0?'Ditt lag poängsätter!':'Motståndarlaget poängsätter!',FW/2,h2+60);
-        if (g.celebration) {
-          ctx.font='13px ui-monospace,monospace'; ctx.fillStyle='#ffd43b';
-          ctx.fillText('Tryck SPACE för att fira!',FW/2,h2+90);
-        }
-        ctx.globalAlpha=1;
-      }
-
+      // Fulltime — trigger callbacks (React HUD visar statistik-skärmen)
       if (g.phase==='fulltime') {
-        const won=g.score[0]>g.score[1], draw=g.score[0]===g.score[1];
-        ctx.fillStyle='rgba(0,0,0,0.78)'; ctx.fillRect(0,0,FW,FH);
-        ctx.font='bold 62px Georgia,serif';
-        ctx.fillStyle=won?'#ffd43b':draw?'#fff':'#ff5555';
-        ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(won?'VINST!':draw?'OAVGJORT':'FÖRLUST',FW/2,h2-28);
-        ctx.font='bold 32px ui-monospace,monospace'; ctx.fillStyle='#fff';
-        ctx.fillText(`${g.score[0]} – ${g.score[1]}`,FW/2,h2+30);
-        ctx.font='13px ui-monospace,monospace'; ctx.fillStyle='rgba(255,255,255,0.55)';
-        ctx.fillText('Tryck ESC för att lämna…',FW/2,h2+80);
         if (!g._done) { g._done=true;
           try { if (window.SFX) { window.SFX.whistleFull(); window.SFX.setCrowdTarget(0.06); } } catch(e) {}
-          setTimeout(()=>onComplete&&onComplete(won,matchData?.id),3500);
+          setTimeout(()=>onComplete&&onComplete(g.score[0]>g.score[1],matchData?.id),3500);
         }
       }
     }
