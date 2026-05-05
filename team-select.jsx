@@ -260,10 +260,12 @@ function TeamPanel({ team, roster, side, label }) {
             <div style={{ marginBottom: 12 }}>
               <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 8,
                 color: 'rgba(255,255,255,0.35)', letterSpacing: '0.15em', marginBottom: 6 }}>RATINGS</div>
-              <RatingBar label="ATTACK"  value={roster.rating.attack}  accent={team.accent} flip={side===1} />
-              <RatingBar label="FÖRSVAR" value={roster.rating.defense} accent={team.accent} flip={side===1} />
-              <RatingBar label="FART"    value={roster.rating.speed}   accent={team.accent} flip={side===1} />
-              <RatingBar label="UTHÅLL." value={roster.rating.stamina} accent={team.accent} flip={side===1} />
+              <RatingBar label="ATTACK"   value={roster.rating.attack}     accent={team.accent} flip={side===1} />
+              <RatingBar label="FÖRSVAR"  value={roster.rating.defense}    accent={team.accent} flip={side===1} />
+              <RatingBar label="AGGRESS." value={roster.rating.aggression} accent={team.accent} flip={side===1} />
+              <RatingBar label="PRESS"    value={roster.rating.pressing}   accent={team.accent} flip={side===1} />
+              <RatingBar label="RISK"     value={roster.rating.risk}       accent={team.accent} flip={side===1} />
+              <RatingBar label="DIREKT"   value={roster.rating.directPlay} accent={team.accent} flip={side===1} />
             </div>
 
             {/* Styrkor */}
