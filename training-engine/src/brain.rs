@@ -1,7 +1,7 @@
 use rand::Rng;
 
 use crate::game::Game;
-use crate::policy::{PolicyParams, V3Params, V4Params};
+use crate::policy::{PolicyParams, V3Params, V4Params, V6Params};
 
 /// Optional hooks that classic_tick reads to alter behavior for v4 brains.
 /// V1/V2/V3 brains pass the default (no-op) and behave exactly as before.
@@ -39,6 +39,7 @@ pub enum PlayerBrain {
     V2(PolicyParams),
     V3(V3Params),
     V4(V4Params),
+    V6(V6Params),
 }
 
 impl PlayerBrain {
@@ -48,6 +49,7 @@ impl PlayerBrain {
             PlayerBrain::V1(p) | PlayerBrain::V2(p) => *p,
             PlayerBrain::V3(p) => p.base,
             PlayerBrain::V4(p) => p.v3.base,
+            PlayerBrain::V6(p) => p.decisions.as_policy_params(),
         }
     }
 
@@ -57,6 +59,7 @@ impl PlayerBrain {
             PlayerBrain::V2(_) => "v2",
             PlayerBrain::V3(_) => "v3",
             PlayerBrain::V4(_) => "v4",
+            PlayerBrain::V6(_) => "v6",
         }
     }
 }
@@ -79,6 +82,9 @@ pub fn tick_player(game: &mut Game, player_idx: usize, rng: &mut impl Rng) {
         }
         PlayerBrain::V4(p) => {
             v4_tick(game, player_idx, &p, rng);
+        }
+        PlayerBrain::V6(p) => {
+            crate::ai::v6_tick(game, player_idx, &p, rng);
         }
     }
 }

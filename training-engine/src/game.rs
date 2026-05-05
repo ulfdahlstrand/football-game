@@ -1,6 +1,14 @@
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use crate::constants::*;
 use crate::brain::PlayerBrain;
-use crate::policy::{PolicyParams, TeamPolicy, TeamPolicyV3, TeamPolicyV4};
+use crate::policy::{PolicyParams, TeamPolicy, TeamPolicyV3, TeamPolicyV4, TeamPolicyV6};
+
+/// When true, all field players start clustered at the centre of their own
+/// half (forward/mid/def at the same position). GKs keep their goal-line spot.
+/// Used by the v6-test mode to verify the spatial-prefs positioning logic
+/// converges from a degenerate start.
+pub static CLUSTER_START: AtomicBool = AtomicBool::new(false);
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Phase {
@@ -211,6 +219,17 @@ impl Game {
         game
     }
 
+    /// Sets up a v6 team-vs-team match: per-position V6Params, V6 brain.
+    pub fn for_team_battle_v6(team0: &TeamPolicyV6, team1: &TeamPolicyV6) -> Self {
+        let mut game = Self::new(team0[0].decisions.as_policy_params(), team1[0].decisions.as_policy_params());
+        for player in &mut game.pl {
+            let slot = player.id % 5;
+            let p = if player.team == 0 { team0[slot] } else { team1[slot] };
+            player.brain = PlayerBrain::V6(p);
+        }
+        game
+    }
+
     /// Sets up a v4 team-vs-team match: per-position V4Params, V4 brain.
     pub fn for_team_battle_v4(team0: &TeamPolicyV4, team1: &TeamPolicyV4) -> Self {
         let mut game = Self::new(team0[0].v3.base, team1[0].v3.base);
@@ -236,6 +255,23 @@ impl Game {
 }
 
 pub fn make_players() -> Vec<Player> {
+    if CLUSTER_START.load(Ordering::Relaxed) {
+        // All field players cluster at centre of own half. GKs unchanged.
+        let cx_team0 = FW * 0.25;
+        let cx_team1 = FW * 0.75;
+        return vec![
+            Player::new(0, 0, cx_team0, H2, Role::Fwd),
+            Player::new(1, 0, cx_team0, H2, Role::Mid),
+            Player::new(2, 0, cx_team0, H2, Role::Mid),
+            Player::new(3, 0, cx_team0, H2, Role::Def),
+            Player::new(4, 0, FIELD_LINE + PR * 2.0, H2, Role::Gk),
+            Player::new(5, 1, cx_team1, H2, Role::Fwd),
+            Player::new(6, 1, cx_team1, H2, Role::Mid),
+            Player::new(7, 1, cx_team1, H2, Role::Mid),
+            Player::new(8, 1, cx_team1, H2, Role::Def),
+            Player::new(9, 1, FW - FIELD_LINE - PR * 2.0, H2, Role::Gk),
+        ];
+    }
     vec![
         Player::new(0, 0, FW * 0.44, H2, Role::Fwd),
         Player::new(1, 0, FW * 0.32, H2 - 85.0, Role::Mid),

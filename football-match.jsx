@@ -365,6 +365,15 @@ function applyPolicyToTeam(g, opp, policy, team) {
   const hasBase = pp && pp[0] && pp[0].base;
   const matches = (p) => p.team === team;
 
+  const hasV6Spatial = pp && pp[0] && pp[0].spatial && pp[0].decisions;
+  if (hasV6Spatial) {
+    g.pl.forEach(p => {
+      if (!matches(p)) return;
+      const slot = p.id % 5;
+      p.brain = { version: 'v6', params: pp[slot] || pp[0] || {} };
+    });
+    return policy.name || opp.name || 'v6';
+  }
   if (hasV3Wrapper) {
     g.pl.forEach(p => {
       if (!matches(p)) return;
@@ -733,6 +742,7 @@ function cpuFindPass(g, carrier) {
 function tickPlayer(g, p) {
   if (!p.brain) { cpuTick(g, p); return; }
   switch (p.brain.version) {
+    case 'v6': v6Tick(g, p); return;
     case 'v4': v4Tick(g, p); return;
     case 'v3': v3Tick(g, p); return;
     case 'v1':
@@ -745,6 +755,117 @@ function tickPlayer(g, p) {
       return;
     }
   }
+}
+
+// V6 distance-pref cost: quadratic around preferred + soft penalty outside [min,max]
+function v6PrefCost(d, pref) {
+  if (!pref) return 0;
+  const range = Math.max(1, pref.max - pref.min);
+  const norm = (d - pref.preferred) / range;
+  const base = norm * norm;
+  const below = Math.max(0, pref.min - d);
+  const above = Math.max(0, d - pref.max);
+  return base + below*below*0.01 + above*above*0.01;
+}
+
+function v6NearestActive(g, excludeId, wantTeam, x, y) {
+  let best = Infinity;
+  for (const q of g.pl) {
+    if (q.state !== 'active' || q.id === excludeId) continue;
+    if (wantTeam !== null && q.team !== wantTeam) continue;
+    const d = Math.hypot(q.x - x, q.y - y);
+    if (d < best) best = d;
+  }
+  return Number.isFinite(best) ? best : 600;
+}
+
+function v6CostAt(g, p, x, y, sp) {
+  const ownGx = p.team === 0 ? FIELD_LINE : FW - FIELD_LINE;
+  const dGoal = Math.hypot(x - ownGx, y - h2);
+  const dSide = y;
+  const dBall = Math.hypot(x - g.ball.x, y - g.ball.y);
+  const dTeam = v6NearestActive(g, p.id, p.team, x, y);
+  const dOpp  = v6NearestActive(g, p.id, 1 - p.team, x, y);
+  return v6PrefCost(dGoal, sp.ownGoal)
+       + v6PrefCost(dSide, sp.side)
+       + v6PrefCost(dBall, sp.ball)
+       + v6PrefCost(dTeam, sp.teammate)
+       + v6PrefCost(dOpp,  sp.opponent);
+}
+
+function v6Target(g, p, sp) {
+  const r = 24, s = r * 0.7071;
+  const cands = [
+    [p.x, p.y],
+    [p.x+r, p.y], [p.x-r, p.y], [p.x, p.y+r], [p.x, p.y-r],
+    [p.x+s, p.y+s], [p.x+s, p.y-s], [p.x-s, p.y+s], [p.x-s, p.y-s],
+  ];
+  let best = [p.x, p.y], bestC = Infinity;
+  for (const [cx, cy] of cands) {
+    const x = clamp(cx, PR, FW-PR), y = clamp(cy, PR, FH-PR);
+    const c = v6CostAt(g, p, x, y, sp);
+    if (c < bestC) { bestC = c; best = [x, y]; }
+  }
+  return best;
+}
+
+function v6Tick(g, p) {
+  const v6 = p.brain.params || {};
+  const sp = v6.spatial || {};
+  const dec = v6.decisions || BASELINE_AI_PARAMS;
+  const ball = g.ball;
+  const hasball = ball.owner === p.id;
+
+  // Set-piece taker override
+  if (g.setPieceTakerId === p.id && !hasball) {
+    const slow = p.slowTimer > 0 ? SLOW_FACTOR : 1;
+    moveTo(p, ball.x, ball.y, CSPEED * 1.18 * slow);
+    return;
+  }
+
+  // Tackle
+  if (!hasball && ball.owner !== null) {
+    const carrier = g.pl.find(q => q.id === ball.owner);
+    if (carrier && carrier.team !== p.team && p.tackleCooldown <= 0) {
+      const tc = (dec.tackleChance || 0.08) * (dec.aggression || 1);
+      if (Math.hypot(p.x-carrier.x, p.y-carrier.y) < TACKLE_DIST && Math.random() < tc) {
+        tacklePlayer(g, p, carrier);
+        return;
+      }
+    }
+  }
+
+  // GK + has-ball use classic logic
+  if (p.role === 'gk' || hasball) {
+    const saved = p.aiPolicy;
+    p.aiPolicy = dec;
+    cpuTick(g, p);
+    p.aiPolicy = saved;
+    return;
+  }
+
+  // Loose ball chase: closest non-GK pursues
+  if (ball.owner === null) {
+    let chaserId = null, bestD = Infinity;
+    for (const q of g.pl) {
+      if (q.role === 'gk' || q.state !== 'active') continue;
+      const d = Math.hypot(q.x-ball.x, q.y-ball.y);
+      if (d < bestD) { bestD = d; chaserId = q.id; }
+    }
+    if (chaserId === p.id) {
+      const lead = Math.min(18, Math.hypot(ball.vx, ball.vy) * 1.4);
+      const tx = clamp(ball.x + ball.vx*lead, PR, FW-PR);
+      const ty = clamp(ball.y + ball.vy*lead, PR, FH-PR);
+      const slow = p.slowTimer > 0 ? SLOW_FACTOR : 1;
+      moveTo(p, tx, ty, CSPEED * 1.18 * slow);
+      return;
+    }
+  }
+
+  // Off-ball: spatial cost minimization
+  const [tx, ty] = v6Target(g, p, sp);
+  const slow = p.slowTimer > 0 ? SLOW_FACTOR : 1;
+  moveTo(p, tx, ty, CSPEED * slow);
 }
 
 // v4 in the browser approximates the engine: applies v3's modulation, plus

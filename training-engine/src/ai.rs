@@ -517,3 +517,153 @@ pub fn classic_tick(
     let spd = (if team_has_ball { CSPEED * 0.82 } else { CSPEED }) * slow_mult;
     move_to(&mut game.pl[player_idx], ntx, nty, spd);
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+// V6 tick — spatial preference architecture
+// ════════════════════════════════════════════════════════════════════════════
+//
+// Off-ball positioning is decided by minimising a weighted cost over 5 distance
+// preferences (own_goal, side, ball, teammate, opponent). On-ball decisions
+// (passing/shooting) reuse classic_tick. GK keeps the role-specific dive logic
+// for shot-saves; otherwise spatial cost dictates target.
+
+fn nearest_active_dist(game: &Game, exclude_id: usize, want_team: Option<usize>, x: f32, y: f32) -> f32 {
+    let mut best = f32::INFINITY;
+    for q in &game.pl {
+        if q.state != crate::game::PlayerState::Active { continue; }
+        if q.id == exclude_id { continue; }
+        if let Some(t) = want_team { if q.team != t { continue; } }
+        let d = (q.x - x).hypot(q.y - y);
+        if d < best { best = d; }
+    }
+    if best.is_infinite() { 600.0 } else { best }
+}
+
+fn v6_total_cost(
+    game: &Game, player_idx: usize, x: f32, y: f32,
+    spatial: &crate::policy::V6Spatial,
+) -> f32 {
+    let p = &game.pl[player_idx];
+    // own_goal: distance to own goal point
+    let own_goal_x = if p.team == 0 { FIELD_LINE } else { FW - FIELD_LINE };
+    let d_own_goal = (x - own_goal_x).hypot(y - H2);
+    let d_side = y; // distance from top sideline
+    let d_ball = (x - game.ball.x).hypot(y - game.ball.y);
+    let opp_team = 1 - p.team;
+    let d_team = nearest_active_dist(game, p.id, Some(p.team), x, y);
+    let d_opp  = nearest_active_dist(game, p.id, Some(opp_team), x, y);
+
+    spatial.own_goal.cost(d_own_goal)
+        + spatial.side.cost(d_side)
+        + spatial.ball.cost(d_ball)
+        + spatial.teammate.cost(d_team)
+        + spatial.opponent.cost(d_opp)
+}
+
+/// Sample 8 directions + center, pick the candidate with min cost.
+fn v6_target(game: &Game, player_idx: usize, spatial: &crate::policy::V6Spatial) -> (f32, f32) {
+    let p = &game.pl[player_idx];
+    let r = 24.0_f32;
+    let s = std::f32::consts::FRAC_1_SQRT_2 * r;
+    let cands: [(f32, f32); 9] = [
+        (p.x, p.y),
+        (p.x + r, p.y), (p.x - r, p.y), (p.x, p.y + r), (p.x, p.y - r),
+        (p.x + s, p.y + s), (p.x + s, p.y - s),
+        (p.x - s, p.y + s), (p.x - s, p.y - s),
+    ];
+    let mut best = (p.x, p.y);
+    let mut best_cost = f32::INFINITY;
+    for (cx, cy) in cands {
+        let cx = cx.clamp(PR, FW - PR);
+        let cy = cy.clamp(PR, FH - PR);
+        let c = v6_total_cost(game, player_idx, cx, cy, spatial);
+        if c < best_cost { best_cost = c; best = (cx, cy); }
+    }
+    best
+}
+
+pub fn v6_tick(
+    game: &mut Game, player_idx: usize, params: &crate::policy::V6Params, rng: &mut impl Rng,
+) {
+    let p_id = game.pl[player_idx].id;
+    let p_team = game.pl[player_idx].team;
+    let p_role = game.pl[player_idx].role;
+    let ball_owner = game.ball.owner;
+    let has_ball = ball_owner == Some(p_id);
+    let policy = params.decisions.as_policy_params();
+
+    // Set-piece taker override: run to ball
+    if game.set_piece_taker_id == Some(p_id) && !has_ball {
+        let slow = if game.pl[player_idx].slow_timer > 0 { SLOW_FACTOR } else { 1.0 };
+        let bx = game.ball.x; let by = game.ball.y;
+        move_to(&mut game.pl[player_idx], bx, by, CSPEED * 1.18 * slow);
+        return;
+    }
+
+    // Tackle attempt (uses decisions.tackle_chance scaled by aggression)
+    if !has_ball {
+        if let Some(c_id) = ball_owner {
+            let c_team = game.pl[c_id].team;
+            if c_team != p_team && game.pl[player_idx].tackle_cooldown <= 0 {
+                let dist = (game.pl[player_idx].x - game.pl[c_id].x)
+                    .hypot(game.pl[player_idx].y - game.pl[c_id].y);
+                let chance = (policy.tackle_chance * params.decisions.aggression).clamp(0.01, 0.5);
+                if dist < TACKLE_DIST && rng.gen::<f32>() < chance {
+                    crate::physics::tackle_player(game, player_idx, c_id);
+                    return;
+                }
+            }
+        }
+    }
+
+    // GK keeps role-specific behavior (dive, hand-pickup, patrol)
+    if p_role == Role::Gk {
+        // Reuse classic_tick GK branch via hooks (passes through to GK logic)
+        let hooks = crate::brain::TickHooks {
+            pass_dir_mult: [
+                params.decisions.pass_dir_offensive.clamp(0.0, 2.0),
+                params.decisions.pass_dir_defensive.clamp(0.0, 2.0),
+                params.decisions.pass_dir_neutral.clamp(0.0, 2.0),
+            ],
+            gk_freedom: 0.0,
+            max_distance_from_goal: (params.spatial.own_goal.max / 880.0).clamp(0.0, 1.0),
+        };
+        crate::ai::classic_tick(game, player_idx, &policy, &hooks, rng);
+        return;
+    }
+
+    // Has ball: classic carry/pass/shoot logic
+    if has_ball {
+        let hooks = crate::brain::TickHooks {
+            pass_dir_mult: [
+                params.decisions.pass_dir_offensive.clamp(0.0, 2.0),
+                params.decisions.pass_dir_defensive.clamp(0.0, 2.0),
+                params.decisions.pass_dir_neutral.clamp(0.0, 2.0),
+            ],
+            gk_freedom: 0.0,
+            max_distance_from_goal: 1.0,
+        };
+        crate::ai::classic_tick(game, player_idx, &policy, &hooks, rng);
+        return;
+    }
+
+    // Loose-ball chase: closest non-GK pursues with leading. Spatial prefs are
+    // overridden because nobody picks up the ball if everyone just orbits at
+    // their preferred ball-distance.
+    if ball_owner.is_none() {
+        if loose_ball_chaser(game) == Some(p_id) {
+            let bvx = game.ball.vx; let bvy = game.ball.vy;
+            let lead = 18.0_f32.min(bvx.hypot(bvy) * 1.4);
+            let tx = clamp(game.ball.x + bvx * lead, PR, FW - PR);
+            let ty = clamp(game.ball.y + bvy * lead, PR, FH - PR);
+            let slow = if game.pl[player_idx].slow_timer > 0 { SLOW_FACTOR } else { 1.0 };
+            move_to(&mut game.pl[player_idx], tx, ty, CSPEED * 1.18 * slow);
+            return;
+        }
+    }
+
+    // Off-ball positioning: spatial cost minimization
+    let (tx, ty) = v6_target(game, player_idx, &params.spatial);
+    let slow = if game.pl[player_idx].slow_timer > 0 { SLOW_FACTOR } else { 1.0 };
+    move_to(&mut game.pl[player_idx], tx, ty, CSPEED * slow);
+}
