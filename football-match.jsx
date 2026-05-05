@@ -1355,7 +1355,8 @@ function FootballMatch({ matchData, onComplete, onExit }) {
     function update() {
       const g=gRef.current;
       if (g.phase==='kickoff') {
-        if (Object.values(keysRef.current).some(Boolean)) g.phase='playing';
+        const anyHuman = g.pl.some(p => p.human);
+        if (!anyHuman || Object.values(keysRef.current).some(Boolean)) g.phase='playing';
         return;
       }
       if (g.phase==='goal') {
