@@ -81,6 +81,8 @@ pub fn tackle_player(game: &mut Game, tackler_idx: usize, target_idx: usize) -> 
         // Off-ball tackle: foul. No pause, no knock — slow target briefly,
         // free kick at foul spot.
         if target_team != tackler_team && tackler_in_own_area {
+            game.pl[tackler_idx].fouls += 1;
+            game.pl[tackler_idx].penalties_caused += 1;
             start_penalty(game, target_team);
             return true;
         }
@@ -91,6 +93,7 @@ pub fn tackle_player(game: &mut Game, tackler_idx: usize, target_idx: usize) -> 
         start_free_kick(game, fouled_id, fx, fy);
         game.stats.tackle_success += 1;
         game.stats.fouls += 1;
+        game.pl[tackler_idx].fouls += 1;
     }
     true
 }
@@ -110,10 +113,33 @@ pub fn do_shoot(game: &mut Game, shooter_idx: usize, mega: bool, tx: f32, ty: f3
     game.ball.mega = mega;
     game.ball.cooldown = BALL_COOL;
     game.ball.last_touch_team = Some(game.pl[shooter_idx].team);
+    let shooter_id = game.pl[shooter_idx].id;
     if is_pass {
+        game.last_passer = Some(shooter_id);
         game.stats.passes += 1;
     } else {
+        game.last_passer = None;
+        game.last_shooter = Some(shooter_id);
+        game.pl[shooter_idx].shots += 1;
         game.stats.shots += 1;
+    }
+}
+
+fn attribute_goal(game: &mut Game) {
+    let scorer_id = game.last_shooter;
+    let assister_id = game.last_passer;
+    let is_penalty = game.penalty_shot_pending;
+    game.penalty_shot_pending = false;
+    if let Some(sid) = scorer_id {
+        if let Some(p) = game.pl.iter_mut().find(|p| p.id == sid) {
+            p.goals += 1;
+            if is_penalty { p.penalties_scored += 1; }
+        }
+    }
+    if let (Some(aid), Some(sid)) = (assister_id, scorer_id) {
+        if aid != sid {
+            if let Some(p) = game.pl.iter_mut().find(|p| p.id == aid) { p.assists += 1; }
+        }
     }
 }
 
@@ -299,6 +325,7 @@ pub fn update_ball(game: &mut Game) {
             game.goal_anim = 160;
             game.goal_team = Some(1);
             game.stats.goals += 1;
+            attribute_goal(game);
             game.gk_has_ball[0] = false;
         } else {
             handle_ball_out(game);
@@ -312,6 +339,7 @@ pub fn update_ball(game: &mut Game) {
             game.goal_anim = 160;
             game.goal_team = Some(0);
             game.stats.goals += 1;
+            attribute_goal(game);
             game.gk_has_ball[1] = false;
         } else {
             handle_ball_out(game);
@@ -384,6 +412,7 @@ pub fn update_ball(game: &mut Game) {
                         game.free_kick_shooter_id = Some(tid);
                         game.free_kick_active = true;
                         game.stats.fouls += 1;
+                        game.pl[pidx].fouls += 1;
                     }
                     return; // skip normal pickup
                 }
@@ -405,6 +434,7 @@ pub fn update_ball(game: &mut Game) {
             if p_role == Role::Gk {
                 game.gk_has_ball[p_team] = true;
                 game.pl[pidx].gk_hold_timer = GK_HOLD_DELAY;
+                game.pl[pidx].gk_hold_extended = 0;
             }
         }
     }
@@ -426,7 +456,8 @@ pub fn reset_kickoff(game: &mut Game) {
         p.state = PlayerState::Active; p.knock_timer = 0;
         p.tackle_cooldown = 0; p.jump_timer = 0;
         p.ai_jitter_x = 0.0; p.ai_jitter_y = 0.0; p.ai_jitter_timer = 0;
-        p.slow_timer = 0; p.gk_dive_dir = None; p.gk_dive_timer = 0; p.gk_hold_timer = 0;
+        p.slow_timer = 0; p.gk_dive_dir = None; p.gk_dive_timer = 0;
+        p.gk_hold_timer = 0; p.gk_hold_extended = 0;
     }
     game.ball.x = FW / 2.0; game.ball.y = H2;
     game.ball.vx = 0.0; game.ball.vy = 0.0;
@@ -461,6 +492,8 @@ pub fn step_game(game: &mut Game, rng: &mut impl Rng) {
                         let team = game.penalty_team.unwrap_or(1);
                         let tx = if team == 0 { FW - FIELD_LINE } else { FIELD_LINE };
                         let jitter = (rng.gen::<f32>() * 2.0 - 1.0) * 48.0;
+                        game.pl[idx].penalties_taken += 1;
+                        game.penalty_shot_pending = true;
                         do_shoot(game, idx, false, tx, H2 + jitter, Some(SHOOT_POW), false);
                         game.phase = Phase::Playing;
                         game.penalty_taken = true;

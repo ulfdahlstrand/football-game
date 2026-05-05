@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Aurora FC logo</title>
+  <desc id="desc">A shield crest with northern lights, a lake star, and a hard central spear for Aurora FC.</desc>
+  <defs>
+    <linearGradient id="shield" x1="92" x2="420" y1="40" y2="472" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#153f4a"/>
+      <stop offset="0.52" stop-color="#102129"/>
+      <stop offset="1" stop-color="#070b10"/>
+    </linearGradient>
+    <linearGradient id="aurora" x1="116" x2="396" y1="128" y2="310" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6ef5d2"/>
+      <stop offset="0.42" stop-color="#87f06b"/>
+      <stop offset="0.74" stop-color="#58a6ff"/>
+      <stop offset="1" stop-color="#a071ff"/>
+    </linearGradient>
+    <linearGradient id="ice" x1="176" x2="336" y1="194" y2="368" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f4ffff"/>
+      <stop offset="0.55" stop-color="#a9f6ff"/>
+      <stop offset="1" stop-color="#2d7f9d"/>
+    </linearGradient>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="124%">
+      <feDropShadow dx="0" dy="9" stdDeviation="9" flood-color="#000" flood-opacity="0.34"/>
+    </filter>
+  </defs>
+  <path fill="url(#shield)" d="M256 34 428 94v138c0 114-65 202-172 246C149 434 84 346 84 232V94L256 34Z"/>
+  <path fill="none" stroke="#74f7d0" stroke-width="17" d="M256 57 405 109v122c0 99-55 174-149 215-94-41-149-116-149-215V109L256 57Z"/>
+  <path fill="none" stroke="#f7fff9" stroke-width="5" opacity="0.9" d="M256 75 386 120v111c0 85-45 151-130 190-85-39-130-105-130-190V120L256 75Z"/>
+
+  <g filter="url(#shadow)">
+    <path fill="none" stroke="url(#aurora)" stroke-linecap="round" stroke-width="30" d="M127 209c54-64 101-67 142-19 38 44 67 35 116-13"/>
+    <path fill="none" stroke="#dfffee" stroke-linecap="round" stroke-width="9" opacity="0.7" d="M132 190c46-38 86-35 124 10 37 44 75 42 123-2"/>
+    <path fill="none" stroke="#5fb7ff" stroke-linecap="round" stroke-width="18" opacity="0.8" d="M150 245c45-35 79-31 112 12 32 40 67 36 106-6"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path fill="url(#ice)" d="M256 154 285 250 379 250 302 306 332 398 256 342 180 398 210 306 133 250 227 250Z"/>
+    <path fill="#0e2330" d="M256 188 275 264 347 264 288 306 310 370 256 329 202 370 224 306 165 264 237 264Z" opacity="0.35"/>
+    <path fill="#f8ffff" d="M256 154 285 250 256 342 227 250Z" opacity="0.48"/>
+  </g>
+
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="9" opacity="0.88">
+    <path d="M256 103v-31"/>
+    <path d="M168 139 147 119"/>
+    <path d="M344 139 365 119"/>
+    <path d="M137 322h34"/>
+    <path d="M375 322h-34"/>
+  </g>
+
+  <path fill="#071014" d="M148 408h216v24H148z"/>
+  <text x="256" y="428" fill="#baffee" font-family="Arial Black, Impact, sans-serif" font-size="28" text-anchor="middle" letter-spacing="2">AURORA FC</text>
+</svg>

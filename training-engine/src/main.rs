@@ -3970,7 +3970,14 @@ fn run_gk_train_all(project_root: &Path, epochs: usize, games_per_epoch: usize) 
             if !baseline.exists() { continue; }
             let team_name = path.file_name().unwrap().to_string_lossy().into_owned();
             match read_team_baseline_v6(&baseline) {
-                Ok(b) => teams.push((team_name, path, b.player_params)),
+                Ok(b) => {
+                    let mut params = b.player_params;
+                    // Old baselines lack gk params — bootstrap defaults for slot 4.
+                    if params[4].gk.is_none() {
+                        params[4].gk = Some(policy::GkDecisionParams::default());
+                    }
+                    teams.push((team_name, path, params));
+                }
                 Err(e) => eprintln!("  ! skip {}: {}", team_name, e),
             }
         }
@@ -4007,7 +4014,17 @@ fn run_gk_train_all(project_root: &Path, epochs: usize, games_per_epoch: usize) 
             let candidate = mutate_gk_only(&champion, &mut rng, scale_factor);
             let eval = evaluate_team_policies_v6(&opponent, &candidate, games_per_epoch);
 
-            if eval.candidate_won {
+            let stop_label = match eval.early_stop {
+                Some(crate::trainer::EarlyStop::Worse)      => "worse",
+                Some(crate::trainer::EarlyStop::Better)     => "better",
+                Some(crate::trainer::EarlyStop::Indecisive) => "indecsv",
+                None => "full",
+            };
+            // GK-only training: accept on goal_diff > 0 (simple majority).
+            // The standard point_z_score > 1.0 criterion needs too many games
+            // to detect the small effect of a single GK param change.
+            let candidate_won = eval.goal_diff > 0.0;
+            if candidate_won {
                 champion = candidate;
                 accepted_count += 1;
                 rejection_streak = 0;
@@ -4019,10 +4036,11 @@ fn run_gk_train_all(project_root: &Path, epochs: usize, games_per_epoch: usize) 
                 }
             }
 
-            if epoch % 10 == 0 || epoch == epochs {
+            if epoch <= 5 || epoch % 10 == 0 || epoch == epochs {
                 let gk = champion[4].gk.unwrap_or_default();
-                println!("  epoch {:>4}/{} | accepted {} | scale {:.2} | gk: dive={:.2} dist={:.0} risk={:.2} zone={:.2} pass={:.0}",
-                    epoch, epochs, accepted_count, scale_factor,
+                println!("  epoch {:>4}/{} | {} games z={:.2} [{}] won={} | accepted {} | scale {:.2} | gk: dive={:.2} dist={:.0} risk={:.2} zone={:.2} pass={:.0}",
+                    epoch, epochs, eval.games, eval.z_score, stop_label, candidate_won,
+                    accepted_count, scale_factor,
                     gk.gk_dive_chance, gk.gk_dive_commit_dist,
                     gk.gk_risk_clearance, gk.gk_distribution_zone,
                     gk.gk_pass_target_dist);

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Phoenix Rovers logo</title>
+  <desc id="desc">A shield crest with a rising phoenix, flame wings, and a traveling star for Phoenix Rovers.</desc>
+  <defs>
+    <linearGradient id="shield" x1="92" x2="420" y1="40" y2="472" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5b0f18"/>
+      <stop offset="0.5" stop-color="#211018"/>
+      <stop offset="1" stop-color="#090507"/>
+    </linearGradient>
+    <linearGradient id="fire" x1="132" x2="380" y1="120" y2="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff08a"/>
+      <stop offset="0.35" stop-color="#ff8a24"/>
+      <stop offset="0.72" stop-color="#e8341d"/>
+      <stop offset="1" stop-color="#8b1115"/>
+    </linearGradient>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="124%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  <path fill="url(#shield)" d="M256 34 428 94v138c0 114-65 202-172 246C149 434 84 346 84 232V94L256 34Z"/>
+  <path fill="none" stroke="#ff7a22" stroke-width="17" d="M256 57 405 109v122c0 99-55 174-149 215-94-41-149-116-149-215V109L256 57Z"/>
+  <path fill="none" stroke="#ffe27a" stroke-width="5" opacity="0.9" d="M256 75 386 120v111c0 85-45 151-130 190-85-39-130-105-130-190V120L256 75Z"/>
+
+  <g filter="url(#shadow)">
+    <path fill="url(#fire)" d="M255 104c23 58 6 91-23 125 42-9 75-35 100-79 10 58 2 105-23 139 28-11 53-32 75-62 3 86-48 154-128 169-80-15-131-83-128-169 22 30 47 51 75 62-25-34-33-81-23-139 25 44 58 70 100 79-29-34-46-67-25-125Z"/>
+    <path fill="#fff3a3" d="M256 182c10 32 3 55-17 78 24-7 44-23 59-48 5 34-2 62-19 84 18-6 33-19 47-38-1 49-29 88-70 100-41-12-69-51-70-100 14 19 29 32 47 38-17-22-24-50-19-84 15 25 35 41 59 48-20-23-27-46-17-78Z" opacity="0.76"/>
+  </g>
+
+  <g fill="#2a0c13" filter="url(#shadow)">
+    <path d="M256 159c30 31 46 68 46 113 0 48-18 87-46 113-28-26-46-65-46-113 0-45 16-82 46-113Z"/>
+    <path d="M256 202 281 251 256 370 231 251Z" fill="#ffcf62"/>
+    <path d="M188 244 256 283 147 314Z" fill="#ff8a24"/>
+    <path d="M324 244 256 283 365 314Z" fill="#ff8a24"/>
+  </g>
+
+  <path fill="#ffe27a" d="M359 124 367 146 390 154 367 162 359 184 351 162 328 154 351 146Z"/>
+  <path fill="#090507" d="M117 408h278v24H117z"/>
+  <text x="256" y="428" fill="#ffe27a" font-family="Arial Black, Impact, sans-serif" font-size="24" text-anchor="middle" letter-spacing="1.4">PHOENIX ROVERS</text>
+</svg>

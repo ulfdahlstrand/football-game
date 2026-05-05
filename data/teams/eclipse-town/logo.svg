@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Eclipse Town logo</title>
+  <desc id="desc">A shield crest with a solar eclipse, crescent corona, and chess-like strike lines for Eclipse Town.</desc>
+  <defs>
+    <radialGradient id="eclipse" cx="50%" cy="45%" r="55%">
+      <stop offset="0.52" stop-color="#05070b"/>
+      <stop offset="0.54" stop-color="#f5e9a6"/>
+      <stop offset="0.69" stop-color="#f0a84c"/>
+      <stop offset="1" stop-color="#43214a"/>
+    </radialGradient>
+    <linearGradient id="shield" x1="88" x2="424" y1="36" y2="478" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2d2740"/>
+      <stop offset="0.52" stop-color="#11121e"/>
+      <stop offset="1" stop-color="#050608"/>
+    </linearGradient>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="124%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000" flood-opacity="0.42"/>
+    </filter>
+  </defs>
+  <path fill="url(#shield)" d="M256 34 428 94v138c0 114-65 202-172 246C149 434 84 346 84 232V94L256 34Z"/>
+  <path fill="none" stroke="#d49a4a" stroke-width="17" d="M256 57 405 109v122c0 99-55 174-149 215-94-41-149-116-149-215V109L256 57Z"/>
+  <path fill="none" stroke="#efe2a1" stroke-width="5" opacity="0.9" d="M256 75 386 120v111c0 85-45 151-130 190-85-39-130-105-130-190V120L256 75Z"/>
+
+  <g filter="url(#shadow)">
+    <circle cx="256" cy="226" r="122" fill="url(#eclipse)"/>
+    <circle cx="286" cy="210" r="103" fill="#06070b"/>
+    <path fill="#fff2ac" d="M169 271c24 43 67 72 117 75-20 11-43 17-68 17-76 0-137-61-137-137 0-55 32-103 78-125-28 30-45 70-45 114 0 20 4 39 11 56h44Z" opacity="0.98"/>
+  </g>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)">
+    <path stroke="#efe2a1" stroke-width="11" d="M156 316h200"/>
+    <path stroke="#7b6bff" stroke-width="7" d="M181 292 222 251 263 292 304 251 345 292"/>
+    <path stroke="#efe2a1" stroke-width="8" d="M201 344h110"/>
+    <path stroke="#efe2a1" stroke-width="8" d="M221 368h70"/>
+  </g>
+
+  <g fill="#f4e7aa">
+    <path d="M256 91 266 119 294 129 266 139 256 167 246 139 218 129 246 119Z"/>
+    <path d="M145 155 152 174 171 181 152 188 145 207 138 188 119 181 138 174Z"/>
+    <path d="M369 162 375 178 391 184 375 190 369 206 363 190 347 184 363 178Z"/>
+  </g>
+
+  <path fill="#06070b" d="M144 408h224v24H144z"/>
+  <text x="256" y="428" fill="#f3e6a6" font-family="Arial Black, Impact, sans-serif" font-size="26" text-anchor="middle" letter-spacing="1.5">ECLIPSE TOWN</text>
+</svg>

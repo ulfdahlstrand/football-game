@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Forge FC logo</title>
+  <desc id="desc">A shield crest with an anvil, crossed hammer, flames, and sparks for Forge FC.</desc>
+  <defs>
+    <linearGradient id="shield" x1="96" x2="416" y1="44" y2="468" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#343b42"/>
+      <stop offset="0.52" stop-color="#171b20"/>
+      <stop offset="1" stop-color="#080a0d"/>
+    </linearGradient>
+    <linearGradient id="ember" x1="156" x2="356" y1="116" y2="386" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffcf67"/>
+      <stop offset="0.48" stop-color="#f36b22"/>
+      <stop offset="1" stop-color="#8f1f17"/>
+    </linearGradient>
+    <linearGradient id="steel" x1="154" x2="366" y1="210" y2="334" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f0f4f6"/>
+      <stop offset="0.5" stop-color="#9ca7ad"/>
+      <stop offset="1" stop-color="#5e666c"/>
+    </linearGradient>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="124%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000" flood-opacity="0.38"/>
+    </filter>
+  </defs>
+
+  <path fill="url(#shield)" d="M256 34 428 94v138c0 114-65 202-172 246C149 434 84 346 84 232V94L256 34Z"/>
+  <path fill="none" stroke="#f36b22" stroke-width="18" d="M256 57 405 109v122c0 99-55 174-149 215-94-41-149-116-149-215V109L256 57Z"/>
+  <path fill="none" stroke="#ffd16a" stroke-width="5" stroke-opacity="0.95" d="M256 75 386 120v111c0 85-45 151-130 190-85-39-130-105-130-190V120L256 75Z"/>
+
+  <g filter="url(#shadow)">
+    <path fill="url(#ember)" d="M255 117c30 44 19 76 2 103 28-12 46-35 56-65 33 35 48 71 48 111 0 69-47 120-105 120s-105-51-105-120c0-50 24-82 60-125-4 31 9 54 29 73 23-34 28-60 15-97Z"/>
+    <path fill="#ffd16a" d="M251 215c15 23 10 42 1 57 16-8 26-20 32-38 17 20 25 40 25 62 0 39-23 67-53 67s-53-28-53-67c0-29 13-48 32-72-2 18 5 31 17 42 12-20 14-35-1-51Z" opacity="0.82"/>
+  </g>
+
+  <g fill="none" stroke="#f5f7f8" stroke-linecap="round" stroke-width="11" opacity="0.9">
+    <path d="M158 139 178 119"/>
+    <path d="M354 139 334 119"/>
+    <path d="M256 95v-28"/>
+    <path d="M126 218h29"/>
+    <path d="M386 218h-29"/>
+  </g>
+
+  <g transform="rotate(-36 256 256)" filter="url(#shadow)">
+    <rect x="234" y="112" width="44" height="240" rx="13" fill="#5b3427"/>
+    <rect x="242" y="116" width="12" height="232" rx="6" fill="#8a5a43" opacity="0.7"/>
+    <path fill="url(#steel)" d="M181 96h150c18 0 32 14 32 32v22H149v-22c0-18 14-32 32-32Z"/>
+    <rect x="136" y="147" width="240" height="34" rx="9" fill="#778087"/>
+    <path fill="#d9e0e3" d="M181 96h150c11 0 21 6 27 15H154c6-9 16-15 27-15Z" opacity="0.72"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path fill="url(#steel)" d="M169 292h174l33 34c6 6 2 17-7 17H143c-9 0-13-11-7-17l33-34Z"/>
+    <path fill="#6f787f" d="M188 247h135c8 0 15 7 15 15v31H173v-31c0-8 7-15 15-15Z"/>
+    <path fill="#cfd7db" d="M185 252h109c16 0 29 13 29 29v11H173v-28c0-7 5-12 12-12Z"/>
+    <rect x="159" y="343" width="194" height="34" rx="8" fill="#4c5358"/>
+    <rect x="133" y="374" width="246" height="28" rx="9" fill="#262b30"/>
+    <path fill="#fff" d="M169 292h174l10 11H159l10-11Z" opacity="0.2"/>
+  </g>
+
+  <path fill="#11161b" d="M151 408h210v23H151z"/>
+  <text x="256" y="427" fill="#ffd16a" font-family="Arial Black, Impact, sans-serif" font-size="30" text-anchor="middle" letter-spacing="2">FORGE FC</text>
+</svg>

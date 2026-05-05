@@ -55,9 +55,19 @@ pub struct Player {
     pub gk_dive_dir: Option<bool>, // Some(true) = up (y<H2), Some(false) = down
     pub gk_dive_timer: i32,        // positive = diving, negative = on ground
     pub gk_hold_timer: i32,
+    /// Counts extra frames held beyond GK_HOLD_DELAY (risk-clearance extensions).
+    /// Capped at GK_MAX_HOLD_EXTRA to prevent infinite hold.
+    pub gk_hold_extended: i32,
     /// What algorithm + parameters this player uses to make decisions.
     /// Set at game setup; defaults to V1 with classic params.
     pub brain: PlayerBrain,
+    pub goals: u32,
+    pub shots: u32,
+    pub assists: u32,
+    pub fouls: u32,
+    pub penalties_caused: u32,
+    pub penalties_taken: u32,
+    pub penalties_scored: u32,
 }
 
 impl Player {
@@ -83,7 +93,15 @@ impl Player {
             gk_dive_dir: None,
             gk_dive_timer: 0,
             gk_hold_timer: 0,
+            gk_hold_extended: 0,
             brain: PlayerBrain::default(),
+            goals: 0,
+            shots: 0,
+            assists: 0,
+            fouls: 0,
+            penalties_caused: 0,
+            penalties_taken: 0,
+            penalties_scored: 0,
         }
     }
 }
@@ -161,6 +179,9 @@ pub struct Game {
     pub set_piece_taker_id: Option<usize>,
     pub set_piece_x: f32,
     pub set_piece_y: f32,
+    pub last_shooter: Option<usize>,
+    pub last_passer: Option<usize>,
+    pub penalty_shot_pending: bool,
 }
 
 impl Game {
@@ -184,6 +205,9 @@ impl Game {
             set_piece_taker_id: None,
             set_piece_x: 0.0,
             set_piece_y: 0.0,
+            last_shooter: None,
+            last_passer: None,
+            penalty_shot_pending: false,
         }
     }
 

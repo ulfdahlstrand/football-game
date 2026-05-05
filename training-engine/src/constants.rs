@@ -38,6 +38,8 @@ pub const GK_DIVE_DUR: i32 = 6;
 pub const GK_DIVE_COMMIT_DIST: f32 = 160.0;
 pub const GK_DIVE_JITTER: f32 = 40.0;
 pub const GK_HOLD_DELAY: i32 = 60;
+/// Max extra frames GK can hold via risk-clearance extensions (~2s at 60fps).
+pub const GK_MAX_HOLD_EXTRA: i32 = 120;
 pub const SET_PIECE_DELAY: i32 = 60;
 pub const FIELD_LINE: f32 = 18.0;
 pub const GOAL_AREA_W: f32 = 54.0;

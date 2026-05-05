@@ -319,15 +319,21 @@ pub fn classic_tick(
                 game.pl[player_idx].gk_hold_timer -= 1;
                 return;
             }
-            // Optionally wait if opponents haven't cleared own half yet.
+            // Optionally wait if opponents haven't cleared own half yet,
+            // but never hold for more than GK_MAX_HOLD_EXTRA extra frames.
             let opponents_on_own_half = game.pl.iter().any(|q| {
                 q.team != p_team && q.state == PlayerState::Active
                     && if p_team == 0 { q.x < FW / 2.0 } else { q.x > FW / 2.0 }
             });
-            if opponents_on_own_half && rng.gen::<f32>() > hooks.gk_risk_clearance {
+            let extended = game.pl[player_idx].gk_hold_extended;
+            if opponents_on_own_half && extended < GK_MAX_HOLD_EXTRA
+                && rng.gen::<f32>() > hooks.gk_risk_clearance
+            {
                 game.pl[player_idx].gk_hold_timer = 5;
+                game.pl[player_idx].gk_hold_extended += 5;
                 return;
             }
+            game.pl[player_idx].gk_hold_extended = 0;
             game.gk_has_ball[p_team] = false;
             // Prefer a short pass if a teammate is close enough.
             let gk_x = game.pl[player_idx].x;
