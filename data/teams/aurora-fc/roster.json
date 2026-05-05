@@ -1,10 +1,58 @@
 {
   "description": "Aurora FC är ett lag som aldrig backar undan en duell — aggressiva längs hela linjen, med ett mittfält som tar för sig och en back som håller linjen med järnhand. Laget spelar direkt och fysiskt, och trots att Risto tar höga risker i utdelningen balanserar han upp lagets glöd med en lugn säkerhet.",
   "players": [
-    { "id": 0, "role": "fwd", "name": "Einar Lund",        "description": "Spjutspetsen Einar Lund är laget risktagare av rang — han vill lösa allt på egen hand och tvekar inte ett ögonblick att avlossa skottet." },
-    { "id": 1, "role": "mid", "name": "Sanna Vikström",    "description": "Mittfältsmotorn Sanna Vikström är Auroras hetlevrade terrier — maxaggressiv och duellsugen, men iskall nog att vänta på rätt skottläge." },
-    { "id": 2, "role": "mid", "name": "Mikael Björk",      "description": "Spelföraren Mikael Björk är laget eldsjäl — aggressiv, duellsugen och en riktig lagspelare som inte drar sig för att skjuta tidigt." },
-    { "id": 3, "role": "def", "name": "Tuulikki Mäkinen",  "description": "Klippan Tuulikki Mäkinen är Auroras järnhårda ryggrad — aggressiv i närkamperna och en pålitlig lagspelande back som aldrig lämnar sin position." },
-    { "id": 4, "role": "gk",  "name": "Risto Järvi",       "description": "Räddaren Risto Järvi ser lugn ut men döljer en djärv sida — han kastar sig för allt som kommer och tar risker i utdelningen som överraskar motståndarna." }
-  ]
+    {
+      "id": 0,
+      "role": "fwd",
+      "name": "Einar Lund",
+      "description": "Spjutspetsen Einar Lund är laget risktagare av rang — han vill lösa allt på egen hand och tvekar inte ett ögonblick att avlossa skottet."
+    },
+    {
+      "id": 1,
+      "role": "mid",
+      "name": "Sanna Vikström",
+      "description": "Mittfältsmotorn Sanna Vikström är Auroras hetlevrade terrier — maxaggressiv och duellsugen, men iskall nog att vänta på rätt skottläge."
+    },
+    {
+      "id": 2,
+      "role": "mid",
+      "name": "Mikael Björk",
+      "description": "Spelföraren Mikael Björk är laget eldsjäl — aggressiv, duellsugen och en riktig lagspelare som inte drar sig för att skjuta tidigt."
+    },
+    {
+      "id": 3,
+      "role": "def",
+      "name": "Tuulikki Mäkinen",
+      "description": "Klippan Tuulikki Mäkinen är Auroras järnhårda ryggrad — aggressiv i närkamperna och en pålitlig lagspelande back som aldrig lämnar sin position."
+    },
+    {
+      "id": 4,
+      "role": "gk",
+      "name": "Risto Järvi",
+      "description": "Räddaren Risto Järvi ser lugn ut men döljer en djärv sida — han kastar sig för allt som kommer och tar risker i utdelningen som överraskar motståndarna."
+    }
+  ],
+  "style": "Aggressiv & Direkt",
+  "styleIcon": "⚡",
+  "formation": "1-2-1",
+  "strengths": [
+    "Stark i press",
+    "Duellvinnare",
+    "Snabba kontringar"
+  ],
+  "weaknesses": [
+    "Sårbar bakåt",
+    "Tappar energi sent"
+  ],
+  "star": {
+    "slot": 0,
+    "name": "Einar Lund",
+    "trait": "Risktagaren"
+  },
+  "rating": {
+    "attack": 85,
+    "defense": 68,
+    "speed": 78,
+    "stamina": 72
+  }
 }

@@ -1,10 +1,58 @@
 {
   "description": "Phoenix Rovers brinner med en enastående jämnhet — hela laget spelar med hög aggression från anfallslinje till backlinje. Skilda riskstilar skapar en intressant intern dynamik: Pyra Wolfe tar noll risker bakom linjen medan Ember Ash gamblar vilt mitt i spelet. En eld med många flammor.",
   "players": [
-    { "id": 0, "role": "fwd", "name": "Ignis Blaze",   "description": "Anfallaren Ignis Blaze är en eld som aldrig slocknar — aggressiv och duellhungrig men förvånansvärt försiktig i risktagandet, och delar gärna med sig av bollen." },
-    { "id": 1, "role": "mid", "name": "Ember Ash",     "description": "Enslingen Ember Ash tar enorma risker och löser allt på eget bevåg — aggressiv, risktagande och skjuter vid minsta glipa utan att be om tillstånd." },
-    { "id": 2, "role": "mid", "name": "Solaris Rynn",  "description": "Motorn Solaris Rynn är Phoenix brinnande hjärta — ständigt i närkampen, lagvillig och riskmedveten, men skjuter bara när läget verkligen öppnar sig." },
-    { "id": 3, "role": "def", "name": "Pyra Wolfe",    "description": "Ankaret Pyra Wolfe är Phoenix iskalla ulv — enorm aggression och duellhunger, men tar aldrig en enda risk och kliver gärna in med bollen i bra lägen." },
-    { "id": 4, "role": "gk",  "name": "Cinder Drake",  "description": "Räddaren Cinder Drake är Phoenix vildaste kort — aggressiv och risktagande i sina val, men kastar sig sällan förhastade och väntar på nästan perfekta lägen." }
-  ]
+    {
+      "id": 0,
+      "role": "fwd",
+      "name": "Ignis Blaze",
+      "description": "Anfallaren Ignis Blaze är en eld som aldrig slocknar — aggressiv och duellhungrig men förvånansvärt försiktig i risktagandet, och delar gärna med sig av bollen."
+    },
+    {
+      "id": 1,
+      "role": "mid",
+      "name": "Ember Ash",
+      "description": "Enslingen Ember Ash tar enorma risker och löser allt på eget bevåg — aggressiv, risktagande och skjuter vid minsta glipa utan att be om tillstånd."
+    },
+    {
+      "id": 2,
+      "role": "mid",
+      "name": "Solaris Rynn",
+      "description": "Motorn Solaris Rynn är Phoenix brinnande hjärta — ständigt i närkampen, lagvillig och riskmedveten, men skjuter bara när läget verkligen öppnar sig."
+    },
+    {
+      "id": 3,
+      "role": "def",
+      "name": "Pyra Wolfe",
+      "description": "Ankaret Pyra Wolfe är Phoenix iskalla ulv — enorm aggression och duellhunger, men tar aldrig en enda risk och kliver gärna in med bollen i bra lägen."
+    },
+    {
+      "id": 4,
+      "role": "gk",
+      "name": "Cinder Drake",
+      "description": "Räddaren Cinder Drake är Phoenix vildaste kort — aggressiv och risktagande i sina val, men kastar sig sällan förhastade och väntar på nästan perfekta lägen."
+    }
+  ],
+  "style": "Intensiv & Passionerad",
+  "styleIcon": "🔥",
+  "formation": "2-2",
+  "strengths": [
+    "Aldrig ger upp",
+    "Starka i slutet",
+    "Inspirerade av mål"
+  ],
+  "weaknesses": [
+    "Slarvig i uppspel",
+    "Disciplinproblem"
+  ],
+  "star": {
+    "slot": 0,
+    "name": "Ignis Blaze",
+    "trait": "Eldsjälen"
+  },
+  "rating": {
+    "attack": 82,
+    "defense": 65,
+    "speed": 80,
+    "stamina": 90
+  }
 }

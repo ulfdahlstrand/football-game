@@ -1,6 +1,18 @@
 // ── Flashig lagväljare + förbättrad LineupScreen ─────────────────────────────
 const { useState: useStateTS, useEffect: useEffectTS, useRef: useRefTS } = React;
 
+// Beräkna formation från spelare (exkl. GK), back→mitt→forward
+// Rollnamnen i roster.json är hårdkodade och stämmer inte alltid —
+// framöver ersätts detta med positioner härledda från träningsdata.
+function computeFormation(players) {
+  if (!players || players.length === 0) return null;
+  const outfield = players.filter(p => p.role !== 'gk');
+  const defs = outfield.filter(p => p.role === 'def').length;
+  const mids = outfield.filter(p => p.role === 'mid').length;
+  const fwds = outfield.filter(p => p.role === 'fwd').length;
+  return [defs, mids, fwds].filter(n => n > 0).join('-');
+}
+
 // Laginformation — namn, färger, slug
 const TEAM_ROSTER = [
   { slug: 'aurora-fc',        name: 'Aurora FC',        primary: '#2d8a4e', secondary: '#1a5c34', accent: '#4ecdc4' },
@@ -147,10 +159,9 @@ function RatingBar({ label, value, accent, flip }) {
   );
 }
 
-// ── Lagpanel (logga + roster + extended info) ─────────────────────────────────
+// ── Lagpanel (logga + roster info) ────────────────────────────────────────────
 function TeamPanel({ team, roster, side, label }) {
   const [tab, setTab] = useStateTS('info'); // info | roster
-  const ext = window.TEAM_EXTENDED?.[team?.slug] || null;
 
   if (!team) return (
     <div style={{
@@ -189,17 +200,17 @@ function TeamPanel({ team, roster, side, label }) {
             color: '#fff', lineHeight: 1.1, textWrap: 'balance' }}>
             {team.name}
           </div>
-          {ext && (
+          {roster?.style && (
             <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 9,
               color: 'rgba(255,255,255,0.5)', marginTop: 3 }}>
-              {ext.styleIcon} {ext.style} · {ext.formation}
+              {roster.styleIcon} {roster.style} · {roster.formation}
             </div>
           )}
         </div>
       </div>
 
       {/* Stjärnspelare */}
-      {ext?.star && (
+      {roster?.star && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10,
           padding: '8px 10px',
@@ -218,9 +229,9 @@ function TeamPanel({ team, roster, side, label }) {
             <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 8,
               color: team.accent, letterSpacing: '0.15em' }}>STJÄRNSPELARE</div>
             <div style={{ fontFamily: 'Georgia, serif', fontSize: 13, fontWeight: 700, color: '#fff' }}>
-              {ext.star.name}
+              {roster.star.name}
               <span style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 9,
-                color: 'rgba(255,255,255,0.5)', marginLeft: 6 }}>{ext.star.trait}</span>
+                color: 'rgba(255,255,255,0.5)', marginLeft: 6 }}>{roster.star.trait}</span>
             </div>
           </div>
         </div>
@@ -243,47 +254,51 @@ function TeamPanel({ team, roster, side, label }) {
 
       {/* Tab-innehåll */}
       <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
-        {tab === 'info' && ext && (
+        {tab === 'info' && roster?.rating && (
           <div>
             {/* Ratings */}
             <div style={{ marginBottom: 12 }}>
               <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 8,
                 color: 'rgba(255,255,255,0.35)', letterSpacing: '0.15em', marginBottom: 6 }}>RATINGS</div>
-              <RatingBar label="ATTACK"  value={ext.rating.attack}  accent={team.accent} flip={side===1} />
-              <RatingBar label="FÖRSVAR" value={ext.rating.defense} accent={team.accent} flip={side===1} />
-              <RatingBar label="FART"    value={ext.rating.speed}   accent={team.accent} flip={side===1} />
-              <RatingBar label="UTHÅLL." value={ext.rating.stamina} accent={team.accent} flip={side===1} />
+              <RatingBar label="ATTACK"  value={roster.rating.attack}  accent={team.accent} flip={side===1} />
+              <RatingBar label="FÖRSVAR" value={roster.rating.defense} accent={team.accent} flip={side===1} />
+              <RatingBar label="FART"    value={roster.rating.speed}   accent={team.accent} flip={side===1} />
+              <RatingBar label="UTHÅLL." value={roster.rating.stamina} accent={team.accent} flip={side===1} />
             </div>
 
             {/* Styrkor */}
-            <div style={{ marginBottom: 10 }}>
-              <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 8,
-                color: 'rgba(255,255,255,0.35)', letterSpacing: '0.15em', marginBottom: 5 }}>STYRKOR</div>
-              {ext.strengths.map((s,i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3,
-                  flexDirection: side === 1 ? 'row-reverse' : 'row' }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%',
-                    background: '#22c55e', flexShrink: 0 }} />
-                  <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 10,
-                    color: 'rgba(255,255,255,0.75)' }}>{s}</div>
-                </div>
-              ))}
-            </div>
+            {roster.strengths && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 8,
+                  color: 'rgba(255,255,255,0.35)', letterSpacing: '0.15em', marginBottom: 5 }}>STYRKOR</div>
+                {roster.strengths.map((s,i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3,
+                    flexDirection: side === 1 ? 'row-reverse' : 'row' }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%',
+                      background: '#22c55e', flexShrink: 0 }} />
+                    <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 10,
+                      color: 'rgba(255,255,255,0.75)' }}>{s}</div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Svagheter */}
-            <div>
-              <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 8,
-                color: 'rgba(255,255,255,0.35)', letterSpacing: '0.15em', marginBottom: 5 }}>SVAGHETER</div>
-              {ext.weaknesses.map((w,i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3,
-                  flexDirection: side === 1 ? 'row-reverse' : 'row' }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%',
-                    background: '#ef4444', flexShrink: 0 }} />
-                  <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 10,
-                    color: 'rgba(255,255,255,0.75)' }}>{w}</div>
-                </div>
-              ))}
-            </div>
+            {roster.weaknesses && (
+              <div>
+                <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 8,
+                  color: 'rgba(255,255,255,0.35)', letterSpacing: '0.15em', marginBottom: 5 }}>SVAGHETER</div>
+                {roster.weaknesses.map((w,i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3,
+                    flexDirection: side === 1 ? 'row-reverse' : 'row' }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%',
+                      background: '#ef4444', flexShrink: 0 }} />
+                    <div style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 10,
+                      color: 'rgba(255,255,255,0.75)' }}>{w}</div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Beskrivning */}
             {roster?.description && (
@@ -296,7 +311,7 @@ function TeamPanel({ team, roster, side, label }) {
           </div>
         )}
 
-        {tab === 'info' && !ext && roster?.description && (
+        {tab === 'info' && !roster?.rating && roster?.description && (
           <div style={{ fontFamily: 'Georgia, serif', fontSize: 13,
             color: 'rgba(255,255,255,0.65)', lineHeight: 1.55, fontStyle: 'italic' }}>
             {roster.description}

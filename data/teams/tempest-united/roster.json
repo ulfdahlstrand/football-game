@@ -1,10 +1,58 @@
 {
   "description": "Tempest United är ett av ligans fysiskt mest imponerande lag — med konsekvent hög aggression längs hela linjen och en duellhunger som sällan matchar. Laget spelar med intensitet snarare än finesse, och kombinationen av en aggressiv keeper med en back som aldrig riskerar något ger dem en oväntad stabilitet mitt i stormen.",
   "players": [
-    { "id": 0, "role": "fwd", "name": "Gale Torrent",  "description": "Anfallaren Gale Torrent är ett mänskligt oväder — maxduellhunger och hög aggression, men tar sig tid att välja rätt skottläge istället för att rusa in." },
-    { "id": 1, "role": "mid", "name": "Squall Maris",  "description": "Spelföraren Squall Maris är Tempests eleganta kraft — aggressiv i sin närvaro men väljer sina dueller med omsorg, och delar gärna med sig när läget är rätt." },
-    { "id": 2, "role": "mid", "name": "Tide Voss",     "description": "Motorn Tide Voss sveper bort motstånd som en flodvåg — risktagande, duellsugen och lagets mest generösa passningsspelare, alltid redo att ta tidiga skott." },
-    { "id": 3, "role": "def", "name": "Briar Storm",   "description": "Ankaret Briar Storm kombinerar enorm aggression med noll risktagande — väljer sina tacklar med yttersta omsorg men är alltid redo att passa bollen och stoppa anfallen." },
-    { "id": 4, "role": "gk",  "name": "Zephyr Holt",   "description": "Väktaren Zephyr Holt är Tempests glödande centrum i målet — ovanligt aggressiv keeper med medvetet risktagande, men kastar sig sällan förhastade och väljer lägen med precision." }
-  ]
+    {
+      "id": 0,
+      "role": "fwd",
+      "name": "Gale Torrent",
+      "description": "Anfallaren Gale Torrent är ett mänskligt oväder — maxduellhunger och hög aggression, men tar sig tid att välja rätt skottläge istället för att rusa in."
+    },
+    {
+      "id": 1,
+      "role": "mid",
+      "name": "Squall Maris",
+      "description": "Spelföraren Squall Maris är Tempests eleganta kraft — aggressiv i sin närvaro men väljer sina dueller med omsorg, och delar gärna med sig när läget är rätt."
+    },
+    {
+      "id": 2,
+      "role": "mid",
+      "name": "Tide Voss",
+      "description": "Motorn Tide Voss sveper bort motstånd som en flodvåg — risktagande, duellsugen och lagets mest generösa passningsspelare, alltid redo att ta tidiga skott."
+    },
+    {
+      "id": 3,
+      "role": "def",
+      "name": "Briar Storm",
+      "description": "Ankaret Briar Storm kombinerar enorm aggression med noll risktagande — väljer sina tacklar med yttersta omsorg men är alltid redo att passa bollen och stoppa anfallen."
+    },
+    {
+      "id": 4,
+      "role": "gk",
+      "name": "Zephyr Holt",
+      "description": "Väktaren Zephyr Holt är Tempests glödande centrum i målet — ovanligt aggressiv keeper med medvetet risktagande, men kastar sig sällan förhastade och väljer lägen med precision."
+    }
+  ],
+  "style": "Vind & Precision",
+  "styleIcon": "🌪️",
+  "formation": "1-2-1",
+  "strengths": [
+    "Precist långspel",
+    "Bra kantspel",
+    "Taktiskt flexibel"
+  ],
+  "weaknesses": [
+    "Stel i närkamp",
+    "Svag på hörnar"
+  ],
+  "star": {
+    "slot": 0,
+    "name": "Gale Torrent",
+    "trait": "Dirigenten"
+  },
+  "rating": {
+    "attack": 76,
+    "defense": 72,
+    "speed": 84,
+    "stamina": 74
+  }
 }

@@ -168,7 +168,7 @@ const NES_GK1    = '#30c060';   // grön GK
 
 function drawPlayer(ctx, p, game) {
   const hasBall  = game.ball.owner === p.id;
-  const baseColors = { 0: NES_TEAM0, 1: NES_TEAM1 };
+  const baseColors = game.teamColors || { 0: NES_TEAM0, 1: NES_TEAM1 };
   const teamColor = p.role === 'gk'
     ? (p.team === 0 ? NES_GK0 : NES_GK1)
     : baseColors[p.team];
