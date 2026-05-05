@@ -5,6 +5,7 @@ const MATCH_DATA = [
     name: 'Parkens Gräsmatta',
     level: 'Nybörjare',
     color: '#7fb069',
+    team: 'aurora-fc',
     questions: [
       {
         q: 'Du får bollen fri på mittplan. En medspelare ropar och är helt omarkerad till höger. Vad gör du?',
@@ -53,6 +54,7 @@ const MATCH_DATA = [
     name: 'Kullens IP',
     level: 'Lätt',
     color: '#5a9a4a',
+    team: 'glacier-fc',
     questions: [
       {
         q: 'Du är innerback. Anfallaren fintar ut mot kanten. Var ställer du dig?',
@@ -101,6 +103,7 @@ const MATCH_DATA = [
     name: 'Norra Arenan',
     level: 'Medel',
     color: '#4a8d3a',
+    team: 'nebula-rangers',
     questions: [
       {
         q: 'Ditt lag ligger under 0-1 med 10 minuter kvar. Tränaren byter in en extra anfallare. Hur justerar du?',
@@ -149,6 +152,7 @@ const MATCH_DATA = [
     name: 'Stadion',
     level: 'Svår',
     color: '#3d7a2e',
+    team: 'tempest-united',
     questions: [
       {
         q: 'Ni spelar 4-3-3 mot ett lag i 3-5-2. Var finns era största ytor?',
