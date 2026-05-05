@@ -163,6 +163,14 @@
     }
 
     if (targetHasBall) {
+      // Cannot kick the ball out of a GK's hands — foul, free kick to GK's team
+      if (target.role === 'gk' && g.gkHasBall[target.team]) {
+        awardSetPiece(g, target.id, target.x, target.y, 'FRISPARK');
+        g.gkHasBall[target.team] = false;
+        g.stats.fouls = (g.stats.fouls || 0) + 1;
+        emit(g, 'foul', { team:tackler.team, playerId:tackler.id, targetId:target.id, x:target.x, y:target.y });
+        return true;
+      }
       // On-ball tackle: strip the ball, nudge it forward in tackler's direction
       const b = g.ball;
       const [nx, ny] = norm(target.x - tackler.x, target.y - tackler.y);
