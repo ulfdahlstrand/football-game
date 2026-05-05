@@ -91,6 +91,16 @@
         passes:0, passCompleted:0, shots:0, shotsOnTarget:0,
         goals:0, tackles:0, tackleSuccess:0, turnovers:0, outOfBounds:0,
       },
+      playerGoals: {},
+      playerShots: {},
+      playerAssists: {},
+      playerFouls: {},
+      playerPenaltiesCaused: {},
+      playerPenaltiesTaken: {},
+      playerPenaltiesScored: {},
+      lastShooter: null,
+      lastPasser: null,
+      penaltyShotPending: false,
       _done:false,
     };
     if (opts.aiOnly) game.pl.forEach(p => { p.human = false; });
@@ -114,9 +124,13 @@
     ball.owner=null; ball.mega=!!mega; ball.cooldown=BALL_COOL;
     ball.lastTouchTeam=shooter.team;
     if (kind === 'pass') {
+      g.lastPasser = shooter.id;
       g.stats.passes++;
       emit(g, 'pass_attempt', { team:shooter.team, playerId:shooter.id, targetX:tx, targetY:ty });
     } else {
+      g.lastShooter = shooter.id;
+      g.lastPasser = null;
+      g.playerShots[shooter.id] = (g.playerShots[shooter.id] || 0) + 1;
       g.stats.shots++;
       emit(g, 'shot_attempt', { team:shooter.team, playerId:shooter.id, mega:!!mega });
     }
@@ -168,6 +182,7 @@
         awardSetPiece(g, target.id, target.x, target.y, 'FRISPARK');
         g.gkHasBall[target.team] = false;
         g.stats.fouls = (g.stats.fouls || 0) + 1;
+        g.playerFouls[tackler.id] = (g.playerFouls[tackler.id] || 0) + 1;
         emit(g, 'foul', { team:tackler.team, playerId:tackler.id, targetId:target.id, x:target.x, y:target.y });
         return true;
       }
@@ -186,6 +201,8 @@
       // Off-ball tackle: foul. No pause, no knock-down — slow the target so
       // they stumble briefly, then the match continues with a free kick.
       if (target.team!==tackler.team && isInOwnPenaltyArea(tackler)) {
+        g.playerFouls[tackler.id] = (g.playerFouls[tackler.id] || 0) + 1;
+        g.playerPenaltiesCaused[tackler.id] = (g.playerPenaltiesCaused[tackler.id] || 0) + 1;
         startPenalty(g, target.team);
         emit(g, 'penalty_awarded', { team:target.team, tacklerId:tackler.id });
         return true;
@@ -193,6 +210,7 @@
       slowPlayer(target, SLOW_DUR * 4); // brief stumble after foul
       startFreeKick(g, target, target.x, target.y);
       g.stats.tackleSuccess++;
+      g.playerFouls[tackler.id] = (g.playerFouls[tackler.id] || 0) + 1;
       emit(g, 'foul', { team:tackler.team, playerId:tackler.id, targetId:target.id, x:target.x, y:target.y });
     }
     return true;
@@ -752,7 +770,15 @@
     if (ball.x-BR<=FIELD_LINE) {
       if (inGoalY) {
         g.score[1]++; g.phase='goal'; g.goalAnim=160; g.goalTeam=1;
-        g.stats.goals++; emit(g, 'goal', { team:1 });
+        g.stats.goals++;
+        if (g.lastShooter !== null) {
+          g.playerGoals[g.lastShooter] = (g.playerGoals[g.lastShooter] || 0) + 1;
+          if (g.penaltyShotPending) g.playerPenaltiesScored[g.lastShooter] = (g.playerPenaltiesScored[g.lastShooter] || 0) + 1;
+          if (g.lastPasser !== null && g.lastPasser !== g.lastShooter)
+            g.playerAssists[g.lastPasser] = (g.playerAssists[g.lastPasser] || 0) + 1;
+        }
+        g.penaltyShotPending = false;
+        emit(g, 'goal', { team:1, scorer:g.lastShooter, assister:g.lastPasser });
         g.gkHasBall[0]=false;
         return;
       }
@@ -761,7 +787,15 @@
     if (ball.x+BR>=FW-FIELD_LINE) {
       if (inGoalY) {
         g.score[0]++; g.phase='goal'; g.goalAnim=160; g.goalTeam=0;
-        g.stats.goals++; emit(g, 'goal', { team:0 });
+        g.stats.goals++;
+        if (g.lastShooter !== null) {
+          g.playerGoals[g.lastShooter] = (g.playerGoals[g.lastShooter] || 0) + 1;
+          if (g.penaltyShotPending) g.playerPenaltiesScored[g.lastShooter] = (g.playerPenaltiesScored[g.lastShooter] || 0) + 1;
+          if (g.lastPasser !== null && g.lastPasser !== g.lastShooter)
+            g.playerAssists[g.lastPasser] = (g.playerAssists[g.lastPasser] || 0) + 1;
+        }
+        g.penaltyShotPending = false;
+        emit(g, 'goal', { team:0, scorer:g.lastShooter, assister:g.lastPasser });
         g.gkHasBall[1]=false;
         return;
       }
@@ -805,6 +839,7 @@
               g.freeKickShooterId = fkTaker.id;
               g.freeKickActive = true;
               g.stats.fouls = (g.stats.fouls || 0) + 1;
+              g.playerFouls[candidate.id] = (g.playerFouls[candidate.id] || 0) + 1;
               emit(g, 'foul_handball', { team:candidate.team, playerId:candidate.id, x:candidate.x, y:candidate.y });
             }
             return; // skip normal pickup
@@ -860,12 +895,16 @@
       g.ball.x=shooter.x; g.ball.y=shooter.y;
       if (g.penaltyTeam===0 && humanAction && humanAction.shoot) {
         const aim = humanAction.aim || { x:1, y:0 };
+        g.playerPenaltiesTaken[shooter.id] = (g.playerPenaltiesTaken[shooter.id] || 0) + 1;
+        g.penaltyShotPending = true;
         doShoot(g,shooter,false,shooter.x+(aim.x||1)*220,shooter.y+(aim.y||0)*220,SHOOT_POW,'shot');
         g.phase='playing'; g.penaltyTaken=true; g.setPieceText=null;
       } else if (g.penaltyTeam!==0 && !g.penaltyTaken) {
         g.setPieceTimer--;
         if (g.setPieceTimer<=35) {
           const tx = g.penaltyTeam===0 ? FW-FIELD_LINE : FIELD_LINE;
+          g.playerPenaltiesTaken[shooter.id] = (g.playerPenaltiesTaken[shooter.id] || 0) + 1;
+          g.penaltyShotPending = true;
           doShoot(g,shooter,false,tx,h2+(rng()*2-1)*48,SHOOT_POW,'shot');
           g.phase='playing'; g.penaltyTaken=true; g.setPieceText=null;
         }
