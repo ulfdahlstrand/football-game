@@ -3,9 +3,10 @@ const { useEffect: useEffFM, useRef: useRefFM, useState: useStateFM, useMemo: us
 // ── Konstanter ───────────────────────────────────────────────────────────────
 const FW = 880, FH = 520, GH = 130, GD = 26;
 const PR = 14, BR = 8;
-const PSPEED = 3.5, CSPEED = 2.4;
+const SPEED_SCALE = 0.8;
+const PSPEED = 3.5 * SPEED_SCALE, CSPEED = 2.4 * SPEED_SCALE;
 const BALL_FRIC = 0.968;
-const PASS_POW = 11, SHOOT_POW = 16, MEGA_POW = 27, CPU_PASS_POW = 10;
+const PASS_POW = 11 * SPEED_SCALE, SHOOT_POW = 16 * SPEED_SCALE, MEGA_POW = 27 * SPEED_SCALE, CPU_PASS_POW = 10 * SPEED_SCALE;
 const MEGA_KR = 55;
 const KNOCK_DUR = 300;
 const BALL_COOL = 16;
@@ -268,8 +269,28 @@ function newGame() {
     gkHasBall:[false,false],
     setPieceTakerId:null, setPieceX:0, setPieceY:0,
     _done:false,
-    _stats: { shots:[0,0], passes:[0,0], tackles:[0,0], corners:[0,0], possession:[50,50], _possFrames:[0,0] },
+    lastShooter: null,
+    lastPasser: null,
+    playerGoals: {},
+    playerAssists: {},
+    _activePieceKind: null,
+    _log: [],
+    _stats: {
+      shots:[0,0], passes:[0,0], tackles:[0,0], corners:[0,0],
+      possession:[50,50], _possFrames:[0,0],
+      freeKicks:[0,0], freeKickGoals:[0,0],
+      cornerGoals:[0,0],
+      shotsOnTarget:[0,0],
+      _possOwnFrames:[0,0], _possOppFrames:[0,0],
+      possOwnHalf:[0,0], possOppHalf:[0,0],
+    },
   };
+}
+
+function logEvent(g, type, data) {
+  const frame = GAME_SECS * 60 - g.timer;
+  const minute = Math.min(90, Math.round(frame / (GAME_SECS * 60) * 90));
+  g._log.push(Object.assign({ type, minute, frame }, data || {}));
 }
 
 function doShoot(g, shooter, mega, tx, ty, pow) {
@@ -288,13 +309,22 @@ function doShoot(g, shooter, mega, tx, ty, pow) {
       else window.SFX.kick();
     }
   } catch(e) {}
-  if (g._stats && p >= SHOOT_POW) {
+  if (p >= SHOOT_POW) {
     const t = shooter.team;
     const towardsGoal = t===0 ? nx > 0.4 : nx < -0.4;
-    if (towardsGoal) g._stats.shots[t] = (g._stats.shots[t]||0) + 1;
-  } else if (g._stats) {
-    const t = shooter.team;
-    g._stats.passes[t] = (g._stats.passes[t]||0) + 1;
+    if (towardsGoal) {
+      if (g._stats) g._stats.shots[t] = (g._stats.shots[t]||0) + 1;
+      g.lastShooter = shooter.id;
+      g.lastPasser = null;
+      g._activePieceKind = null;
+      logEvent(g, 'shot', { team:t, playerId:shooter.id, mega:!!mega });
+    } else {
+      g.lastPasser = shooter.id;
+    }
+  } else {
+    if (g._stats) g._stats.passes[shooter.team] = (g._stats.passes[shooter.team]||0) + 1;
+    g.lastPasser = shooter.id;
+    logEvent(g, 'pass', { team:shooter.team, playerId:shooter.id });
   }
 }
 
@@ -329,6 +359,31 @@ function tacklePlayer(g, tackler, target) {
     return true;
   }
 
+  // Auto-foul: any tackle inside a goal area (the small 6-yard box).
+  // In opponent's goal area = free kick to defending team.
+  // In own goal area = penalty against tackler's team.
+  if (target.team !== tackler.team) {
+    if (isInGoalAreaForTeam(tackler.team, tackler.x, tackler.y)) {
+      // Tackler is in their OWN goal area — penalty
+      startPenalty(g, target.team);
+      logEvent(g, 'foul_goalarea_penalty', {
+        tacklerId: tackler.id, tacklerTeam: tackler.team,
+        targetId: target.id, x: Math.round(tackler.x), y: Math.round(tackler.y),
+      });
+      return true;
+    }
+    if (isInGoalAreaForTeam(1 - tackler.team, tackler.x, tackler.y)) {
+      // Tackler is in OPPONENT's goal area — free kick to defending (target's) team
+      slowPlayer(target, SLOW_DUR * 4);
+      startFreeKick(g, target, target.x, target.y);
+      logEvent(g, 'foul_goalarea_freekick', {
+        tacklerId: tackler.id, tacklerTeam: tackler.team,
+        targetId: target.id, x: Math.round(tackler.x), y: Math.round(tackler.y),
+      });
+      return true;
+    }
+  }
+
   if (targetHasBall) {
     // On-ball tackle: strip ball, nudge it forward in tackler's direction
     const b = g.ball;
@@ -341,6 +396,16 @@ function tacklePlayer(g, tackler, target) {
     slowPlayer(target, SLOW_DUR);
     try { if (window.SFX) window.SFX.tackle(); } catch(e) {}
     if (g._stats) g._stats.tackles[tackler.team] = (g._stats.tackles[tackler.team]||0) + 1;
+    logEvent(g, 'tackle', {
+      tacklerId: tackler.id, tacklerTeam: tackler.team,
+      targetId: target.id, targetTeam: target.team,
+      x: Math.round(target.x), y: Math.round(target.y),
+      players: g.pl.map(p => ({
+        id: p.id, team: p.team, role: p.role,
+        x: Math.round(p.x), y: Math.round(p.y), state: p.state,
+      })),
+      ball: { x: Math.round(b.x), y: Math.round(b.y) },
+    });
   } else {
     // Off-ball tackle: foul. No pause/knock — slow target briefly, free kick.
     if (target.team!==tackler.team && isInOwnPenaltyArea(tackler)) {
@@ -486,17 +551,28 @@ function isInOwnPenaltyArea(p) {
   return isInPenaltyAreaForTeam(p.team, p.x, p.y);
 }
 
+// Goal area = the small box near the goal. Tackles here are always fouls.
+function isInGoalAreaForTeam(team, x, y) {
+  if (Math.abs(y - h2) > GH/2 + 18) return false;
+  return team===0
+    ? x <= FIELD_LINE + GOAL_AREA_W
+    : x >= FW - FIELD_LINE - GOAL_AREA_W;
+}
+
 function startFreeKick(g, fouledPlayer, fx, fy) {
   awardSetPiece(g, fouledPlayer.id, fx, fy, 'FRISPARK');
   g.freeKickShooterId = fouledPlayer.id;
   g.freeKickActive = true;
+  if (g._stats) g._stats.freeKicks[fouledPlayer.team] = (g._stats.freeKicks[fouledPlayer.team]||0) + 1;
+  g._activePieceKind = 'freekick';
+  logEvent(g, 'freekick', { team:fouledPlayer.team, x:fx, y:fy });
 }
 
 function restartGoalKick(g, team) {
   const keeper = rolePlayer(g, team, 'gk');
   const sx = team===0 ? FIELD_LINE + PR*2.3 : FW - FIELD_LINE - PR*2.3;
   awardSetPiece(g, keeper.id, sx, h2, 'MÅLVAKTENS BOLL');
-  g.gkHasBall[team] = false;
+  g.gkHasBall[team] = true;
 }
 
 function restartKickIn(g, team, x, y) {
@@ -514,6 +590,8 @@ function restartCorner(g, team, x, y) {
   awardSetPiece(g, taker.id, sx, sy, 'HÖRNA');
   try { if (window.SFX) window.SFX.corner(); } catch(e) {}
   if (g._stats) g._stats.corners[team] = (g._stats.corners[team]||0) + 1;
+  g._activePieceKind = 'corner';
+  logEvent(g, 'corner', { team });
 }
 
 function startPenalty(g, team) {
@@ -764,6 +842,17 @@ function cpuFindPass(g, carrier) {
   return best;
 }
 
+function applyGkRetreat(g, p) {
+  if (p.role === 'gk') return false;
+  const enemyTeam = 1 - p.team;
+  if (!g.gkHasBall[enemyTeam]) return false;
+  const retreatX = p.team === 0
+    ? Math.min(p.x, FW / 2 - PR)
+    : Math.max(p.x, FW / 2 + PR);
+  moveTo(p, retreatX, p.y, CSPEED * 0.9);
+  return true;
+}
+
 // Brain dispatcher. v1/v2 use the classic cpuTick; v3 wraps it with
 // modulators; v4 = v3 + directional pass mult + GK freedom.
 function tickPlayer(g, p) {
@@ -837,6 +926,8 @@ function v6Target(g, p, sp) {
 }
 
 function v6Tick(g, p) {
+  if (applyGkRetreat(g, p)) return;
+
   const v6 = p.brain.params || {};
   const sp = v6.spatial || {};
   const dec = v6.decisions || BASELINE_AI_PARAMS;
@@ -957,6 +1048,9 @@ function cpuTick(g, p) {
     return;
   }
 
+  // Retreat when opposing GK has ball — must come BEFORE tackle check.
+  if (applyGkRetreat(g, p)) return;
+
   if (!hasball && carrier && carrier.team!==p.team && p.tackleCooldown<=0) {
     if (Math.hypot(p.x-carrier.x,p.y-carrier.y)<TACKLE_DIST && Math.random()<(params.tackleChance ?? 0.08)) {
       tacklePlayer(g, p, carrier);
@@ -969,7 +1063,23 @@ function cpuTick(g, p) {
     if (hasball) {
       if (p.gkHoldTimer > 0) { p.gkHoldTimer--; return; }
       g.gkHasBall[p.team] = false;
-      doShoot(g, p, false, FW/2, h2);
+      // Score all teammates: freedom (opponent distance) + attack progress.
+      // Always picks best available — no fallback to center unless no outfield players exist.
+      const mates = teamPlayers(g, p.team).filter(q => q.id !== p.id && q.role !== 'gk');
+      const opps = g.pl.filter(opp => opp.team !== p.team && opp.state === 'active');
+      let gkTx = FW/2, gkTy = h2 + (Math.random()-0.5)*80;
+      if (mates.length > 0) {
+        const best = mates
+          .map(q => {
+            const oppDist = opps.reduce((mn, opp) => Math.min(mn, Math.hypot(opp.x-q.x, opp.y-q.y)), Infinity);
+            return { q, score: oppDist * 0.6 + attackProgress(p.team, q.x) * 120 };
+          })
+          .sort((a, b) => b.score - a.score)[0].q;
+        const lead = p.team === 0 ? 80 : -80;
+        gkTx = best.x + lead;
+        gkTy = best.y + (Math.random()-0.5)*60;
+      }
+      doShoot(g, p, false, gkTx, gkTy);
       return;
     }
     // Try to dive for incoming shot
@@ -1000,16 +1110,6 @@ function cpuTick(g, p) {
     }
     const gx = p.team===0 ? FIELD_LINE + PR*1.5 : FW - FIELD_LINE - PR*1.5;
     moveTo(p, gx, clamp(ball.y, h2-GH/2+PR, h2+GH/2-PR), CSPEED*0.88);
-    return;
-  }
-
-  // Retreat to midline when opposing GK holds ball
-  const enemyTeam = 1 - p.team;
-  if (g.gkHasBall[enemyTeam]) {
-    const retreatX = p.team===0
-      ? Math.min(p.x, FW/2 - PR)
-      : Math.max(p.x, FW/2 + PR);
-    moveTo(p, retreatX, p.y, CSPEED * 0.9);
     return;
   }
 
@@ -1110,6 +1210,16 @@ function resetKickoff(g) {
   g.setPieceText=null; g.setPieceTimer=0; g.penaltyTeam=null; g.penaltyTaken=false;
   g.freeKickActive=false; g.freeKickShooterId=null;
   g.gkHasBall=[false,false]; g.setPieceTakerId=null;
+  g._activePieceKind=null;
+}
+
+// ── Match log (skickas till log-server.py om den kör) ────────────────────────
+function saveMatchLog(summary) {
+  fetch('http://localhost:8766/log', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(summary),
+  }).catch(() => { /* log-servern kör inte — tyst fallback */ });
 }
 
 // ── React-komponent ───────────────────────────────────────────────────────────
@@ -1276,6 +1386,7 @@ function FootballMatch({ matchData, onComplete, onExit }) {
     function humanPass() {
       const g=gRef.current;
       if (g.phase!=='playing') return;
+      if (!g.pl[0].human) return; // AI har tagit över
       const human=g.pl[0];
       if (human.state!=='active') return;
 
@@ -1302,6 +1413,7 @@ function FootballMatch({ matchData, onComplete, onExit }) {
     function humanTackle() {
       const g=gRef.current;
       if (g.phase!=='playing') return;
+      if (!g.pl[0].human) return; // AI har tagit över — skippa keyboard-tackle
       const human=g.pl[0];
       if (human.state!=='active'||human.tackleCooldown>0) return;
       const carrier=g.pl.find(p=>p.id===g.ball.owner);
@@ -1322,6 +1434,7 @@ function FootballMatch({ matchData, onComplete, onExit }) {
 
     function humanShoot(mega) {
       const g=gRef.current;
+      if (!g.pl[0].human) return; // AI har tagit över
       if ((g.phase!=='playing' && g.phase!=='penalty') || g.ball.owner!==0) return;
       // Block direct shot during indirect free kick
       if (g.freeKickActive && g.freeKickShooterId === 0) return;
@@ -1349,6 +1462,7 @@ function FootballMatch({ matchData, onComplete, onExit }) {
     function humanJump() {
       const g=gRef.current;
       if (g.phase!=='playing') return;
+      if (!g.pl[0].human) return; // AI har tagit över
       const human=g.pl[0];
       if (human.state==='active' && human.jumpTimer<=0) human.jumpTimer=JUMP_DUR;
     }
@@ -1419,27 +1533,30 @@ function FootballMatch({ matchData, onComplete, onExit }) {
         if (g.setPieceTimer<=0) g.setPieceText=null;
       }
 
-      // Mänsklig rörelse
+      // Mänsklig rörelse — bara om player 0 är i mänskligt läge.
+      // I AI-läge sköter CPU-loopen alla timers + rörelse via tickPlayer().
       const human=g.pl[0];
-      if (human.tackleCooldown>0) human.tackleCooldown--;
-      if (human.jumpTimer>0) human.jumpTimer--;
-      if (human.slowTimer>0) human.slowTimer--;
-      if (human.state==='active') {
-        const k=keysRef.current;
-        const slowMult = human.slowTimer > 0 ? SLOW_FACTOR : 1;
-        let dx=0,dy=0;
-        if (k['arrowleft'] ||k['a']) dx-=PSPEED*slowMult;
-        if (k['arrowright']||k['d']) dx+=PSPEED*slowMult;
-        if (k['arrowup']) dy-=PSPEED*slowMult;
-        if (k['arrowdown'] ||k['s']) dy+=PSPEED*slowMult;
-        if (dx&&dy){dx*=0.707;dy*=0.707;}
-        const nx=human.x+dx, ny=human.y+dy;
-        human.x=clamp(nx,PR,FW-PR); human.y=clamp(ny,PR,FH-PR);
-        if (dx||dy) {
-          human.facing=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');
-          human.stepCounter++;
-        }
-      } else if (--human.knockTimer<=0) { human.state='active'; human.gkDiveDir=null; }
+      if (human.human) {
+        if (human.tackleCooldown>0) human.tackleCooldown--;
+        if (human.jumpTimer>0) human.jumpTimer--;
+        if (human.slowTimer>0) human.slowTimer--;
+        if (human.state==='active') {
+          const k=keysRef.current;
+          const slowMult = human.slowTimer > 0 ? SLOW_FACTOR : 1;
+          let dx=0,dy=0;
+          if (k['arrowleft'] ||k['a']) dx-=PSPEED*slowMult;
+          if (k['arrowright']||k['d']) dx+=PSPEED*slowMult;
+          if (k['arrowup']) dy-=PSPEED*slowMult;
+          if (k['arrowdown'] ||k['s']) dy+=PSPEED*slowMult;
+          if (dx&&dy){dx*=0.707;dy*=0.707;}
+          const nx=human.x+dx, ny=human.y+dy;
+          human.x=clamp(nx,PR,FW-PR); human.y=clamp(ny,PR,FH-PR);
+          if (dx||dy) {
+            human.facing=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');
+            human.stepCounter++;
+          }
+        } else if (--human.knockTimer<=0) { human.state='active'; human.gkDiveDir=null; }
+      }
 
       // CPU
       g.pl.forEach(p => {
@@ -1466,7 +1583,24 @@ function FootballMatch({ matchData, onComplete, onExit }) {
 
         const inGoalY=Math.abs(ball.y-h2)<GH/2;
         if (ball.x-BR<=FIELD_LINE) {
-          if (inGoalY) { g.score[1]++; g.phase='goal'; g.goalAnim=160; g.goalTeam=1; g.lastScorer=null; g.celebration=false; g.gkHasBall[0]=false; try { if (window.SFX) window.SFX.goal(); } catch(e) {} return; }
+          if (inGoalY) {
+            g.score[1]++; g.phase='goal'; g.goalAnim=160; g.goalTeam=1;
+            g.lastScorer=null; g.celebration=false; g.gkHasBall[0]=false;
+            if (g._stats) {
+              g._stats.shotsOnTarget[1] = (g._stats.shotsOnTarget[1]||0) + 1;
+              if (g._activePieceKind==='freekick') g._stats.freeKickGoals[1] = (g._stats.freeKickGoals[1]||0) + 1;
+              if (g._activePieceKind==='corner') g._stats.cornerGoals[1] = (g._stats.cornerGoals[1]||0) + 1;
+            }
+            if (g.lastShooter !== null) {
+              g.playerGoals[g.lastShooter] = (g.playerGoals[g.lastShooter]||0) + 1;
+              if (g.lastPasser !== null && g.lastPasser !== g.lastShooter)
+                g.playerAssists[g.lastPasser] = (g.playerAssists[g.lastPasser]||0) + 1;
+            }
+            logEvent(g, 'goal', { team:1, scorer:g.lastShooter, assister:g.lastPasser, kind:g._activePieceKind });
+            g._activePieceKind = null;
+            try { if (window.SFX) window.SFX.goal(); } catch(e) {}
+            return;
+          }
           handleBallOut(g);
           return;
         }
@@ -1474,6 +1608,18 @@ function FootballMatch({ matchData, onComplete, onExit }) {
           if (inGoalY) {
             g.score[0]++; g.phase='goal'; g.goalAnim=160; g.goalTeam=0;
             g.lastScorer=0; g.celebration=true; g.celebrateFrame=0; g.gkHasBall[1]=false;
+            if (g._stats) {
+              g._stats.shotsOnTarget[0] = (g._stats.shotsOnTarget[0]||0) + 1;
+              if (g._activePieceKind==='freekick') g._stats.freeKickGoals[0] = (g._stats.freeKickGoals[0]||0) + 1;
+              if (g._activePieceKind==='corner') g._stats.cornerGoals[0] = (g._stats.cornerGoals[0]||0) + 1;
+            }
+            if (g.lastShooter !== null) {
+              g.playerGoals[g.lastShooter] = (g.playerGoals[g.lastShooter]||0) + 1;
+              if (g.lastPasser !== null && g.lastPasser !== g.lastShooter)
+                g.playerAssists[g.lastPasser] = (g.playerAssists[g.lastPasser]||0) + 1;
+            }
+            logEvent(g, 'goal', { team:0, scorer:g.lastShooter, assister:g.lastPasser, kind:g._activePieceKind });
+            g._activePieceKind = null;
             try { if (window.SFX) window.SFX.goal(); } catch(e) {}
             return;
           }
@@ -1537,16 +1683,29 @@ function FootballMatch({ matchData, onComplete, onExit }) {
               ball.lastTouchTeam=owner.team;
               if (g.freeKickActive && owner.id !== g.freeKickShooterId) g.freeKickActive = false;
               if (owner.role === 'gk') {
+                // Count as shot on target if ball was moving fast enough to be a real save
+                const spd2 = ball.vx*ball.vx + ball.vy*ball.vy;
+                const oppTeam = 1 - owner.team;
+                if (spd2 > SHOOT_POW * SHOOT_POW * 0.25 && g.lastShooter !== null) {
+                  const shooter = g.pl.find(p => p.id === g.lastShooter);
+                  if (shooter && shooter.team === oppTeam) {
+                    if (g._stats) g._stats.shotsOnTarget[oppTeam] = (g._stats.shotsOnTarget[oppTeam]||0) + 1;
+                    logEvent(g, 'save', { team:owner.team, gkId:owner.id, shooterId:g.lastShooter });
+                    g.lastShooter = null;
+                  }
+                }
                 g.gkHasBall[owner.team] = true; owner.gkHoldTimer = GK_HOLD_DELAY;
               }
             }
           }
         }
-        // Clear gkHasBall if GK no longer has ball
+        // Clear gkHasBall unless GK has ball or is the designated goal-kick taker
         [0,1].forEach(t => {
           if (g.gkHasBall[t]) {
             const gk = g.pl.find(p => p.role==='gk' && p.team===t);
-            if (!gk || ball.owner !== gk.id) g.gkHasBall[t] = false;
+            if (!gk || (ball.owner !== gk.id && g.setPieceTakerId !== gk.id)) {
+              g.gkHasBall[t] = false;
+            }
           }
         });
       }
@@ -1689,11 +1848,10 @@ function FootballMatch({ matchData, onComplete, onExit }) {
         ctx.fillText(`${matchData?.name||'Match'} · Du spelar i BLÅ`,FW/2,h2+50);
       }
 
-      // Fulltime — trigger callbacks (React HUD visar statistik-skärmen)
+      // Fulltime — whistle + crowd fade; summary screen shows via React state
       if (g.phase==='fulltime') {
         if (!g._done) { g._done=true;
           try { if (window.SFX) { window.SFX.whistleFull(); window.SFX.setCrowdTarget(0.06); } } catch(e) {}
-          setTimeout(()=>onComplete&&onComplete(g.score[0]>g.score[1],matchData?.id),3500);
         }
       }
     }
@@ -1702,13 +1860,30 @@ function FootballMatch({ matchData, onComplete, onExit }) {
       const g = gRef.current;
       if (!g || !g._stats) return;
       if (g.ball.owner !== null) {
-        const ownerTeam = g.pl.find(p => p.id === g.ball.owner)?.team;
+        const ownerPlayer = g.pl.find(p => p.id === g.ball.owner);
+        const ownerTeam = ownerPlayer?.team;
         if (ownerTeam === 0 || ownerTeam === 1) {
           g._stats._possFrames[ownerTeam]++;
           const total = g._stats._possFrames[0] + g._stats._possFrames[1];
           if (total > 0) {
             g._stats.possession[0] = (g._stats._possFrames[0] / total) * 100;
             g._stats.possession[1] = (g._stats._possFrames[1] / total) * 100;
+          }
+          // Half possession: team 0 attacks right → own half = left (x < FW/2)
+          const inOwnHalf = ownerTeam === 0 ? g.ball.x < FW/2 : g.ball.x >= FW/2;
+          if (inOwnHalf) {
+            g._stats._possOwnFrames[ownerTeam]++;
+          } else {
+            g._stats._possOppFrames[ownerTeam]++;
+          }
+          const totalOwn = g._stats._possOwnFrames[0] + g._stats._possOwnFrames[1];
+          const totalOpp = g._stats._possOppFrames[0] + g._stats._possOppFrames[1];
+          const totalAll = totalOwn + totalOpp;
+          if (totalAll > 0) {
+            g._stats.possOwnHalf[0] = g._stats._possOwnFrames[0] / totalAll * 100;
+            g._stats.possOwnHalf[1] = g._stats._possOwnFrames[1] / totalAll * 100;
+            g._stats.possOppHalf[0] = g._stats._possOppFrames[0] / totalAll * 100;
+            g._stats.possOppHalf[1] = g._stats._possOppFrames[1] / totalAll * 100;
           }
         }
       }
@@ -1738,8 +1913,11 @@ function FootballMatch({ matchData, onComplete, onExit }) {
 
   const [matchTeam0, setMatchTeam0] = useStateFM(null);
   const [matchTeam1, setMatchTeam1] = useStateFM(null);
+  const [matchRoster0, setMatchRoster0] = useStateFM(null);
+  const [matchRoster1, setMatchRoster1] = useStateFM(null);
   const [gameSnapshot, setGameSnapshot] = useStateFM(null);
   const [matchStats, setMatchStats] = useStateFM(null);
+  const [finalSummary, setFinalSummary] = useStateFM(null);
   const [tsReady, setTsReady] = useStateFM(() => !!window.TeamSelectScreen);
 
   useEffFM(() => {
@@ -1770,20 +1948,49 @@ function FootballMatch({ matchData, onComplete, onExit }) {
         phase: g.phase, setPieceText: g.setPieceText,
         setPieceTimer: g.setPieceTimer
       });
-      if (g._stats) setMatchStats({ ...g._stats,
+      if (g._stats) setMatchStats({
         shots: [...g._stats.shots], passes: [...g._stats.passes],
         tackles: [...g._stats.tackles], corners: [...g._stats.corners],
-        possession: [...g._stats.possession]
+        possession: [...g._stats.possession],
+        freeKicks: [...g._stats.freeKicks], freeKickGoals: [...g._stats.freeKickGoals],
+        cornerGoals: [...g._stats.cornerGoals], shotsOnTarget: [...g._stats.shotsOnTarget],
+        possOwnHalf: [...g._stats.possOwnHalf], possOppHalf: [...g._stats.possOppHalf],
       });
+      if (g.phase === 'fulltime') {
+        setFinalSummary(prev => {
+          if (prev) return prev;
+          const summary = {
+            score: [...g.score],
+            team0: teamNamesRef.current.t0,
+            team1: teamNamesRef.current.t1,
+            stats: {
+              shots: [...g._stats.shots], shotsOnTarget: [...g._stats.shotsOnTarget],
+              corners: [...g._stats.corners], cornerGoals: [...g._stats.cornerGoals],
+              freeKicks: [...g._stats.freeKicks], freeKickGoals: [...g._stats.freeKickGoals],
+              possession: [...g._stats.possession],
+              possOwnHalf: [...g._stats.possOwnHalf], possOppHalf: [...g._stats.possOppHalf],
+            },
+            log: [...g._log],
+            playerGoals: { ...g.playerGoals },
+            playerAssists: { ...g.playerAssists },
+          };
+          saveMatchLog(summary);
+          return summary;
+        });
+      }
     }, 120);
     return () => clearInterval(id);
   }, [started]);
 
   const teamColorsRef = useRefFM({ 0: '#3464a8', 1: '#c82828' });
+  const teamNamesRef = useRefFM({ t0: 'lag0', t1: 'lag1' });
 
-  const handleTeamSelectStart = ({ team0, team1, oppIdx0, oppIdx1 }) => {
+  const handleTeamSelectStart = ({ team0, team1, oppIdx0, oppIdx1, roster0, roster1 }) => {
     setMatchTeam0(team0);
     setMatchTeam1(team1);
+    setMatchRoster0(roster0 || null);
+    setMatchRoster1(roster1 || null);
+    teamNamesRef.current = { t0: team0?.name || 'lag0', t1: team1?.name || 'lag1' };
     teamColorsRef.current = {
       0: team0?.primary || '#3464a8',
       1: team1?.primary || '#c82828',
@@ -1817,12 +2024,30 @@ function FootballMatch({ matchData, onComplete, onExit }) {
         style={{maxWidth:'100%',maxHeight:'100%',display:'block',
           visibility: started ? 'visible' : 'hidden'}}/>
 
-      {started && window.MatchHUD && (
+      {started && window.MatchHUD && !finalSummary && (
         <window.MatchHUD
           game={gameSnapshot}
           team0info={matchTeam0}
           team1info={matchTeam1}
           matchStats={matchStats}
+          onExit={onExit}
+        />
+      )}
+
+      {finalSummary && window.MatchSummary && (
+        <window.MatchSummary
+          score={finalSummary.score}
+          stats={finalSummary.stats}
+          log={finalSummary.log}
+          playerGoals={finalSummary.playerGoals}
+          playerAssists={finalSummary.playerAssists}
+          team0={matchTeam0}
+          team1={matchTeam1}
+          roster0={matchRoster0}
+          roster1={matchRoster1}
+          onContinue={() => onComplete && onComplete(
+            finalSummary.score[0] > finalSummary.score[1], matchData?.id
+          )}
           onExit={onExit}
         />
       )}
