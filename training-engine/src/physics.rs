@@ -535,6 +535,7 @@ pub fn step_game(game: &mut Game, rng: &mut impl Rng) {
             }
             continue;
         }
+        if game.human_player == Some(game.pl[i].id) { continue; }
         crate::brain::tick_player(game, i, rng);
     }
 
