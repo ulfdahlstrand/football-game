@@ -277,6 +277,106 @@ function Pitch({ data, completed, highlighted }) {
   );
 }
 
+// Lagflagga vid plan
+// Flagg-animation: Quadratic Bezier cloth-sim (inspirerad av r3mainer, CC BY-SA 4.0)
+// Amplituden ökar linjärt från stången (x=0) till fria änden (x=1).
+const FLAG_W = 44;
+const FLAG_H = 40;
+const FLAG_AMP = 6;
+const FLAG_NFRAMES = 14;
+
+const FLAG_ANIM_VALUES = (() => {
+  const freq = 1.0;
+  const paths = [];
+  for (let i = 0; i <= FLAG_NFRAMES; i++) {
+    const t = i / FLAG_NFRAMES;
+    let s = 'M0 0', bx = 0, by = 0;
+    // Övre kant: stång → fri ände
+    for (let xi = 1; xi <= 10; xi++) {
+      const cx = xi * 0.1 - 0.05;
+      const ex = xi * 0.1;
+      const ay = FLAG_AMP * cx * Math.sin((cx * freq - t) * 2 * Math.PI);
+      const ey = FLAG_AMP * ex * Math.sin((ex * freq - t) * 2 * Math.PI);
+      s += `Q${(cx * FLAG_W).toFixed(1)} ${ay.toFixed(1)} ${(ex * FLAG_W).toFixed(1)} ${ey.toFixed(1)}`;
+      bx = ex * FLAG_W; by = ey;
+    }
+    // Höger kant: rakt ner
+    s += `L${bx.toFixed(1)} ${(by + FLAG_H).toFixed(1)}`;
+    // Nedre kant: fri ände → stång
+    for (let xi = 9; xi >= 0; xi--) {
+      const cx = xi * 0.1 + 0.05;
+      const ex = xi * 0.1;
+      const ay = FLAG_AMP * cx * Math.sin((cx * freq - t) * 2 * Math.PI) + FLAG_H;
+      const ey = FLAG_AMP * ex * Math.sin((ex * freq - t) * 2 * Math.PI) + FLAG_H;
+      s += `Q${(cx * FLAG_W).toFixed(1)} ${ay.toFixed(1)} ${(ex * FLAG_W).toFixed(1)} ${ey.toFixed(1)}`;
+    }
+    s += 'Z';
+    paths.push(s);
+  }
+  paths.push(paths[0]); // sömlös loop
+  return paths.join(';');
+})();
+
+const FLAG_PATH_INIT = FLAG_ANIM_VALUES.split(';')[0];
+const FLAG_DELAYS = { parken: '0s', kullen: '-0.7s', arena: '-1.3s', stadion: '-0.4s' };
+const FLAG_PAD = FLAG_AMP + 2;
+
+function PitchFlag({ pitch, matchData }) {
+  if (!matchData || !matchData.team) return null;
+  const x = (pitch.gx + Math.floor(pitch.w / 2)) * TILE + 4;
+  const y = (pitch.gy - Math.floor(pitch.h / 2)) * TILE - 38;
+  const delay = FLAG_DELAYS[pitch.id] || '0s';
+  const clipId = `flagclip-${pitch.id}`;
+  return (
+    <div style={{
+      position: 'absolute', left: x, top: y,
+      zIndex: pitch.gy * 100 + 15, pointerEvents: 'none'
+    }}>
+      {/* Stång */}
+      <div style={{
+        position: 'absolute', left: 2, top: 2,
+        width: 4, height: FLAG_H + FLAG_PAD * 2 + 48,
+        background: 'linear-gradient(90deg, #5a4424 0%, #8a6a3e 50%, #5a4424 100%)',
+        outline: '1px solid #1a1a1a'
+      }} />
+      {/* Stångknopp */}
+      <div style={{
+        position: 'absolute', left: 0, top: -2,
+        width: 8, height: 8, borderRadius: '50%',
+        background: '#d4b04e', border: '1px solid #1a1a1a'
+      }} />
+      {/* Vajande SVG-flagga */}
+      <svg
+        style={{ position: 'absolute', left: 6, top: 0, overflow: 'visible' }}
+        width={FLAG_W} height={FLAG_H + FLAG_PAD * 2}
+        viewBox={`0 -${FLAG_PAD} ${FLAG_W} ${FLAG_H + FLAG_PAD * 2}`}
+        shapeRendering="geometricPrecision"
+      >
+        <defs>
+          <clipPath id={clipId}>
+            <path d={FLAG_PATH_INIT}>
+              <animate attributeName="d" dur="2.2s" repeatCount="indefinite"
+                values={FLAG_ANIM_VALUES} begin={delay} calcMode="linear" />
+            </path>
+          </clipPath>
+        </defs>
+        {/* Vit flaggbakgrund (vajar med samma path) */}
+        <path fill="#fdfcf7" stroke="#1a1a1a" strokeWidth="1.5" strokeLinejoin="round" d={FLAG_PATH_INIT}>
+          <animate attributeName="d" dur="2.2s" repeatCount="indefinite"
+            values={FLAG_ANIM_VALUES} begin={delay} calcMode="linear" />
+        </path>
+        {/* Logo klippt mot flagg-formen */}
+        <image
+          href={`data/teams/${matchData.team}/logo.svg`}
+          x="2" y="2" width={FLAG_W - 4} height={FLAG_H - 4}
+          clipPath={`url(#${clipId})`}
+          preserveAspectRatio="xMidYMid meet"
+        />
+      </svg>
+    </div>
+  );
+}
+
 // SPELARE - top-down sprite, Pokémon-inspirerad
 function Player({ px, py, dir, moving, step }) {
   // px, py i pixel-koordinater
@@ -690,6 +790,11 @@ function IsoWorld({ player, onEnterPitch, onEnterSign, completedMatches }) {
             />
           );
         })}
+
+        {/* Lagflaggor vid planer */}
+        {PITCH_POSITIONS.map(p => (
+          <PitchFlag key={`flag-${p.id}`} pitch={p} matchData={window.MATCH_DATA.find(m => m.id === p.id)} />
+        ))}
 
         {/* Dekorationer */}
         {DECORATIONS.map((d, i) => {
