@@ -185,6 +185,20 @@ enum JsMatchEvent {
         #[serde(rename = "assisterId")] assister_id: Option<usize>,
         #[serde(rename = "isPenalty")]  is_penalty:  bool,
     },
+    Foul {
+        #[serde(rename = "tacklerId")]   tackler_id:   usize,
+        #[serde(rename = "tacklerTeam")] tackler_team: usize,
+        #[serde(rename = "targetId")]    target_id:    usize,
+        x: i32, y: i32,
+        #[serde(rename = "isPenalty")]   is_penalty:   bool,
+    },
+    Freekick { team: usize, x: i32, y: i32 },
+    Corner   { team: usize },
+    Save {
+        #[serde(rename = "gkTeam")]    gk_team:    usize,
+        #[serde(rename = "gkId")]      gk_id:      usize,
+        #[serde(rename = "shooterId")] shooter_id: Option<usize>,
+    },
 }
 
 fn convert_event(e: &MatchEvent) -> JsMatchEvent {
@@ -204,6 +218,19 @@ fn convert_event(e: &MatchEvent) -> JsMatchEvent {
                 team: *team, scorer_id: *scorer_id,
                 assister_id: *assister_id, is_penalty: *is_penalty,
             },
+        MatchEvent::Foul { tackler_id, tackler_team, target_id, x, y, is_penalty } =>
+            JsMatchEvent::Foul {
+                tackler_id: *tackler_id, tackler_team: *tackler_team,
+                target_id: *target_id,
+                x: x.round() as i32, y: y.round() as i32,
+                is_penalty: *is_penalty,
+            },
+        MatchEvent::FreeKick { team, x, y } =>
+            JsMatchEvent::Freekick { team: *team, x: x.round() as i32, y: y.round() as i32 },
+        MatchEvent::Corner { team } =>
+            JsMatchEvent::Corner { team: *team },
+        MatchEvent::Save { gk_team, gk_id, shooter_id } =>
+            JsMatchEvent::Save { gk_team: *gk_team, gk_id: *gk_id, shooter_id: *shooter_id },
     }
 }
 

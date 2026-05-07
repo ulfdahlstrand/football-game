@@ -105,6 +105,23 @@ pub enum MatchEvent {
         assister_id: Option<usize>,
         is_penalty: bool,
     },
+    /// Foul committed during off-ball tackle — leads to penalty or free kick.
+    Foul {
+        tackler_id: usize,
+        tackler_team: usize,
+        target_id: usize,
+        x: f32,
+        y: f32,
+        is_penalty: bool,  // true = penalty awarded, false = free kick
+    },
+    FreeKick { team: usize, x: f32, y: f32 },
+    Corner { team: usize },
+    /// GK catches/picks up a shot from the opposing team.
+    Save {
+        gk_team: usize,
+        gk_id: usize,
+        shooter_id: Option<usize>,
+    },
 }
 
 /// Per-player match statistics. Owned by Game, not by Player —

@@ -94,17 +94,31 @@ pub fn tackle_player(game: &mut Game, tackler_idx: usize, target_idx: usize) -> 
         if target_team != tackler_team && tackler_in_own_area {
             game.player_stats[tackler_idx].fouls += 1;
             game.player_stats[tackler_idx].penalties_caused += 1;
+            let tackler_id = game.pl[tackler_idx].id;
+            let target_id  = game.pl[target_idx].id;
+            let (tx, ty)   = (game.pl[tackler_idx].x, game.pl[tackler_idx].y);
+            game.events.push(crate::game::MatchEvent::Foul {
+                tackler_id, tackler_team, target_id,
+                x: tx, y: ty, is_penalty: true,
+            });
             start_penalty(game, target_team);
             return true;
         }
         let fx = game.pl[target_idx].x;
         let fy = game.pl[target_idx].y;
         let fouled_id = game.pl[target_idx].id;
+        let tackler_id = game.pl[tackler_idx].id;
+        let target_id  = fouled_id;
+        let (tx, ty)   = (game.pl[tackler_idx].x, game.pl[tackler_idx].y);
         slow_player(game, target_idx, SLOW_DUR * 4);
         start_free_kick(game, fouled_id, fx, fy);
         game.stats.tackle_success += 1;
         game.stats.fouls += 1;
         game.player_stats[tackler_idx].fouls += 1;
+        game.events.push(crate::game::MatchEvent::Foul {
+            tackler_id, tackler_team, target_id,
+            x: tx, y: ty, is_penalty: false,
+        });
     }
     true
 }
@@ -213,10 +227,12 @@ fn award_set_piece(game: &mut Game, taker_id: usize, sx: f32, sy: f32) {
 }
 
 pub fn start_free_kick(game: &mut Game, fouled_id: usize, fx: f32, fy: f32) {
+    let team = game.pl.iter().find(|p| p.id == fouled_id).map(|p| p.team).unwrap_or(0);
     award_set_piece(game, fouled_id, fx, fy);
     game.free_kick_shooter_id = Some(fouled_id);
     game.free_kick_active = true;
     game.stats.free_kicks += 1;
+    game.events.push(crate::game::MatchEvent::FreeKick { team, x: fx, y: fy });
 }
 
 fn goal_line_teams(x: f32) -> (usize, usize) {
@@ -268,6 +284,7 @@ fn restart_corner(game: &mut Game, team: usize, bx: f32, by: f32) {
     }
     game.stats.out_of_bounds += 1;
     game.stats.corners += 1;
+    game.events.push(crate::game::MatchEvent::Corner { team });
 }
 
 pub fn start_penalty(game: &mut Game, team: usize) {
@@ -468,6 +485,18 @@ pub fn update_ball(game: &mut Game) {
                 game.gk_has_ball[p_team] = true;
                 game.pl[pidx].gk_hold_timer = GK_HOLD_DELAY;
                 game.pl[pidx].gk_hold_extended = 0;
+                // Save: GK caught a shot from the opposing team
+                if let Some(shooter_id) = game.last_shooter {
+                    let shooter_team = game.pl.iter().find(|p| p.id == shooter_id).map(|p| p.team);
+                    if shooter_team == Some(1 - p_team) {
+                        game.events.push(crate::game::MatchEvent::Save {
+                            gk_team: p_team,
+                            gk_id: pid,
+                            shooter_id: Some(shooter_id),
+                        });
+                        game.last_shooter = None;
+                    }
+                }
             }
         }
     }
