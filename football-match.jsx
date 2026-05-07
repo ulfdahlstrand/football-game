@@ -355,26 +355,32 @@ function FootballMatch({ matchData, onComplete, onExit }) {
       setPieceTakerId:null, setPieceX:0, setPieceY:0,
     };
 
-    // Fetch team baseline JSON files and initialise WASM session
-    const opp0 = opponents[selectedIdx];
-    const opp1 = opponents[selectedIdx1];
-    const fetchJson = (opp) => opp
-      ? fetch(`${opp.file}?t=${Date.now()}`, { cache:'no-store' }).then(r => r.ok ? r.text() : '').catch(() => '')
+    // Hämta team-baseline JSON utifrån vald lag-slug och initiera WASM-session.
+    // OBS: simulerings-policyn kommer från data/teams/<slug>/baseline.json
+    // (V6-format med playerParams[5]) — INTE från opponents.json (legacy).
+    const slug0 = matchTeam0?.slug;
+    const slug1 = matchTeam1?.slug;
+    const fetchTeamBaseline = (slug) => slug
+      ? fetch(`data/teams/${slug}/baseline.json?t=${Date.now()}`, { cache:'no-store' })
+          .then(r => r.ok ? r.text() : '')
+          .catch(() => '')
       : Promise.resolve('');
     let cancelled = false;
     (window._wasmReady || Promise.resolve()).then(() => {
       if (cancelled) return;
-      Promise.all([fetchJson(opp0), fetchJson(opp1)]).then(([json0, json1]) => {
+      Promise.all([fetchTeamBaseline(slug0), fetchTeamBaseline(slug1)]).then(([json0, json1]) => {
         if (cancelled) return;
+        if (!json0) console.warn('[wasm] team0 baseline saknas, faller tillbaka till default V6');
+        if (!json1) console.warn('[wasm] team1 baseline saknas, faller tillbaka till default V6');
         const seed = Math.floor(Math.random() * 0xFFFFFFFF);
         wasmHandle.current = wasm_bindgen.create_game(json0, json1, seed);
         const g = gRef.current;
         g.teamColors = { ...teamColorsRef.current };
-        g.aiPolicyNames[0] = opp0?.label || opp0?.name || 'baseline';
-        g.aiPolicyNames[1] = opp1?.label || opp1?.name || 'baseline';
-        const left = (opp0?.label || opp0?.name || 'BASELINE').toUpperCase();
-        const right = (opp1?.label || opp1?.name || 'BASELINE').toUpperCase();
-        g.setPieceText = `LAG 1: ${left}  vs  LAG 2: ${right}`;
+        g.aiPolicyNames[0] = matchTeam0?.name || slug0 || 'baseline';
+        g.aiPolicyNames[1] = matchTeam1?.name || slug1 || 'baseline';
+        const left = (matchTeam0?.name || 'BASELINE').toUpperCase();
+        const right = (matchTeam1?.name || 'BASELINE').toUpperCase();
+        g.setPieceText = `${left}  vs  ${right}`;
         g.setPieceTimer = 180;
       });
     });
