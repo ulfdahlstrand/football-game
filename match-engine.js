@@ -957,20 +957,12 @@
   }
 
   // Dispatcher: every CPU player ticks through here. v1/v2 use classic;
-  // v3 modulates; v4 = v3 + directional pass mult + GK freedom.
   function tickPlayer(g, p, random) {
     if (!p.brain) { baselineCpuTick(g, p, random); return; }
     switch (p.brain.version) {
       case 'v6': v6Tick(g, p, random); return;
-      case 'v4': v4Tick(g, p, random); return;
-      case 'v3': v3Tick(g, p, random); return;
-      case 'v1':
-      case 'v2':
       default: {
-        const saved = p.aiPolicy;
-        p.aiPolicy = p.brain.params;
         baselineCpuTick(g, p, random);
-        p.aiPolicy = saved;
         return;
       }
     }
@@ -1024,7 +1016,6 @@
     const sp = v6.spatial || {};
     const dec = v6.decisions || {};
     // Risk-appetite modulation: higher risk → shoot earlier.
-    // Matches Rust ai.rs and JS v3Tick.
     const risk = dec.riskAppetite == null ? 0.5 : Math.max(0, Math.min(1, dec.riskAppetite));
     const baseShoot = dec.shootProgressThreshold == null ? 0.76 : dec.shootProgressThreshold;
     const modulatedDec = Object.assign({}, dec, {
@@ -1131,50 +1122,6 @@
     moveTo(p, tx, ty, CSPEED * slow);
   }
 
-  // v4 approximation in JS engine: delegates to v3 logic, then enforces the
-  // per-slot maxDistanceFromGoal roaming cap.
-  function v4Tick(g, p, random) {
-    const v4 = p.brain.params || {};
-    const savedBrain = p.brain;
-    const savedPolicy = p.aiPolicy;
-    p.brain = { version: 'v3', params: v4.v3 || {} };
-    v3Tick(g, p, random);
-    p.brain = savedBrain;
-    p.aiPolicy = savedPolicy;
-    applyRoamLimit(p, v4.maxDistanceFromGoal);
-  }
-
-  function applyRoamLimit(p, maxDist) {
-    if (maxDist == null || maxDist >= 1.0) return;
-    const md = Math.max(0, Math.min(1, maxDist));
-    const span = FW - 2*FIELD_LINE;
-    const limit = md * span;
-    if (p.team === 0) {
-      if (p.x > FIELD_LINE + limit) p.x = FIELD_LINE + limit;
-    } else {
-      const minX = FW - FIELD_LINE - limit;
-      if (p.x < minX) p.x = minX;
-    }
-  }
-
-  // v3 algorithm. Today: classic logic + aggression / risk modulators.
-  // Stays a single source-of-truth for the v3 dispatch path; future v3 work
-  // can diverge further from classic_tick without touching v1/v2.
-  function v3Tick(g, p, random) {
-    const b = p.brain.params || {};
-    const base = b.base || b;
-    const aggression = b.aggression == null ? 1.0 : b.aggression;
-    const risk = b.riskAppetite == null ? 0.5 : b.riskAppetite;
-    const modulated = Object.assign({}, base, {
-      tackleChance: clamp((base.tackleChance ?? 0.08) * aggression, 0.01, 0.5),
-      shootProgressThreshold: clamp((base.shootProgressThreshold ?? 0.76) - 0.05 * (risk - 0.5), 0.5, 0.95),
-    });
-    const saved = p.aiPolicy;
-    p.aiPolicy = modulated;
-    baselineCpuTick(g, p, random);
-    p.aiPolicy = saved;
-  }
-
   function candidateCpuTick(g, p, random, policy) {
     const params = { ...(policy && policy.parameters || {}) };
     if (!g.aiPolicies) g.aiPolicies = {};
@@ -1197,7 +1144,5 @@
     baselineCpuTick,
     candidateCpuTick,
     tickPlayer,
-    v3Tick,
-    v4Tick,
   };
 });
