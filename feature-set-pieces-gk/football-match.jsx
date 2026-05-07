@@ -160,12 +160,18 @@ function drawSpriteSide(ctx, teamColor, hairColor, facingLeft, legPhase) {
   ctx.restore();
 }
 
+// NES-palett (Stil A — Pixel Retro)
+const NES_TEAM0  = '#2040e0';   // blå
+const NES_TEAM1  = '#e83030';   // röd
+const NES_GK0    = '#f0c030';   // gul GK
+const NES_GK1    = '#30c060';   // grön GK
+
 function drawPlayer(ctx, p, game) {
   const hasBall  = game.ball.owner === p.id;
-  // Goalkeepers wear contrasting jerseys (yellow / lime) so they stand out.
+  const baseColors = game.teamColors || { 0: NES_TEAM0, 1: NES_TEAM1 };
   const teamColor = p.role === 'gk'
-    ? (p.team === 0 ? '#fbbf24' : '#84cc16')
-    : (p.team === 0 ? '#3464a8' : '#c82828');
+    ? (p.team === 0 ? NES_GK0 : NES_GK1)
+    : baseColors[p.team];
   const hairColor = p.hairColor;
   const celebrateJump = p.celebrateTimer > 0 ? -Math.abs(Math.sin(p.celebrateTimer * 0.18)) * 22 : 0;
   const hopPhase = p.jumpTimer > 0 ? Math.sin((1 - p.jumpTimer/JUMP_DUR) * Math.PI) : 0;
@@ -262,6 +268,7 @@ function newGame() {
     gkHasBall:[false,false],
     setPieceTakerId:null, setPieceX:0, setPieceY:0,
     _done:false,
+    _stats: { shots:[0,0], passes:[0,0], tackles:[0,0], corners:[0,0], possession:[50,50], _possFrames:[0,0] },
   };
 }
 
@@ -273,6 +280,22 @@ function doShoot(g, shooter, mega, tx, ty, pow) {
   ball.x=shooter.x; ball.y=shooter.y;
   ball.owner=null; ball.mega=mega; ball.cooldown=BALL_COOL;
   ball.lastTouchTeam=shooter.team;
+  try {
+    if (window.SFX) {
+      const isShot = p >= SHOOT_POW;
+      if (mega) window.SFX.shoot();
+      else if (isShot) window.SFX.shoot();
+      else window.SFX.kick();
+    }
+  } catch(e) {}
+  if (g._stats && p >= SHOOT_POW) {
+    const t = shooter.team;
+    const towardsGoal = t===0 ? nx > 0.4 : nx < -0.4;
+    if (towardsGoal) g._stats.shots[t] = (g._stats.shots[t]||0) + 1;
+  } else if (g._stats) {
+    const t = shooter.team;
+    g._stats.passes[t] = (g._stats.passes[t]||0) + 1;
+  }
 }
 
 function knockPlayer(g, p, duration=KNOCK_DUR) {
@@ -316,6 +339,8 @@ function tacklePlayer(g, tackler, target) {
     b.x = target.x; b.y = target.y;
     b.cooldown = BALL_COOL;
     slowPlayer(target, SLOW_DUR);
+    try { if (window.SFX) window.SFX.tackle(); } catch(e) {}
+    if (g._stats) g._stats.tackles[tackler.team] = (g._stats.tackles[tackler.team]||0) + 1;
   } else {
     // Off-ball tackle: foul. No pause/knock — slow target briefly, free kick.
     if (target.team!==tackler.team && isInOwnPenaltyArea(tackler)) {
@@ -487,6 +512,8 @@ function restartCorner(g, team, x, y) {
   const sx = x < FW/2 ? FIELD_LINE + PR : FW - FIELD_LINE - PR;
   const sy = y < h2 ? PR : FH-PR;
   awardSetPiece(g, taker.id, sx, sy, 'HÖRNA');
+  try { if (window.SFX) window.SFX.corner(); } catch(e) {}
+  if (g._stats) g._stats.corners[team] = (g._stats.corners[team]||0) + 1;
 }
 
 function startPenalty(g, team) {
@@ -1208,6 +1235,7 @@ function FootballMatch({ matchData, onComplete, onExit }) {
   useEffFM(() => {
     if (!started) return;
     gRef.current = newGame();
+    gRef.current.teamColors = { ...teamColorsRef.current };
 
     // Apply per-team selections — fetch in parallel, set brain only for that team
     const opp0 = opponents[selectedIdx];
@@ -1438,7 +1466,7 @@ function FootballMatch({ matchData, onComplete, onExit }) {
 
         const inGoalY=Math.abs(ball.y-h2)<GH/2;
         if (ball.x-BR<=FIELD_LINE) {
-          if (inGoalY) { g.score[1]++; g.phase='goal'; g.goalAnim=160; g.goalTeam=1; g.lastScorer=null; g.celebration=false; g.gkHasBall[0]=false; return; }
+          if (inGoalY) { g.score[1]++; g.phase='goal'; g.goalAnim=160; g.goalTeam=1; g.lastScorer=null; g.celebration=false; g.gkHasBall[0]=false; try { if (window.SFX) window.SFX.goal(); } catch(e) {} return; }
           handleBallOut(g);
           return;
         }
@@ -1446,6 +1474,7 @@ function FootballMatch({ matchData, onComplete, onExit }) {
           if (inGoalY) {
             g.score[0]++; g.phase='goal'; g.goalAnim=160; g.goalTeam=0;
             g.lastScorer=0; g.celebration=true; g.celebrateFrame=0; g.gkHasBall[1]=false;
+            try { if (window.SFX) window.SFX.goal(); } catch(e) {}
             return;
           }
           handleBallOut(g);
@@ -1523,179 +1552,280 @@ function FootballMatch({ matchData, onComplete, onExit }) {
       }
     }
 
+    // Boll-rotation för pentagon-animation
+    let _drawFrame = 0;
+
+    function drawFootballBall(ctx, x, y, radius, frame) {
+      const rot = frame * 0.018;
+      ctx.save();
+      ctx.translate(x, y);
+      // Skugga
+      ctx.fillStyle = 'rgba(0,0,0,0.22)';
+      ctx.beginPath(); ctx.ellipse(2, radius + 2, radius * 0.85, radius * 0.28, 0, 0, Math.PI*2); ctx.fill();
+      // Clip + vit boll
+      ctx.save();
+      ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI*2); ctx.clip();
+      ctx.fillStyle = '#f8f8f8';
+      ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI*2); ctx.fill();
+      // Pentagon-mönster
+      const drawPent = (cx, cy, r) => {
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          const a = (i/5)*Math.PI*2 - Math.PI/2 + rot;
+          i===0 ? ctx.moveTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r)
+                : ctx.lineTo(cx+Math.cos(a)*r, cy+Math.sin(a)*r);
+        }
+        ctx.closePath();
+        ctx.fillStyle = '#1a1a1a'; ctx.fill();
+        ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = radius * 0.07; ctx.stroke();
+      };
+      drawPent(0, 0, radius * 0.38);
+      for (let i = 0; i < 5; i++) {
+        const a = (i/5)*Math.PI*2 - Math.PI/2 + rot;
+        const d = radius * 0.68;
+        drawPent(Math.cos(a)*d, Math.sin(a)*d, radius * 0.28);
+      }
+      ctx.restore(); // unclip
+      // Yttre outline
+      ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = radius * 0.1;
+      ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI*2); ctx.stroke();
+      // Highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.beginPath(); ctx.ellipse(-radius*0.28, -radius*0.3, radius*0.2, radius*0.12, -0.5, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+
+    // CRT-effekt (scanlines + vignette)
+    function drawCRT(ctx, w, h) {
+      ctx.fillStyle = 'rgba(0,0,0,0.11)';
+      for (let y = 0; y < h; y += 2) ctx.fillRect(0, y, w, 1);
+      const vg = ctx.createRadialGradient(w/2,h/2,h*0.28,w/2,h/2,h*0.72);
+      vg.addColorStop(0,'rgba(0,0,0,0)');
+      vg.addColorStop(1,'rgba(0,0,0,0.32)');
+      ctx.fillStyle = vg; ctx.fillRect(0, 0, w, h);
+    }
+
     function draw() {
       const g=gRef.current;
+      _drawFrame++;
 
-      // Plan
-      ctx.fillStyle='#2a6318'; ctx.fillRect(0,0,FW,FH);
-      for (let i=0;i<11;i++) {
-        ctx.fillStyle=i%2===0?'rgba(0,0,0,0.06)':'rgba(255,255,255,0.025)';
-        ctx.fillRect(i*(FW/11),0,FW/11,FH);
+      // Plan — NES-grönt med alternerande ränder
+      const stripeCount = 11;
+      const sw = FW / stripeCount;
+      for (let i = 0; i < stripeCount; i++) {
+        ctx.fillStyle = i % 2 === 0 ? '#1a4a1a' : '#1f5a1f';
+        ctx.fillRect(i * sw, 0, sw, FH);
       }
-      ctx.strokeStyle='rgba(255,255,255,0.82)'; ctx.lineWidth=2;
+      ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.lineWidth=2;
       ctx.strokeRect(18,8,FW-36,FH-16);
       ctx.beginPath();ctx.moveTo(FW/2,8);ctx.lineTo(FW/2,FH-8);ctx.stroke();
       ctx.beginPath();ctx.arc(FW/2,h2,62,0,Math.PI*2);ctx.stroke();
-      ctx.fillStyle='rgba(255,255,255,0.8)';
+      ctx.fillStyle='rgba(255,255,255,0.9)';
       ctx.beginPath();ctx.arc(FW/2,h2,3,0,Math.PI*2);ctx.fill();
       [[18,h2-88,106,176],[FW-124,h2-88,106,176],[18,h2-46,54,92],[FW-72,h2-46,54,92]].forEach(
         ([x,y,w,hh])=>ctx.strokeRect(x,y,w,hh));
 
-      // Mål (öppning vid planlinjerna FIELD_LINE och FW-FIELD_LINE)
+      // Mål
       [[FIELD_LINE-GD,h2-GH/2],[FW-FIELD_LINE,h2-GH/2]].forEach(([gx,gy])=>{
-        ctx.fillStyle='rgba(255,255,255,0.1)'; ctx.fillRect(gx,gy,GD,GH);
-        ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.lineWidth=3; ctx.strokeRect(gx,gy,GD,GH);
+        ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fillRect(gx,gy,GD,GH);
+        ctx.strokeStyle='rgba(255,255,255,0.92)'; ctx.lineWidth=3; ctx.strokeRect(gx,gy,GD,GH);
       });
 
       // Spelare (sorterade på y för djup-ordning)
       [...g.pl].sort((a,b)=>a.y-b.y).forEach(p => drawPlayer(ctx,p,g));
 
-      // Boll
+      // Boll — pentagon-mönster (Stil A)
       const b=g.ball;
-      ctx.save(); ctx.translate(b.x,b.y);
       if (b.mega) {
+        ctx.save(); ctx.translate(b.x,b.y);
         const grd=ctx.createRadialGradient(0,0,BR,0,0,BR*3.8);
         grd.addColorStop(0,'rgba(255,210,40,0.95)');
         grd.addColorStop(1,'rgba(255,80,0,0)');
         ctx.fillStyle=grd; ctx.beginPath();ctx.arc(0,0,BR*3.8,0,Math.PI*2);ctx.fill();
-      }
-      ctx.fillStyle='rgba(0,0,0,0.2)'; ctx.beginPath();ctx.ellipse(2,BR+1,BR*0.8,BR*0.28,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle=b.mega?'#ffd43b':'#fff';
-      ctx.beginPath();ctx.arc(0,0,b.mega?BR*1.6:BR,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle='#1a1a1a';ctx.lineWidth=1.5;ctx.stroke();
-      if (!b.mega){ctx.fillStyle='rgba(0,0,0,0.2)';ctx.beginPath();ctx.arc(2,-2,BR*0.4,0,Math.PI*2);ctx.fill();}
-      ctx.restore();
-
-      // HUD
-      ctx.fillStyle='rgba(0,0,0,0.68)'; ctx.fillRect(FW/2-95,7,190,42);
-      ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;ctx.strokeRect(FW/2-95,7,190,42);
-      ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.font='bold 22px ui-monospace,monospace'; ctx.fillStyle='#fff';
-      ctx.fillText(`${g.score[0]}  –  ${g.score[1]}`,FW/2,24);
-      const mm=Math.floor(g.timer/3600),ss=Math.floor((g.timer%3600)/60);
-      ctx.font='11px ui-monospace,monospace'; ctx.fillStyle='rgba(255,255,255,0.65)';
-      ctx.fillText(`${mm}:${String(ss).padStart(2,'0')}`,FW/2,40);
-      ctx.font='bold 9px ui-monospace,monospace';
-      ctx.fillStyle='#6ea8fe';ctx.textAlign='left'; ctx.fillText('DU',FW/2-92,22);
-      ctx.fillStyle='#f87171';ctx.textAlign='right';ctx.fillText('MOTST.',FW/2+92,22);
-
-      // Kontrolltips
-      ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.fillRect(0,FH-26,FW,26);
-      ctx.font='10px ui-monospace,monospace'; ctx.fillStyle='rgba(255,255,255,0.55)';
-      ctx.textAlign='center';
-      ctx.fillText('PILAR/ASD rörelse  ·  W passa  ·  W+PIL riktad pass  ·  SPACE skjut  ·  Q+SPACE superskott  ·  E tackling  ·  ENTER hopp',FW/2,FH-12);
-
-      if (g.setPieceText) {
-        ctx.fillStyle='rgba(0,0,0,0.62)';
-        ctx.fillRect(FW/2-120,58,240,34);
-        ctx.strokeStyle='rgba(255,255,255,0.22)'; ctx.strokeRect(FW/2-120,58,240,34);
-        ctx.font='bold 16px ui-monospace,monospace'; ctx.fillStyle='#ffd43b';
-        ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(g.setPieceText,FW/2,75);
-        if (g.phase==='penalty' && g.penaltyTeam===0) {
-          ctx.font='10px ui-monospace,monospace'; ctx.fillStyle='rgba(255,255,255,0.75)';
-          ctx.fillText('Håll pil för riktning och tryck SPACE',FW/2,102);
-        }
+        ctx.restore();
+        drawFootballBall(ctx, b.x, b.y, BR*1.5, _drawFrame);
+      } else {
+        drawFootballBall(ctx, b.x, b.y, BR, _drawFrame);
       }
 
-      // Fasöverlägg
+      // CRT-effekt (Stil A)
+      drawCRT(ctx, FW, FH);
+
+      // Kontrolltips längst ned
+      const tipBg = ctx.createLinearGradient(0,FH-32,0,FH);
+      tipBg.addColorStop(0,'rgba(0,0,0,0)');
+      tipBg.addColorStop(0.3,'rgba(0,0,0,0.7)');
+      tipBg.addColorStop(1,'rgba(0,0,0,0.85)');
+      ctx.fillStyle=tipBg; ctx.fillRect(0,FH-32,FW,32);
+      const tips=[
+        ['PILAR','rörelse'],['W','passa'],['SPACE','skjut'],
+        ['Q+SPC','superskott'],['E','tackling'],['ENTER','hopp'],['BSP','AI']
+      ];
+      const tipTotalW = tips.length * 110;
+      const tipStartX = FW/2 - tipTotalW/2;
+      ctx.textBaseline='middle';
+      tips.forEach(([key,act],i) => {
+        const tx = tipStartX + i*110 + 55;
+        ctx.font='bold 8px ui-monospace,monospace';
+        const kw = ctx.measureText(key).width + 12;
+        ctx.fillStyle='rgba(255,255,255,0.14)';
+        const bx = tx - kw/2 - 24;
+        ctx.beginPath(); ctx.roundRect(bx, FH-22, kw, 14, 3); ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,0.8)';
+        ctx.textAlign='center'; ctx.fillText(key, bx + kw/2, FH-15);
+        ctx.font='8px ui-monospace,monospace'; ctx.fillStyle='rgba(255,255,255,0.4)';
+        ctx.fillText(act, bx + kw/2 + kw/2 + 20, FH-15);
+      });
+
+      // Avspark-överlägg (React HUD saknar detta)
       if (g.phase==='kickoff') {
-        ctx.fillStyle='rgba(0,0,0,0.58)'; ctx.fillRect(0,0,FW,FH);
-        ctx.font='bold 40px Georgia,serif'; ctx.fillStyle='#fff';
+        ctx.fillStyle='rgba(0,0,0,0.62)'; ctx.fillRect(0,0,FW,FH);
+        ctx.font='bold 44px Georgia,serif'; ctx.fillStyle='#fff';
         ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.fillText('AVSPARK',FW/2,h2-22);
-        ctx.font='16px ui-monospace,monospace'; ctx.fillStyle='rgba(255,255,255,0.7)';
+        ctx.font='15px ui-monospace,monospace'; ctx.fillStyle='rgba(255,255,255,0.7)';
         ctx.fillText('Tryck valfri tangent',FW/2,h2+18);
-        ctx.font='12px ui-monospace,monospace'; ctx.fillStyle='#ffd43b';
+        ctx.font='11px ui-monospace,monospace'; ctx.fillStyle='#ffd43b';
         ctx.fillText(`${matchData?.name||'Match'} · Du spelar i BLÅ`,FW/2,h2+50);
       }
 
-      if (g.phase==='goal') {
-        const t=g.goalAnim/160;
-        ctx.fillStyle=`rgba(0,0,0,${(1-t)*0.5})`; ctx.fillRect(0,0,FW,FH);
-        ctx.globalAlpha=Math.min(1,t*5);
-        ctx.font='bold 84px Georgia,serif';
-        ctx.fillStyle=g.goalTeam===0?'#ffd43b':'#ff4040';
-        ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText('MÅÅÅL!',FW/2,h2);
-        ctx.font='18px ui-monospace,monospace'; ctx.fillStyle='#fff';
-        ctx.fillText(g.goalTeam===0?'Ditt lag poängsätter!':'Motståndarlaget poängsätter!',FW/2,h2+60);
-        if (g.celebration) {
-          ctx.font='13px ui-monospace,monospace'; ctx.fillStyle='#ffd43b';
-          ctx.fillText('Tryck SPACE för att fira!',FW/2,h2+90);
-        }
-        ctx.globalAlpha=1;
-      }
-
+      // Fulltime — trigger callbacks (React HUD visar statistik-skärmen)
       if (g.phase==='fulltime') {
-        const won=g.score[0]>g.score[1], draw=g.score[0]===g.score[1];
-        ctx.fillStyle='rgba(0,0,0,0.78)'; ctx.fillRect(0,0,FW,FH);
-        ctx.font='bold 62px Georgia,serif';
-        ctx.fillStyle=won?'#ffd43b':draw?'#fff':'#ff5555';
-        ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(won?'VINST!':draw?'OAVGJORT':'FÖRLUST',FW/2,h2-28);
-        ctx.font='bold 32px ui-monospace,monospace'; ctx.fillStyle='#fff';
-        ctx.fillText(`${g.score[0]} – ${g.score[1]}`,FW/2,h2+30);
-        ctx.font='13px ui-monospace,monospace'; ctx.fillStyle='rgba(255,255,255,0.55)';
-        ctx.fillText('Tryck ESC för att lämna…',FW/2,h2+80);
-        if (!g._done) { g._done=true; setTimeout(()=>onComplete&&onComplete(won,matchData?.id),3500); }
+        if (!g._done) { g._done=true;
+          try { if (window.SFX) { window.SFX.whistleFull(); window.SFX.setCrowdTarget(0.06); } } catch(e) {}
+          setTimeout(()=>onComplete&&onComplete(g.score[0]>g.score[1],matchData?.id),3500);
+        }
       }
     }
 
+    function updateStats() {
+      const g = gRef.current;
+      if (!g || !g._stats) return;
+      if (g.ball.owner !== null) {
+        const ownerTeam = g.pl.find(p => p.id === g.ball.owner)?.team;
+        if (ownerTeam === 0 || ownerTeam === 1) {
+          g._stats._possFrames[ownerTeam]++;
+          const total = g._stats._possFrames[0] + g._stats._possFrames[1];
+          if (total > 0) {
+            g._stats.possession[0] = (g._stats._possFrames[0] / total) * 100;
+            g._stats.possession[1] = (g._stats._possFrames[1] / total) * 100;
+          }
+        }
+      }
+      if (window.SFX) {
+        try {
+          const b = g.ball;
+          const nearLeft  = b.x < FW * 0.2;
+          const nearRight = b.x > FW * 0.8;
+          const tension = (nearLeft || nearRight)
+            ? clamp(1 - (nearLeft ? b.x : FW - b.x) / (FW * 0.2), 0, 1)
+            : 0;
+          window.SFX.setCrowdTension(tension);
+        } catch(e) {}
+      }
+      if (g._lastSetPieceText !== g.setPieceText && g.setPieceText &&
+          (g.setPieceText.includes('FRISPARK') || g.setPieceText.includes('STRAFF') || g.setPieceText.includes('HÖRNA'))) {
+        try { if (window.SFX) window.SFX.whistle(); } catch(e) {}
+      }
+      g._lastSetPieceText = g.setPieceText;
+    }
+
     let raf;
-    const loop=()=>{ update(); draw(); raf=requestAnimationFrame(loop); };
+    const loop=()=>{ update(); updateStats(); draw(); raf=requestAnimationFrame(loop); };
     raf=requestAnimationFrame(loop);
-    return ()=>{ cancelAnimationFrame(raf); window.removeEventListener('keydown',onKD); window.removeEventListener('keyup',onKU); };
+    return ()=>{ cancelAnimationFrame(raf); window.removeEventListener('keydown',onKD); window.removeEventListener('keyup',onKU); try { if (window.SFX) window.SFX.stopAll(); } catch(e) {} };
   },[started]);
+
+  const [matchTeam0, setMatchTeam0] = useStateFM(null);
+  const [matchTeam1, setMatchTeam1] = useStateFM(null);
+  const [gameSnapshot, setGameSnapshot] = useStateFM(null);
+  const [matchStats, setMatchStats] = useStateFM(null);
+  const [tsReady, setTsReady] = useStateFM(() => !!window.TeamSelectScreen);
+
+  useEffFM(() => {
+    if (tsReady) return;
+    const id = setInterval(() => {
+      if (window.TeamSelectScreen) { setTsReady(true); clearInterval(id); }
+    }, 50);
+    return () => clearInterval(id);
+  }, [tsReady]);
+
+  useEffFM(() => {
+    const unlock = () => { try { if (window.SFX) window.SFX.unlock(); } catch(e) {} };
+    window.addEventListener('keydown', unlock, { once: true });
+    window.addEventListener('pointerdown', unlock, { once: true });
+    return () => {
+      window.removeEventListener('keydown', unlock);
+      window.removeEventListener('pointerdown', unlock);
+    };
+  }, []);
+
+  useEffFM(() => {
+    if (!started) return;
+    const id = setInterval(() => {
+      const g = gRef.current;
+      if (!g) return;
+      setGameSnapshot({
+        score: [...g.score], timer: g.timer,
+        phase: g.phase, setPieceText: g.setPieceText,
+        setPieceTimer: g.setPieceTimer
+      });
+      if (g._stats) setMatchStats({ ...g._stats,
+        shots: [...g._stats.shots], passes: [...g._stats.passes],
+        tackles: [...g._stats.tackles], corners: [...g._stats.corners],
+        possession: [...g._stats.possession]
+      });
+    }, 120);
+    return () => clearInterval(id);
+  }, [started]);
+
+  const teamColorsRef = useRefFM({ 0: '#3464a8', 1: '#c82828' });
+
+  const handleTeamSelectStart = ({ team0, team1, oppIdx0, oppIdx1 }) => {
+    setMatchTeam0(team0);
+    setMatchTeam1(team1);
+    teamColorsRef.current = {
+      0: team0?.primary || '#3464a8',
+      1: team1?.primary || '#c82828',
+    };
+    setSelectedIdx(oppIdx0);
+    setSelectedIdx1(oppIdx1);
+    setStarted(true);
+  };
 
   return (
     <div style={{position:'absolute',inset:0,background:'#0a0a0a',
       display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}>
-      {!started && (
-        <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.85)',
-          display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
-          gap:'16px',padding:'24px',color:'#f3f4f6',zIndex:10,fontFamily:'Arial, sans-serif'}}>
-          <h2 style={{margin:0,fontSize:'28px',letterSpacing:'1px'}}>VÄLJ LAG</h2>
-          {opponents.length === 0 ? (
-            <p style={{color:'#9ca3af',fontSize:'14px'}}>Laddar motståndare...</p>
-          ) : (
-            <div style={{display:'flex',flexDirection:'column',gap:'12px',alignItems:'stretch',minWidth:'360px'}}>
-              <label style={{display:'flex',flexDirection:'column',gap:'4px'}}>
-                <span style={{fontSize:'13px',color:'#93c5fd'}}>Lag 1 (blått) — ditt lag</span>
-                <OpponentSelector opponents={opponents} grouped={groupedOpponents}
-                  selectedIdx={selectedIdx} onChange={setSelectedIdx} accentColor="#3b82f6" />
-              </label>
-              <label style={{display:'flex',flexDirection:'column',gap:'4px'}}>
-                <span style={{fontSize:'13px',color:'#fca5a5'}}>Lag 2 (rött) — motståndare</span>
-                <OpponentSelector opponents={opponents} grouped={groupedOpponents}
-                  selectedIdx={selectedIdx1} onChange={setSelectedIdx1} accentColor="#ef4444" />
-              </label>
-              <p style={{margin:'4px 0 0',fontSize:'12px',color:'#9ca3af',textAlign:'center'}}>
-                Tryck <kbd style={{background:'#374151',padding:'2px 6px',borderRadius:'3px'}}>backspace</kbd> i matchen för att toggla manuell/AI-styrning av din spelare
-              </p>
-            </div>
-          )}
-          <button
-            onClick={()=>setStarted(true)}
-            disabled={opponents.length === 0}
-            style={{padding:'12px 28px',fontSize:'16px',fontWeight:700,
-              background:'#16a34a',color:'#ffffff',border:'none',borderRadius:'6px',
-              cursor: opponents.length === 0 ? 'not-allowed' : 'pointer',
-              opacity: opponents.length === 0 ? 0.5 : 1}}
-          >
-            STARTA MATCH
-          </button>
-          {onExit && (
-            <button onClick={onExit}
-              style={{padding:'8px 18px',fontSize:'13px',background:'transparent',
-                color:'#9ca3af',border:'1px solid #374151',borderRadius:'6px',cursor:'pointer'}}>
-              Avbryt
-            </button>
-          )}
+
+      {!started && tsReady && (
+        <window.TeamSelectScreen
+          opponents={opponents}
+          groupedOpponents={groupedOpponents}
+          highestVersionIdx={highestVersionIdx}
+          onStart={handleTeamSelectStart}
+          onExit={onExit}
+        />
+      )}
+
+      {!started && !tsReady && (
+        <div style={{color:'rgba(255,255,255,0.25)',fontFamily:'ui-monospace,monospace',fontSize:11,letterSpacing:'0.15em'}}>
+          LADDAR…
         </div>
       )}
+
       <canvas ref={canvasRef} width={FW} height={FH}
-        style={{maxWidth:'100%',maxHeight:'100%',display:'block'}}/>
+        style={{maxWidth:'100%',maxHeight:'100%',display:'block',
+          visibility: started ? 'visible' : 'hidden'}}/>
+
+      {started && window.MatchHUD && (
+        <window.MatchHUD
+          game={gameSnapshot}
+          team0info={matchTeam0}
+          team1info={matchTeam1}
+          matchStats={matchStats}
+          onExit={onExit}
+        />
+      )}
     </div>
   );
 }
