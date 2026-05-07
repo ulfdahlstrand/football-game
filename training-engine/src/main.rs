@@ -1799,6 +1799,40 @@ fn main() {
             max_depth, games);
         return;
     }
+    if args.get(1).map(|s| s.as_str()) == Some("--score-probe") {
+        // Print actual scores for N games between two teams.
+        // Usage: --score-probe <team_a> <team_b> [games]
+        let team_a = args.get(2).cloned().unwrap_or_else(|| "granite-athletic".to_string());
+        let team_b = args.get(3).cloned().unwrap_or_else(|| "nebula-rangers".to_string());
+        let n: usize = args.get(4).and_then(|s| s.parse().ok()).unwrap_or(100);
+        let teams_dir = project_root.join("data").join("teams");
+        let load = |name: &str| -> TeamPolicyV6 {
+            let p = teams_dir.join(name).join("baseline.json");
+            read_team_baseline_v6(&p).unwrap_or_else(|e| panic!("cannot load {}: {}", name, e)).player_params
+        };
+        let pa = load(&team_a);
+        let pb = load(&team_b);
+        let mut rng = rand::thread_rng();
+        let mut score_counts: std::collections::HashMap<(u32,u32), u32> = std::collections::HashMap::new();
+        for i in 0..n {
+            let seed: u64 = rand::Rng::gen(&mut rng);
+            let swap = i % 2 == 1;
+            let (g0, g1) = {
+                let mut g = crate::game::Game::for_team_battle_v6(if swap { &pb } else { &pa }, if swap { &pa } else { &pb });
+                while g.phase != crate::game::Phase::Fulltime { crate::physics::step_game(&mut g, &mut rng); }
+                if swap { (g.score[1], g.score[0]) } else { (g.score[0], g.score[1]) }
+            };
+            *score_counts.entry((g0, g1)).or_insert(0) += 1;
+        }
+        println!("Score distribution: {} vs {} ({} games)", team_a, team_b, n);
+        let mut counts: Vec<_> = score_counts.into_iter().collect();
+        counts.sort_by(|a, b| b.1.cmp(&a.1));
+        for ((a, b), c) in &counts {
+            let result = if a > b { "W" } else if b > a { "L" } else { "D" };
+            println!("  {}-{}  {}  x{}", a, b, result, c);
+        }
+        return;
+    }
     if args.get(1).map(|s| s.as_str()) == Some("--v6-tournament") {
         let games_per_match: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(10000);
         run_v6_tournament(&project_root, games_per_match);
@@ -1847,6 +1881,112 @@ fn main() {
     }
     if args.get(1).map(|s| s.as_str()) == Some("--v6-team-svgs") {
         regenerate_all_team_svgs(&project_root);
+        return;
+    }
+    if args.get(1).map(|s| s.as_str()) == Some("--single-stage-slot") {
+        // Single-stage anneal that mutates ONLY the specified slot (0..=4).
+        // Slots: 0=fwd, 1=mid-top, 2=mid-bottom, 3=def, 4=gk
+        // Usage: --single-stage-slot <team> <slot> <epochs> <games>
+        let team_name: String = args.get(2).cloned().unwrap_or_else(|| "granite-athletic".to_string());
+        let slot: usize = args.get(3).and_then(|s| s.parse().ok()).unwrap_or(0);
+        let epochs: usize = args.get(4).and_then(|s| s.parse().ok()).unwrap_or(2000);
+        let games: usize  = args.get(5).and_then(|s| s.parse().ok()).unwrap_or(200);
+        if slot > 4 { eprintln!("slot must be 0..=4"); std::process::exit(1); }
+        let slot_name = ["fwd","mid-top","mid-bot","def","gk"][slot];
+        let stages: &[(usize, usize)] = &[(epochs, games)];
+        let teams_dir = project_root.join("data").join("teams");
+        let team_dir  = teams_dir.join(&team_name);
+        let baseline_path = team_dir.join("baseline.json");
+        let baseline_file = read_team_baseline_v6(&baseline_path)
+            .unwrap_or_else(|e| panic!("cannot load {}: {}", team_name, e));
+        let start = baseline_file.player_params.clone();
+        println!("[{}] single-stage SLOT-{}({}): {} epochs × {} games", team_name, slot, slot_name, epochs, games);
+        let anneal_dir = team_dir.join("sessions").join(format!("single-stage-slot{}", slot));
+        std::fs::create_dir_all(&anneal_dir).expect("create anneal dir");
+        let champion = run_team_anneal_slot_only(&anneal_dir, &team_name, start, stages, slot);
+        let team_desc_idx = TEAM_NAMES.iter().position(|n| *n == team_name.as_str());
+        let team_desc = team_desc_idx.and_then(|i| TEAM_DESCRIPTIONS.get(i)).copied().unwrap_or(team_name.as_str());
+        let final_doc = serde_json::json!({
+            "name": team_name, "version": 1,
+            "type": "team-policy-v6",
+            "description": format!("{}: single-stage slot {} ({}) {}×{}", team_name, slot, slot_name, epochs, games),
+            "playerParams": champion,
+            "trainedAt": iso_now(),
+            "trainingMethod": format!("single-stage-slot-{}", slot),
+        });
+        let _ = std::fs::write(&baseline_path,
+            format!("{}\n", serde_json::to_string_pretty(&final_doc).unwrap()));
+        write_team_info_md(&team_dir, &team_name, team_desc, &champion);
+        write_team_layout_svg(&team_dir.join("layout.svg"), &team_name, team_desc, &champion);
+        println!("Updated baseline + info.md + layout.svg for {}", team_name);
+        return;
+    }
+    if args.get(1).map(|s| s.as_str()) == Some("--single-stage-gk") {
+        // Single-stage anneal that mutates ONLY the GK slot (slot 4).
+        // Usage: --single-stage-gk <team> <epochs> <games_per_epoch>
+        let team_name: String = args.get(2).cloned().unwrap_or_else(|| "granite-athletic".to_string());
+        let epochs: usize = args.get(3).and_then(|s| s.parse().ok()).unwrap_or(2000);
+        let games: usize  = args.get(4).and_then(|s| s.parse().ok()).unwrap_or(200);
+        let stages: &[(usize, usize)] = &[(epochs, games)];
+        let teams_dir = project_root.join("data").join("teams");
+        let team_dir  = teams_dir.join(&team_name);
+        let baseline_path = team_dir.join("baseline.json");
+        let baseline_file = read_team_baseline_v6(&baseline_path)
+            .unwrap_or_else(|e| panic!("cannot load {}: {}", team_name, e));
+        let start = baseline_file.player_params.clone();
+        println!("[{}] single-stage GK-ONLY: {} epochs × {} games", team_name, epochs, games);
+        let anneal_dir = team_dir.join("sessions").join("single-stage-gk");
+        std::fs::create_dir_all(&anneal_dir).expect("create anneal dir");
+        let champion = run_team_anneal_slot_only(&anneal_dir, &team_name, start, stages, 4);
+        let team_desc_idx = TEAM_NAMES.iter().position(|n| *n == team_name.as_str());
+        let team_desc = team_desc_idx.and_then(|i| TEAM_DESCRIPTIONS.get(i)).copied().unwrap_or(team_name.as_str());
+        let final_doc = serde_json::json!({
+            "name": team_name, "version": 1,
+            "type": "team-policy-v6",
+            "description": format!("{}: single-stage GK-only {}×{}", team_name, epochs, games),
+            "playerParams": champion,
+            "trainedAt": iso_now(),
+            "trainingMethod": "single-stage-gk-only",
+        });
+        let _ = std::fs::write(&baseline_path,
+            format!("{}\n", serde_json::to_string_pretty(&final_doc).unwrap()));
+        write_team_info_md(&team_dir, &team_name, team_desc, &champion);
+        write_team_layout_svg(&team_dir.join("layout.svg"), &team_name, team_desc, &champion);
+        println!("Updated baseline + info.md + layout.svg for {}", team_name);
+        return;
+    }
+    if args.get(1).map(|s| s.as_str()) == Some("--single-stage") {
+        // Single-stage anneal with custom epochs and games_per_epoch.
+        // Usage: --single-stage <team> <epochs> <games_per_epoch>
+        let team_name: String = args.get(2).cloned().unwrap_or_else(|| "granite-athletic".to_string());
+        let epochs: usize = args.get(3).and_then(|s| s.parse().ok()).unwrap_or(100);
+        let games: usize  = args.get(4).and_then(|s| s.parse().ok()).unwrap_or(500);
+        let stages: &[(usize, usize)] = &[(epochs, games)];
+        let teams_dir = project_root.join("data").join("teams");
+        let team_dir  = teams_dir.join(&team_name);
+        let baseline_path = team_dir.join("baseline.json");
+        let baseline_file = read_team_baseline_v6(&baseline_path)
+            .unwrap_or_else(|e| panic!("cannot load {}: {}", team_name, e));
+        let start = baseline_file.player_params.clone();
+        println!("[{}] single-stage: {} epochs × {} games", team_name, epochs, games);
+        let anneal_dir = team_dir.join("sessions").join("single-stage");
+        std::fs::create_dir_all(&anneal_dir).expect("create anneal dir");
+        let champion = run_team_anneal(&anneal_dir, &team_name, start, stages);
+        let team_desc_idx = TEAM_NAMES.iter().position(|n| *n == team_name.as_str());
+        let team_desc = team_desc_idx.and_then(|i| TEAM_DESCRIPTIONS.get(i)).copied().unwrap_or(team_name.as_str());
+        let final_doc = serde_json::json!({
+            "name": team_name, "version": 1,
+            "type": "team-policy-v6",
+            "description": format!("{}: single-stage {}×{}", team_name, epochs, games),
+            "playerParams": champion,
+            "trainedAt": iso_now(),
+            "trainingMethod": "single-stage-anneal",
+        });
+        let _ = std::fs::write(&baseline_path,
+            format!("{}\n", serde_json::to_string_pretty(&final_doc).unwrap()));
+        write_team_info_md(&team_dir, &team_name, team_desc, &champion);
+        write_team_layout_svg(&team_dir.join("layout.svg"), &team_name, team_desc, &champion);
+        println!("Updated baseline + info.md + layout.svg for {}", team_name);
         return;
     }
     if args.get(1).map(|s| s.as_str()) == Some("--v6-team-train") {
@@ -2235,7 +2375,17 @@ fn run_team_anneal(
     initial: TeamPolicyV6,
     stages: &[(usize, usize)],
 ) -> TeamPolicyV6 {
-    run_team_anneal_with_prefix(team_dir, team_name, initial, stages, "", true)
+    run_team_anneal_with_prefix(team_dir, team_name, initial, stages, "", true, None)
+}
+
+fn run_team_anneal_slot_only(
+    team_dir: &Path,
+    team_name: &str,
+    initial: TeamPolicyV6,
+    stages: &[(usize, usize)],
+    slot: usize,
+) -> TeamPolicyV6 {
+    run_team_anneal_with_prefix(team_dir, team_name, initial, stages, "", true, Some(slot))
 }
 
 fn run_team_anneal_with_prefix(
@@ -2245,6 +2395,7 @@ fn run_team_anneal_with_prefix(
     stages: &[(usize, usize)],
     session_prefix: &str,
     write_initial_baseline: bool,
+    slot_filter: Option<usize>,
 ) -> TeamPolicyV6 {
     crate::game::CLUSTER_START.store(true, std::sync::atomic::Ordering::Relaxed);
 
@@ -2288,7 +2439,11 @@ fn run_team_anneal_with_prefix(
         for epoch in 1..=stage_epochs {
             let opponent = champion;
             let mut rng = rand::thread_rng();
-            let candidate = mutate_team_v6(&champion, &mut rng, scale_factor);
+            let candidate = if let Some(slot) = slot_filter {
+                policy::mutate_slot_only(&champion, slot, &mut rng, scale_factor)
+            } else {
+                mutate_team_v6(&champion, &mut rng, scale_factor)
+            };
             let mutated_slots = v6_diff_slots(&champion, &candidate);
 
             let eval = evaluate_team_policies_v6(&opponent, &candidate, games_per_epoch);
@@ -3826,7 +3981,14 @@ pub fn write_team_layout_svg(out_path: &Path, team_name: &str, team_desc: &str, 
     // Player markers: preferred position + comfort zone (opponent.preferred as repel-radius hint)
     for i in 0..5 {
         let s = &params[i].spatial;
-        let (px, py) = compute_v6_preferred_xy(&params[i], own_goal_x);
+        // GK spatial params are overridden by goal-line logic in both engines —
+        // always show GK at the actual patrol position instead of misleading spatial prefs.
+        let (px, py) = if i == 4 {
+            // GK patrol position: FIELD_LINE + PR*1.5 = 18 + 21 = 39, vertically centered
+            (crate::constants::FIELD_LINE + 21.0, 260.0)
+        } else {
+            compute_v6_preferred_xy(&params[i], own_goal_x)
+        };
 
         // Side band — vertical stripe at side.min/max y
         svg.push_str(&format!(r##"<line x1="{:.0}" y1="{:.0}" x2="{:.0}" y2="{:.0}" stroke="{}" stroke-width="1" stroke-opacity="0.22" stroke-dasharray="2,3"/>"##,
@@ -3935,7 +4097,7 @@ fn run_v6_team_train(project_root: &Path, team_name: &str, variant: AnnealVarian
     println!("Session prefix: {}", session_prefix);
     println!();
 
-    let final_team = run_team_anneal_with_prefix(&team_dir, team_name, initial, stages, &session_prefix, false);
+    let final_team = run_team_anneal_with_prefix(&team_dir, team_name, initial, stages, &session_prefix, false, None);
 
     // Persist updated baseline + info + svg
     let final_doc = serde_json::json!({
