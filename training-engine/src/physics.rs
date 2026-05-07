@@ -82,8 +82,8 @@ pub fn tackle_player(game: &mut Game, tackler_idx: usize, target_idx: usize) -> 
         // Off-ball tackle: foul. No pause, no knock — slow target briefly,
         // free kick at foul spot.
         if target_team != tackler_team && tackler_in_own_area {
-            game.pl[tackler_idx].fouls += 1;
-            game.pl[tackler_idx].penalties_caused += 1;
+            game.player_stats[tackler_idx].fouls += 1;
+            game.player_stats[tackler_idx].penalties_caused += 1;
             start_penalty(game, target_team);
             return true;
         }
@@ -94,7 +94,7 @@ pub fn tackle_player(game: &mut Game, tackler_idx: usize, target_idx: usize) -> 
         start_free_kick(game, fouled_id, fx, fy);
         game.stats.tackle_success += 1;
         game.stats.fouls += 1;
-        game.pl[tackler_idx].fouls += 1;
+        game.player_stats[tackler_idx].fouls += 1;
     }
     true
 }
@@ -121,7 +121,7 @@ pub fn do_shoot(game: &mut Game, shooter_idx: usize, mega: bool, tx: f32, ty: f3
     } else {
         game.last_passer = None;
         game.last_shooter = Some(shooter_id);
-        game.pl[shooter_idx].shots += 1;
+        game.player_stats[shooter_idx].shots += 1;
         game.stats.shots += 1;
     }
 }
@@ -132,14 +132,16 @@ fn attribute_goal(game: &mut Game) {
     let is_penalty = game.penalty_shot_pending;
     game.penalty_shot_pending = false;
     if let Some(sid) = scorer_id {
-        if let Some(p) = game.pl.iter_mut().find(|p| p.id == sid) {
-            p.goals += 1;
-            if is_penalty { p.penalties_scored += 1; }
+        if let Some(idx) = game.pl.iter().position(|p| p.id == sid) {
+            game.player_stats[idx].goals += 1;
+            if is_penalty { game.player_stats[idx].penalties_scored += 1; }
         }
     }
     if let (Some(aid), Some(sid)) = (assister_id, scorer_id) {
         if aid != sid {
-            if let Some(p) = game.pl.iter_mut().find(|p| p.id == aid) { p.assists += 1; }
+            if let Some(idx) = game.pl.iter().position(|p| p.id == aid) {
+                game.player_stats[idx].assists += 1;
+            }
         }
     }
 }
@@ -413,7 +415,7 @@ pub fn update_ball(game: &mut Game) {
                         game.free_kick_shooter_id = Some(tid);
                         game.free_kick_active = true;
                         game.stats.fouls += 1;
-                        game.pl[pidx].fouls += 1;
+                        game.player_stats[pidx].fouls += 1;
                     }
                     return; // skip normal pickup
                 }
@@ -493,7 +495,7 @@ pub fn step_game(game: &mut Game, teams: &mut [Box<dyn Team>; 2], rng: &mut impl
                         let team = game.penalty_team.unwrap_or(1);
                         let tx = if team == 0 { FW - FIELD_LINE } else { FIELD_LINE };
                         let jitter = (rng.gen::<f32>() * 2.0 - 1.0) * 48.0;
-                        game.pl[idx].penalties_taken += 1;
+                        game.player_stats[idx].penalties_taken += 1;
                         game.penalty_shot_pending = true;
                         do_shoot(game, idx, false, tx, H2 + jitter, Some(SHOOT_POW), false);
                         game.phase = Phase::Playing;

@@ -54,13 +54,6 @@ pub struct Player {
     pub gk_dive_timer: i32,
     pub gk_hold_timer: i32,
     pub gk_hold_extended: i32,
-    pub goals: u32,
-    pub shots: u32,
-    pub assists: u32,
-    pub fouls: u32,
-    pub penalties_caused: u32,
-    pub penalties_taken: u32,
-    pub penalties_scored: u32,
 }
 
 impl Player {
@@ -87,15 +80,21 @@ impl Player {
             gk_dive_timer: 0,
             gk_hold_timer: 0,
             gk_hold_extended: 0,
-            goals: 0,
-            shots: 0,
-            assists: 0,
-            fouls: 0,
-            penalties_caused: 0,
-            penalties_taken: 0,
-            penalties_scored: 0,
         }
     }
+}
+
+/// Per-player match statistics. Owned by Game, not by Player —
+/// teams and player AI never see these.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct PlayerStats {
+    pub goals: u32,
+    pub shots: u32,
+    pub assists: u32,
+    pub fouls: u32,
+    pub penalties_caused: u32,
+    pub penalties_taken: u32,
+    pub penalties_scored: u32,
 }
 
 #[derive(Clone, Debug)]
@@ -154,6 +153,7 @@ pub struct Game {
     pub penalty_team: Option<usize>,
     pub penalty_taken: bool,
     pub stats: Stats,
+    pub player_stats: Vec<PlayerStats>,
     pub free_kick_active: bool,
     pub free_kick_shooter_id: Option<usize>,
     pub gk_has_ball: [bool; 2],
@@ -168,8 +168,10 @@ pub struct Game {
 
 impl Game {
     pub fn new() -> Self {
+        let pl = make_players();
+        let n = pl.len();
         Self {
-            pl: make_players(),
+            pl,
             ball: Ball::new(),
             score: [0, 0],
             timer: GAME_SECS * 60,
@@ -180,6 +182,7 @@ impl Game {
             penalty_team: None,
             penalty_taken: false,
             stats: Stats::default(),
+            player_stats: vec![PlayerStats::default(); n],
             free_kick_active: false,
             free_kick_shooter_id: None,
             gk_has_ball: [false; 2],

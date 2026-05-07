@@ -266,9 +266,9 @@ fn build_state_json(session: &GameSession) -> String {
             human: i == 0,
             home_x: p.home_x,
             home_y: p.home_y,
-            goals: p.goals,
-            shots: p.shots,
-            assists: p.assists,
+            goals: g.player_stats[i].goals,
+            shots: g.player_stats[i].shots,
+            assists: g.player_stats[i].assists,
         }
     }).collect();
 
