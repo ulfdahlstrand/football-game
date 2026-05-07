@@ -1,0 +1,11 @@
+[package]
+name = "training-render"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "training_render"
+path = "src/lib.rs"
+
+[dependencies]
+training-engine = { path = "../training-engine" }

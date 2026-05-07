@@ -3,10 +3,6 @@ name = "training-engine"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]]
-name = "training-engine"
-path = "src/main.rs"
-
 [lib]
 name = "training_engine"
 path = "src/lib.rs"
@@ -20,8 +16,3 @@ anyhow     = "1"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rayon      = "1"
-
-[profile.release]
-opt-level = 3
-lto = true
-codegen-units = 1
