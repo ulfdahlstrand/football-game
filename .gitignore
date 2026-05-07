@@ -10,3 +10,7 @@ training-engine/target/
 
 # Match logs from test runs and gameplay sessions
 match-logs/
+
+# Claude Code runtime files (worktrees, locks)
+.claude/worktrees/
+.claude/scheduled_tasks.lock
