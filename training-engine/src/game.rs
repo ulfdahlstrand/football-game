@@ -182,6 +182,7 @@ pub struct Game {
     pub last_shooter: Option<usize>,
     pub last_passer: Option<usize>,
     pub penalty_shot_pending: bool,
+    pub human_player: Option<usize>,
 }
 
 impl Game {
@@ -208,6 +209,7 @@ impl Game {
             last_shooter: None,
             last_passer: None,
             penalty_shot_pending: false,
+            human_player: None,
         }
     }
 

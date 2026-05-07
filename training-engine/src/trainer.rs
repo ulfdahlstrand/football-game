@@ -1,3 +1,4 @@
+#[cfg(not(target_arch = "wasm32"))]
 use rayon::prelude::*;
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
@@ -101,8 +102,14 @@ pub fn evaluate_team_policies_v6(
                 (seed, swap)
             }).collect();
         chunk_start_seed = chunk_start_seed.wrapping_add(chunk_size as u64);
+        #[cfg(not(target_arch = "wasm32"))]
         let chunk_results: Vec<(u32, u32, crate::game::Stats)> = seeds
             .into_par_iter()
+            .map(|(seed, swap)| run_one_team_v6_game(baseline, candidate, seed, swap))
+            .collect();
+        #[cfg(target_arch = "wasm32")]
+        let chunk_results: Vec<(u32, u32, crate::game::Stats)> = seeds
+            .into_iter()
             .map(|(seed, swap)| run_one_team_v6_game(baseline, candidate, seed, swap))
             .collect();
         for (b_goals, c_goals, stats) in chunk_results {
