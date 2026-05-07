@@ -3,10 +3,12 @@ use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 
 use training_engine::constants::*;
-use training_engine::game::{Game, Phase, Role, PlayerState};
+use training_engine::game::{Game, Phase, Role, PlayerState, MatchEvent};
 use training_engine::physics::{step_game as rust_step_game, do_shoot, tackle_player};
 use training_engine::ai::cpu_find_pass;
-use training_engine::policy::TeamPolicyV6;
+use training_engine::policy::{TeamPolicyV6, PolicyParams};
+use training_engine::team::Team;
+use training_engine::team_v6::V6Team;
 
 // ── Human input from JS ───────────────────────────────────────────────────────
 
@@ -56,6 +58,8 @@ impl PlayerRender {
 
 struct GameSession {
     game: Game,
+    teams: [Box<dyn Team>; 2],
+    human_policy: PolicyParams,
     render: Vec<PlayerRender>,
     rng: rand::rngs::SmallRng,
     set_piece_text: Option<&'static str>,
@@ -73,12 +77,15 @@ struct GameSession {
 impl GameSession {
     fn new(team0: &TeamPolicyV6, team1: &TeamPolicyV6, seed: u32) -> Self {
         use rand::SeedableRng;
-        let mut game = Game::for_team_battle_v6(team0, team1);
+        let mut game = Game::new();
         game.human_player = Some(0);
         let n = game.pl.len();
         let prev_pos = game.pl.iter().map(|p| (p.x, p.y)).collect();
+        let human_policy = team0[0].decisions.as_policy_params();
         Self {
             game,
+            teams: [Box::new(V6Team::new(0, *team0)), Box::new(V6Team::new(1, *team1))],
+            human_policy,
             render: (0..n).map(|_| PlayerRender::new()).collect(),
             rng: rand::rngs::SmallRng::seed_from_u64(seed as u64),
             set_piece_text: Some("AVSPARK"),
@@ -159,6 +166,74 @@ struct JsEvents {
     tackle_done: bool,
 }
 
+/// Per-event details, drained from the engine each frame.
+#[derive(Serialize)]
+#[serde(tag = "type", rename_all = "lowercase")]
+enum JsMatchEvent {
+    Pass  { team: usize, #[serde(rename = "playerId")] player_id: usize },
+    Shot  { team: usize, #[serde(rename = "playerId")] player_id: usize, mega: bool },
+    Tackle {
+        #[serde(rename = "tacklerId")]   tackler_id:   usize,
+        #[serde(rename = "tacklerTeam")] tackler_team: usize,
+        #[serde(rename = "targetId")]    target_id:    usize,
+        #[serde(rename = "targetTeam")]  target_team:  usize,
+        x: i32, y: i32,
+    },
+    Goal {
+        team: usize,
+        #[serde(rename = "scorerId")]   scorer_id:   Option<usize>,
+        #[serde(rename = "assisterId")] assister_id: Option<usize>,
+        #[serde(rename = "isPenalty")]  is_penalty:  bool,
+    },
+    Foul {
+        #[serde(rename = "tacklerId")]   tackler_id:   usize,
+        #[serde(rename = "tacklerTeam")] tackler_team: usize,
+        #[serde(rename = "targetId")]    target_id:    usize,
+        x: i32, y: i32,
+        #[serde(rename = "isPenalty")]   is_penalty:   bool,
+    },
+    Freekick { team: usize, x: i32, y: i32 },
+    Corner   { team: usize },
+    Save {
+        #[serde(rename = "gkTeam")]    gk_team:    usize,
+        #[serde(rename = "gkId")]      gk_id:      usize,
+        #[serde(rename = "shooterId")] shooter_id: Option<usize>,
+    },
+}
+
+fn convert_event(e: &MatchEvent) -> JsMatchEvent {
+    match e {
+        MatchEvent::Pass { team, player_id } =>
+            JsMatchEvent::Pass { team: *team, player_id: *player_id },
+        MatchEvent::Shot { team, player_id, mega } =>
+            JsMatchEvent::Shot { team: *team, player_id: *player_id, mega: *mega },
+        MatchEvent::Tackle { tackler_id, tackler_team, target_id, target_team, x, y } =>
+            JsMatchEvent::Tackle {
+                tackler_id: *tackler_id, tackler_team: *tackler_team,
+                target_id: *target_id, target_team: *target_team,
+                x: x.round() as i32, y: y.round() as i32,
+            },
+        MatchEvent::Goal { team, scorer_id, assister_id, is_penalty } =>
+            JsMatchEvent::Goal {
+                team: *team, scorer_id: *scorer_id,
+                assister_id: *assister_id, is_penalty: *is_penalty,
+            },
+        MatchEvent::Foul { tackler_id, tackler_team, target_id, x, y, is_penalty } =>
+            JsMatchEvent::Foul {
+                tackler_id: *tackler_id, tackler_team: *tackler_team,
+                target_id: *target_id,
+                x: x.round() as i32, y: y.round() as i32,
+                is_penalty: *is_penalty,
+            },
+        MatchEvent::FreeKick { team, x, y } =>
+            JsMatchEvent::Freekick { team: *team, x: x.round() as i32, y: y.round() as i32 },
+        MatchEvent::Corner { team } =>
+            JsMatchEvent::Corner { team: *team },
+        MatchEvent::Save { gk_team, gk_id, shooter_id } =>
+            JsMatchEvent::Save { gk_team: *gk_team, gk_id: *gk_id, shooter_id: *shooter_id },
+    }
+}
+
 #[derive(Serialize)]
 struct JsGameState {
     pl: Vec<JsPlayer>,
@@ -196,6 +271,8 @@ struct JsGameState {
     #[serde(rename = "_done")]
     done: bool,
     events: JsEvents,
+    #[serde(rename = "matchEvents")]
+    match_events: Vec<JsMatchEvent>,
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -234,7 +311,9 @@ fn facing_from_delta(dx: f32, dy: f32) -> &'static str {
     }
 }
 
-fn build_state_json(session: &GameSession) -> String {
+fn build_state_json(session: &mut GameSession) -> String {
+    let drained_events: Vec<JsMatchEvent> = std::mem::take(&mut session.game.events)
+        .iter().map(convert_event).collect();
     let g = &session.game;
 
     let pl = g.pl.iter().enumerate().map(|(i, p)| {
@@ -259,9 +338,9 @@ fn build_state_json(session: &GameSession) -> String {
             human: i == 0,
             home_x: p.home_x,
             home_y: p.home_y,
-            goals: p.goals,
-            shots: p.shots,
-            assists: p.assists,
+            goals: g.player_stats[i].goals,
+            shots: g.player_stats[i].shots,
+            assists: g.player_stats[i].assists,
         }
     }).collect();
 
@@ -301,6 +380,7 @@ fn build_state_json(session: &GameSession) -> String {
             pass_done: session.ev_pass_done,
             tackle_done: session.ev_tackle_done,
         },
+        match_events: drained_events,
     };
 
     serde_json::to_string(&state).unwrap_or_else(|_| "{}".to_string())
@@ -424,7 +504,7 @@ fn apply_step(session: &mut GameSession, input: &HumanInput) {
                     g.ball.x = sx; g.ball.y = sy;
                 }
             }
-            rust_step_game(g, &mut session.rng);
+            rust_step_game(g, &mut session.teams, &mut session.rng);
             update_set_piece_text(session);
             return;
         }
@@ -470,7 +550,7 @@ fn apply_step(session: &mut GameSession, input: &HumanInput) {
                     let ty = g.pl[human_idx].y + pdy * 180.0;
                     do_shoot(g, human_idx, false, tx, ty, Some(PASS_POW), true);
                     session.ev_pass_done = true;
-                } else if let Some(pass_result) = cpu_find_pass(g, human_idx) {
+                } else if let Some(pass_result) = cpu_find_pass(g, human_idx, &session.human_policy) {
                     let tidx = g.pl.iter().position(|p| p.id == pass_result.target_id).unwrap_or(1);
                     let tx = g.pl[tidx].x;
                     let ty = g.pl[tidx].y;
@@ -507,7 +587,7 @@ fn apply_step(session: &mut GameSession, input: &HumanInput) {
     // ── Run Rust simulation step (skips human player AI via human_player flag) ─
     let prev_positions: Vec<(f32, f32)> = g.pl.iter().map(|p| (p.x, p.y)).collect();
     let prev_phase = g.phase;
-    rust_step_game(g, &mut session.rng);
+    rust_step_game(g, &mut session.teams, &mut session.rng);
 
     // ── Detect goal for events/celebration ────────────────────────────────────
     if g.phase == Phase::Goal && prev_phase == Phase::Playing {
@@ -568,10 +648,14 @@ pub fn run_simulation(team0_json: &str, team1_json: &str, seed: u32) -> String {
     use rand::SeedableRng;
     let team0 = parse_team_v6(team0_json);
     let team1 = parse_team_v6(team1_json);
-    let mut game = Game::for_team_battle_v6(&team0, &team1);
+    let mut game = Game::new();
+    let mut teams: [Box<dyn Team>; 2] = [
+        Box::new(V6Team::new(0, team0)),
+        Box::new(V6Team::new(1, team1)),
+    ];
     let mut rng = rand::rngs::SmallRng::seed_from_u64(seed as u64);
     while game.phase != Phase::Fulltime {
-        rust_step_game(&mut game, &mut rng);
+        rust_step_game(&mut game, &mut teams, &mut rng);
     }
     serde_json::json!({
         "score0": game.score[0],

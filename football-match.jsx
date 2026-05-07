@@ -496,6 +496,23 @@ function FootballMatch({ matchData, onComplete, onExit }) {
       if (ev.tackleDone && g.ball.lastTouchTeam !== null) {
         g._stats.tackles[g.ball.lastTouchTeam] = (g._stats.tackles[g.ball.lastTouchTeam]||0) + 1;
       }
+
+      // Drain detailed match events from engine and push into _log
+      if (state.matchEvents && state.matchEvents.length > 0) {
+        const frame = GAME_SECS * 60 - g.timer;
+        const minute = Math.min(90, Math.round(frame / (GAME_SECS * 60) * 90));
+        for (const me of state.matchEvents) {
+          const entry = { ...me, minute, frame };
+          if (me.type === 'tackle') {
+            entry.players = g.pl.map(p => ({
+              id: p.id, team: p.team, role: p.role,
+              x: Math.round(p.x), y: Math.round(p.y), state: p.state,
+            }));
+            entry.ball = { x: Math.round(g.ball.x), y: Math.round(g.ball.y) };
+          }
+          g._log.push(entry);
+        }
+      }
     }
 
 

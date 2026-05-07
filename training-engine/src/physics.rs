@@ -2,6 +2,7 @@ use rand::Rng;
 
 use crate::constants::*;
 use crate::game::{Game, Phase, Player, PlayerState, Role, make_players};
+use crate::team::Team;
 
 fn clamp(v: f32, lo: f32, hi: f32) -> f32 {
     v.max(lo).min(hi)
@@ -77,23 +78,47 @@ pub fn tackle_player(game: &mut Game, tackler_idx: usize, target_idx: usize) -> 
         game.ball.cooldown = BALL_COOL;
         slow_player(game, target_idx, SLOW_DUR);
         game.stats.tackle_success += 1;
+        let tackler_id = game.pl[tackler_idx].id;
+        let target_id = game.pl[target_idx].id;
+        game.events.push(crate::game::MatchEvent::Tackle {
+            tackler_id,
+            tackler_team,
+            target_id,
+            target_team,
+            x: gx,
+            y: gy,
+        });
     } else {
         // Off-ball tackle: foul. No pause, no knock — slow target briefly,
         // free kick at foul spot.
         if target_team != tackler_team && tackler_in_own_area {
-            game.pl[tackler_idx].fouls += 1;
-            game.pl[tackler_idx].penalties_caused += 1;
+            game.player_stats[tackler_idx].fouls += 1;
+            game.player_stats[tackler_idx].penalties_caused += 1;
+            let tackler_id = game.pl[tackler_idx].id;
+            let target_id  = game.pl[target_idx].id;
+            let (tx, ty)   = (game.pl[tackler_idx].x, game.pl[tackler_idx].y);
+            game.events.push(crate::game::MatchEvent::Foul {
+                tackler_id, tackler_team, target_id,
+                x: tx, y: ty, is_penalty: true,
+            });
             start_penalty(game, target_team);
             return true;
         }
         let fx = game.pl[target_idx].x;
         let fy = game.pl[target_idx].y;
         let fouled_id = game.pl[target_idx].id;
+        let tackler_id = game.pl[tackler_idx].id;
+        let target_id  = fouled_id;
+        let (tx, ty)   = (game.pl[tackler_idx].x, game.pl[tackler_idx].y);
         slow_player(game, target_idx, SLOW_DUR * 4);
         start_free_kick(game, fouled_id, fx, fy);
         game.stats.tackle_success += 1;
         game.stats.fouls += 1;
-        game.pl[tackler_idx].fouls += 1;
+        game.player_stats[tackler_idx].fouls += 1;
+        game.events.push(crate::game::MatchEvent::Foul {
+            tackler_id, tackler_team, target_id,
+            x: tx, y: ty, is_penalty: false,
+        });
     }
     true
 }
@@ -114,14 +139,24 @@ pub fn do_shoot(game: &mut Game, shooter_idx: usize, mega: bool, tx: f32, ty: f3
     game.ball.cooldown = BALL_COOL;
     game.ball.last_touch_team = Some(game.pl[shooter_idx].team);
     let shooter_id = game.pl[shooter_idx].id;
+    let shooter_team = game.pl[shooter_idx].team;
     if is_pass {
         game.last_passer = Some(shooter_id);
         game.stats.passes += 1;
+        game.events.push(crate::game::MatchEvent::Pass {
+            team: shooter_team,
+            player_id: shooter_id,
+        });
     } else {
         game.last_passer = None;
         game.last_shooter = Some(shooter_id);
-        game.pl[shooter_idx].shots += 1;
+        game.player_stats[shooter_idx].shots += 1;
         game.stats.shots += 1;
+        game.events.push(crate::game::MatchEvent::Shot {
+            team: shooter_team,
+            player_id: shooter_id,
+            mega,
+        });
     }
 }
 
@@ -131,15 +166,27 @@ fn attribute_goal(game: &mut Game) {
     let is_penalty = game.penalty_shot_pending;
     game.penalty_shot_pending = false;
     if let Some(sid) = scorer_id {
-        if let Some(p) = game.pl.iter_mut().find(|p| p.id == sid) {
-            p.goals += 1;
-            if is_penalty { p.penalties_scored += 1; }
+        if let Some(idx) = game.pl.iter().position(|p| p.id == sid) {
+            game.player_stats[idx].goals += 1;
+            if is_penalty { game.player_stats[idx].penalties_scored += 1; }
         }
     }
+    let mut emit_assist: Option<usize> = None;
     if let (Some(aid), Some(sid)) = (assister_id, scorer_id) {
         if aid != sid {
-            if let Some(p) = game.pl.iter_mut().find(|p| p.id == aid) { p.assists += 1; }
+            if let Some(idx) = game.pl.iter().position(|p| p.id == aid) {
+                game.player_stats[idx].assists += 1;
+                emit_assist = Some(aid);
+            }
         }
+    }
+    if let Some(team) = game.goal_team {
+        game.events.push(crate::game::MatchEvent::Goal {
+            team,
+            scorer_id,
+            assister_id: emit_assist,
+            is_penalty,
+        });
     }
 }
 
@@ -180,10 +227,12 @@ fn award_set_piece(game: &mut Game, taker_id: usize, sx: f32, sy: f32) {
 }
 
 pub fn start_free_kick(game: &mut Game, fouled_id: usize, fx: f32, fy: f32) {
+    let team = game.pl.iter().find(|p| p.id == fouled_id).map(|p| p.team).unwrap_or(0);
     award_set_piece(game, fouled_id, fx, fy);
     game.free_kick_shooter_id = Some(fouled_id);
     game.free_kick_active = true;
     game.stats.free_kicks += 1;
+    game.events.push(crate::game::MatchEvent::FreeKick { team, x: fx, y: fy });
 }
 
 fn goal_line_teams(x: f32) -> (usize, usize) {
@@ -235,6 +284,7 @@ fn restart_corner(game: &mut Game, team: usize, bx: f32, by: f32) {
     }
     game.stats.out_of_bounds += 1;
     game.stats.corners += 1;
+    game.events.push(crate::game::MatchEvent::Corner { team });
 }
 
 pub fn start_penalty(game: &mut Game, team: usize) {
@@ -412,7 +462,7 @@ pub fn update_ball(game: &mut Game) {
                         game.free_kick_shooter_id = Some(tid);
                         game.free_kick_active = true;
                         game.stats.fouls += 1;
-                        game.pl[pidx].fouls += 1;
+                        game.player_stats[pidx].fouls += 1;
                     }
                     return; // skip normal pickup
                 }
@@ -435,6 +485,18 @@ pub fn update_ball(game: &mut Game) {
                 game.gk_has_ball[p_team] = true;
                 game.pl[pidx].gk_hold_timer = GK_HOLD_DELAY;
                 game.pl[pidx].gk_hold_extended = 0;
+                // Save: GK caught a shot from the opposing team
+                if let Some(shooter_id) = game.last_shooter {
+                    let shooter_team = game.pl.iter().find(|p| p.id == shooter_id).map(|p| p.team);
+                    if shooter_team == Some(1 - p_team) {
+                        game.events.push(crate::game::MatchEvent::Save {
+                            gk_team: p_team,
+                            gk_id: pid,
+                            shooter_id: Some(shooter_id),
+                        });
+                        game.last_shooter = None;
+                    }
+                }
             }
         }
     }
@@ -473,7 +535,7 @@ pub fn reset_kickoff(game: &mut Game) {
     game.set_piece_taker_id = None;
 }
 
-pub fn step_game(game: &mut Game, rng: &mut impl Rng) {
+pub fn step_game(game: &mut Game, teams: &mut [Box<dyn Team>; 2], rng: &mut impl Rng) {
     if game.phase == Phase::Kickoff { game.phase = Phase::Playing; }
 
     if game.phase == Phase::Goal {
@@ -492,7 +554,7 @@ pub fn step_game(game: &mut Game, rng: &mut impl Rng) {
                         let team = game.penalty_team.unwrap_or(1);
                         let tx = if team == 0 { FW - FIELD_LINE } else { FIELD_LINE };
                         let jitter = (rng.gen::<f32>() * 2.0 - 1.0) * 48.0;
-                        game.pl[idx].penalties_taken += 1;
+                        game.player_stats[idx].penalties_taken += 1;
                         game.penalty_shot_pending = true;
                         do_shoot(game, idx, false, tx, H2 + jitter, Some(SHOOT_POW), false);
                         game.phase = Phase::Playing;
@@ -536,7 +598,8 @@ pub fn step_game(game: &mut Game, rng: &mut impl Rng) {
             continue;
         }
         if game.human_player == Some(game.pl[i].id) { continue; }
-        crate::brain::tick_player(game, i, rng);
+        let team_id = game.pl[i].team;
+        teams[team_id].tick_player(game, i, rng as &mut dyn rand::RngCore);
     }
 
     update_ball(game);

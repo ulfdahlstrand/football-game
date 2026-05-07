@@ -3,9 +3,11 @@ use rayon::prelude::*;
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
 
-use crate::game::{Phase};
+use crate::game::Phase;
 use crate::physics::step_game;
 use crate::policy::TeamPolicyV6;
+use crate::team::Team;
+use crate::team_v6::V6Team;
 
 const WINDOW_MIN_GAMES: usize = 100;
 const WINDOW_CHECK_EVERY: usize = 25;
@@ -75,8 +77,12 @@ fn compute_z_score(diffs: &[f64]) -> f64 {
 fn run_one_team_v6_game(baseline: &TeamPolicyV6, candidate: &TeamPolicyV6, seed: u64, swap: bool) -> (u32, u32, crate::game::Stats) {
     let mut rng = SmallRng::seed_from_u64(seed);
     let (t0, t1) = if swap { (candidate, baseline) } else { (baseline, candidate) };
-    let mut game = crate::game::Game::for_team_battle_v6(t0, t1);
-    while game.phase != Phase::Fulltime { step_game(&mut game, &mut rng); }
+    let mut game = crate::game::Game::new();
+    let mut teams: [Box<dyn Team>; 2] = [
+        Box::new(V6Team::new(0, *t0)),
+        Box::new(V6Team::new(1, *t1)),
+    ];
+    while game.phase != Phase::Fulltime { step_game(&mut game, &mut teams, &mut rng); }
     if swap { (game.score[1], game.score[0], game.stats.clone()) }
     else { (game.score[0], game.score[1], game.stats.clone()) }
 }

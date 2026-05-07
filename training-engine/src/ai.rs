@@ -1,7 +1,7 @@
 use rand::Rng;
 
 use crate::constants::*;
-use crate::game::{effective_policy, Game, Player, PlayerState, Role};
+use crate::game::{Game, Player, PlayerState, Role};
 use crate::policy::PolicyParams;
 
 fn clamp(v: f32, lo: f32, hi: f32) -> f32 {
@@ -131,7 +131,7 @@ fn best_interception_target(game: &Game, p: &Player, carrier_id: usize, cx: f32,
     best
 }
 
-fn natural_target(p: &mut Player, tx: f32, ty: f32, amp: f32, rng: &mut impl Rng) -> (f32, f32) {
+fn natural_target(p: &mut Player, tx: f32, ty: f32, amp: f32, rng: &mut (impl Rng + ?Sized)) -> (f32, f32) {
     p.ai_jitter_timer -= 1;
     if p.ai_jitter_timer <= 0 {
         p.ai_jitter_x = (rng.gen::<f32>() * 2.0 - 1.0) * amp;
@@ -174,7 +174,7 @@ fn get_attack_target(game: &Game, p: &Player) -> (f32, f32) {
     }
 }
 
-fn get_defend_target(game: &Game, p: &Player, rng: &mut impl Rng) -> (f32, f32) {
+fn get_defend_target(game: &Game, p: &Player, rng: &mut (impl Rng + ?Sized)) -> (f32, f32) {
     let bx = game.ball.x;
     let by = game.ball.y;
     let opp_carrier = game.ball.owner
@@ -217,9 +217,8 @@ pub struct PassResult {
     pub ty: f32,
 }
 
-pub fn cpu_find_pass(game: &Game, carrier_idx: usize) -> Option<PassResult> {
+pub fn cpu_find_pass(game: &Game, carrier_idx: usize, params: &PolicyParams) -> Option<PassResult> {
     let carrier = &game.pl[carrier_idx];
-    let params = effective_policy(game, carrier_idx);
     let opp_goal_x = if carrier.team == 0 { FW } else { 0.0 };
     let mut best: Option<(f32, PassResult)> = None;
 
@@ -273,7 +272,7 @@ fn loose_ball_chaser(game: &Game) -> Option<usize> {
 /// classic behavior.
 pub fn classic_tick(
     game: &mut Game, player_idx: usize, params: &PolicyParams,
-    hooks: &crate::brain::TickHooks, rng: &mut impl Rng,
+    hooks: &crate::brain::TickHooks, rng: &mut (impl Rng + ?Sized),
 ) {
     let p_id = game.pl[player_idx].id;
     let p_team = game.pl[player_idx].team;
@@ -462,7 +461,7 @@ pub fn classic_tick(
     if has_ball {
         // Indirect free kick: must pass first
         if game.free_kick_active && game.free_kick_shooter_id == Some(p_id) {
-            let pass_opt = cpu_find_pass(game, player_idx);
+            let pass_opt = cpu_find_pass(game, player_idx, params);
             if let Some(pt) = pass_opt {
                 crate::physics::do_shoot(game, player_idx, false, pt.tx, pt.ty, Some(CPU_PASS_POW), true);
             }
@@ -484,7 +483,7 @@ pub fn classic_tick(
             params.pass_chance_default
         };
 
-        let pass_opt = cpu_find_pass(game, player_idx);
+        let pass_opt = cpu_find_pass(game, player_idx, params);
         let forward_pass = pass_opt.as_ref().and_then(|pt| {
             let gain = (pt.tx - game.pl[player_idx].x) * team_dir(p_team);
             if gain > params.forward_pass_min_gain { Some((pt.tx, pt.ty)) } else { None }
@@ -641,7 +640,7 @@ fn apply_gk_retreat(game: &mut Game, player_idx: usize) -> bool {
 }
 
 pub fn v6_tick(
-    game: &mut Game, player_idx: usize, params: &crate::policy::V6Params, rng: &mut impl Rng,
+    game: &mut Game, player_idx: usize, params: &crate::policy::V6Params, rng: &mut (impl Rng + ?Sized),
 ) {
     if apply_gk_retreat(game, player_idx) { return; }
 

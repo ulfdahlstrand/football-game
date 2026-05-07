@@ -5,6 +5,8 @@ pub mod policy;
 pub mod spatial;
 pub mod ai;
 pub mod physics;
+pub mod team;
+pub mod team_v6;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod trainer;
 #[cfg(not(target_arch = "wasm32"))]
