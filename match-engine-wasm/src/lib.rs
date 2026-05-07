@@ -6,7 +6,9 @@ use training_engine::constants::*;
 use training_engine::game::{Game, Phase, Role, PlayerState};
 use training_engine::physics::{step_game as rust_step_game, do_shoot, tackle_player};
 use training_engine::ai::cpu_find_pass;
-use training_engine::policy::TeamPolicyV6;
+use training_engine::policy::{TeamPolicyV6, PolicyParams};
+use training_engine::team::Team;
+use training_engine::team_v6::V6Team;
 
 // ── Human input from JS ───────────────────────────────────────────────────────
 
@@ -56,6 +58,8 @@ impl PlayerRender {
 
 struct GameSession {
     game: Game,
+    teams: [Box<dyn Team>; 2],
+    human_policy: PolicyParams,
     render: Vec<PlayerRender>,
     rng: rand::rngs::SmallRng,
     set_piece_text: Option<&'static str>,
@@ -73,12 +77,15 @@ struct GameSession {
 impl GameSession {
     fn new(team0: &TeamPolicyV6, team1: &TeamPolicyV6, seed: u32) -> Self {
         use rand::SeedableRng;
-        let mut game = Game::for_team_battle_v6(team0, team1);
+        let mut game = Game::new();
         game.human_player = Some(0);
         let n = game.pl.len();
         let prev_pos = game.pl.iter().map(|p| (p.x, p.y)).collect();
+        let human_policy = team0[0].decisions.as_policy_params();
         Self {
             game,
+            teams: [Box::new(V6Team::new(0, *team0)), Box::new(V6Team::new(1, *team1))],
+            human_policy,
             render: (0..n).map(|_| PlayerRender::new()).collect(),
             rng: rand::rngs::SmallRng::seed_from_u64(seed as u64),
             set_piece_text: Some("AVSPARK"),
@@ -424,7 +431,7 @@ fn apply_step(session: &mut GameSession, input: &HumanInput) {
                     g.ball.x = sx; g.ball.y = sy;
                 }
             }
-            rust_step_game(g, &mut session.rng);
+            rust_step_game(g, &mut session.teams, &mut session.rng);
             update_set_piece_text(session);
             return;
         }
@@ -470,7 +477,7 @@ fn apply_step(session: &mut GameSession, input: &HumanInput) {
                     let ty = g.pl[human_idx].y + pdy * 180.0;
                     do_shoot(g, human_idx, false, tx, ty, Some(PASS_POW), true);
                     session.ev_pass_done = true;
-                } else if let Some(pass_result) = cpu_find_pass(g, human_idx) {
+                } else if let Some(pass_result) = cpu_find_pass(g, human_idx, &session.human_policy) {
                     let tidx = g.pl.iter().position(|p| p.id == pass_result.target_id).unwrap_or(1);
                     let tx = g.pl[tidx].x;
                     let ty = g.pl[tidx].y;
@@ -507,7 +514,7 @@ fn apply_step(session: &mut GameSession, input: &HumanInput) {
     // ── Run Rust simulation step (skips human player AI via human_player flag) ─
     let prev_positions: Vec<(f32, f32)> = g.pl.iter().map(|p| (p.x, p.y)).collect();
     let prev_phase = g.phase;
-    rust_step_game(g, &mut session.rng);
+    rust_step_game(g, &mut session.teams, &mut session.rng);
 
     // ── Detect goal for events/celebration ────────────────────────────────────
     if g.phase == Phase::Goal && prev_phase == Phase::Playing {
@@ -568,10 +575,14 @@ pub fn run_simulation(team0_json: &str, team1_json: &str, seed: u32) -> String {
     use rand::SeedableRng;
     let team0 = parse_team_v6(team0_json);
     let team1 = parse_team_v6(team1_json);
-    let mut game = Game::for_team_battle_v6(&team0, &team1);
+    let mut game = Game::new();
+    let mut teams: [Box<dyn Team>; 2] = [
+        Box::new(V6Team::new(0, team0)),
+        Box::new(V6Team::new(1, team1)),
+    ];
     let mut rng = rand::rngs::SmallRng::seed_from_u64(seed as u64);
     while game.phase != Phase::Fulltime {
-        rust_step_game(&mut game, &mut rng);
+        rust_step_game(&mut game, &mut teams, &mut rng);
     }
     serde_json::json!({
         "score0": game.score[0],
