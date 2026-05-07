@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Mirage SC logo</title>
+  <desc id="desc">A shield crest with desert heat, a hidden eye, and direct strike lines for Mirage SC.</desc>
+  <defs>
+    <linearGradient id="shield" x1="92" x2="420" y1="40" y2="472" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f1c56e"/>
+      <stop offset="0.5" stop-color="#8d5a2b"/>
+      <stop offset="1" stop-color="#16111b"/>
+    </linearGradient>
+    <linearGradient id="sand" x1="112" x2="400" y1="164" y2="344" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff1b8"/>
+      <stop offset="0.48" stop-color="#e2a653"/>
+      <stop offset="1" stop-color="#8e4f2a"/>
+    </linearGradient>
+    <linearGradient id="aqua" x1="184" x2="328" y1="204" y2="338" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b8fff2"/>
+      <stop offset="1" stop-color="#25a9c7"/>
+    </linearGradient>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="124%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <path fill="url(#shield)" d="M256 34 428 94v138c0 114-65 202-172 246C149 434 84 346 84 232V94L256 34Z"/>
+  <path fill="none" stroke="#f0c36c" stroke-width="17" d="M256 57 405 109v122c0 99-55 174-149 215-94-41-149-116-149-215V109L256 57Z"/>
+  <path fill="none" stroke="#2ad0d2" stroke-width="5" opacity="0.9" d="M256 75 386 120v111c0 85-45 151-130 190-85-39-130-105-130-190V120L256 75Z"/>
+
+  <g fill="none" stroke-linecap="round" filter="url(#shadow)">
+    <path stroke="url(#sand)" stroke-width="30" d="M112 280c57-55 111-55 162 0 42 46 82 49 126 10"/>
+    <path stroke="#fff1bc" stroke-width="8" opacity="0.8" d="M120 257c54-31 99-26 140 17 44 46 87 50 132 10"/>
+    <path stroke="#57dbe1" stroke-width="13" opacity="0.8" d="M142 326c44-31 83-28 118 9 35 36 69 35 110 1"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path fill="url(#aqua)" d="M132 244c46-56 91-84 124-84s78 28 124 84c-46 56-91 84-124 84s-78-28-124-84Z"/>
+    <path fill="#17111b" d="M161 244c35-35 67-53 95-53s60 18 95 53c-35 35-67 53-95 53s-60-18-95-53Z"/>
+    <circle cx="256" cy="244" r="37" fill="#e8f8e8"/>
+    <circle cx="256" cy="244" r="20" fill="#0b6577"/>
+    <circle cx="264" cy="236" r="7" fill="#ffffff"/>
+  </g>
+
+  <g fill="none" stroke="#fff1bc" stroke-linecap="round" stroke-width="10" opacity="0.92">
+    <path d="M127 174h79"/>
+    <path d="M306 174h79"/>
+    <path d="M141 213h45"/>
+    <path d="M326 213h45"/>
+  </g>
+
+  <path fill="#17111b" d="M158 408h196v24H158z"/>
+  <text x="256" y="428" fill="#ffe4a0" font-family="Arial Black, Impact, sans-serif" font-size="28" text-anchor="middle" letter-spacing="2">MIRAGE SC</text>
+</svg>

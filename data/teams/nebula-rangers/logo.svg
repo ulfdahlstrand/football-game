@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Nebula Rangers logo</title>
+  <desc id="desc">A shield crest with a star cluster, orbiting ranger arrow, and bright quasar for Nebula Rangers.</desc>
+  <defs>
+    <radialGradient id="space" cx="47%" cy="34%" r="72%">
+      <stop offset="0" stop-color="#46227c"/>
+      <stop offset="0.43" stop-color="#111a4d"/>
+      <stop offset="1" stop-color="#03050d"/>
+    </radialGradient>
+    <linearGradient id="nebula" x1="124" x2="392" y1="138" y2="364" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff63c8"/>
+      <stop offset="0.45" stop-color="#7667ff"/>
+      <stop offset="1" stop-color="#30e1ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="124%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <path fill="url(#space)" d="M256 34 428 94v138c0 114-65 202-172 246C149 434 84 346 84 232V94L256 34Z"/>
+  <path fill="none" stroke="#7667ff" stroke-width="17" d="M256 57 405 109v122c0 99-55 174-149 215-94-41-149-116-149-215V109L256 57Z"/>
+  <path fill="none" stroke="#65efff" stroke-width="5" opacity="0.9" d="M256 75 386 120v111c0 85-45 151-130 190-85-39-130-105-130-190V120L256 75Z"/>
+
+  <g filter="url(#shadow)">
+    <path fill="none" stroke="url(#nebula)" stroke-linecap="round" stroke-width="31" opacity="0.86" d="M144 285c35-73 92-108 171-103 45 3 75-10 97-41"/>
+    <path fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="6" opacity="0.55" d="M134 300c58-41 120-57 186-49 39 5 72-2 99-20"/>
+    <ellipse cx="256" cy="248" rx="142" ry="73" fill="none" stroke="#a7f6ff" stroke-width="9" transform="rotate(-22 256 248)"/>
+    <path fill="#a7f6ff" d="M370 155 416 139 400 185Z"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path fill="#fff7b0" d="M256 136 282 213 363 213 298 261 323 338 256 291 189 338 214 261 149 213 230 213Z"/>
+    <path fill="#ff63c8" d="M256 172 271 222 323 222 281 251 297 301 256 271 215 301 231 251 189 222 241 222Z" opacity="0.9"/>
+    <circle cx="256" cy="248" r="24" fill="#ffffff"/>
+  </g>
+
+  <g fill="#ffffff">
+    <circle cx="159" cy="151" r="5"/>
+    <circle cx="358" cy="125" r="4"/>
+    <circle cx="391" cy="298" r="5"/>
+    <circle cx="125" cy="344" r="4"/>
+    <path d="M170 104 177 123 196 130 177 137 170 156 163 137 144 130 163 123Z"/>
+    <path d="M350 333 357 352 376 359 357 366 350 385 343 366 324 359 343 352Z"/>
+  </g>
+
+  <path fill="#03050d" d="M118 408h276v24H118z"/>
+  <text x="256" y="428" fill="#b8f8ff" font-family="Arial Black, Impact, sans-serif" font-size="24" text-anchor="middle" letter-spacing="1.5">NEBULA RANGERS</text>
+</svg>

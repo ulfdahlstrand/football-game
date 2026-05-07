@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Tempest United logo</title>
+  <desc id="desc">A shield crest with a storm spiral, wave, and lightning bolt for Tempest United.</desc>
+  <defs>
+    <linearGradient id="shield" x1="92" x2="420" y1="40" y2="472" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#164b69"/>
+      <stop offset="0.48" stop-color="#102437"/>
+      <stop offset="1" stop-color="#050810"/>
+    </linearGradient>
+    <linearGradient id="storm" x1="118" x2="394" y1="126" y2="374" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d6f7ff"/>
+      <stop offset="0.42" stop-color="#39a8ff"/>
+      <stop offset="1" stop-color="#1534a0"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="230" x2="305" y1="115" y2="318" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff6a1"/>
+      <stop offset="1" stop-color="#ffb226"/>
+    </linearGradient>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="124%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  <path fill="url(#shield)" d="M256 34 428 94v138c0 114-65 202-172 246C149 434 84 346 84 232V94L256 34Z"/>
+  <path fill="none" stroke="#44b9ff" stroke-width="17" d="M256 57 405 109v122c0 99-55 174-149 215-94-41-149-116-149-215V109L256 57Z"/>
+  <path fill="none" stroke="#ffe879" stroke-width="5" opacity="0.9" d="M256 75 386 120v111c0 85-45 151-130 190-85-39-130-105-130-190V120L256 75Z"/>
+
+  <g fill="none" stroke-linecap="round" filter="url(#shadow)">
+    <path stroke="url(#storm)" stroke-width="32" d="M379 205c-40-54-101-77-164-54-73 26-95 105-47 151 40 38 108 30 128-9 18-35-8-66-43-66"/>
+    <path stroke="#dff8ff" stroke-width="9" opacity="0.72" d="M363 202c-41-39-91-51-139-31-53 22-68 76-36 108 25 24 69 20 84-4"/>
+    <path stroke="#63d3ff" stroke-width="20" d="M122 335c60-48 116-48 168 0 39 36 73 34 110 0"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path fill="url(#bolt)" d="M272 105 203 253h62l-31 137 88-171h-65Z"/>
+    <path fill="#ffffff" d="M267 133 226 238h49l-22 93 48-100h-55Z" opacity="0.45"/>
+  </g>
+
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="9" opacity="0.88">
+    <path d="M137 169h52"/>
+    <path d="M340 154h42"/>
+    <path d="M122 231h37"/>
+    <path d="M367 262h32"/>
+  </g>
+
+  <path fill="#050810" d="M119 408h274v24H119z"/>
+  <text x="256" y="428" fill="#dff8ff" font-family="Arial Black, Impact, sans-serif" font-size="24" text-anchor="middle" letter-spacing="1.4">TEMPEST UNITED</text>
+</svg>

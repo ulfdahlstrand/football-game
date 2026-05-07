@@ -1,0 +1,60 @@
+{
+  "description": "Nebula Rangers är ett av ligans mest aggressiva lag, med fyra av fem utespelare som spelar med hög intensitet — och en keeper som är hetlevradare än de flesta anfallare. Lagets excentriker Quasar Dyne är det enda undantaget: nära maximal aggression men extremt kräsmagad i skottlägen och undviker alla tacklar. Ett stjärnkluster av starka personligheter.",
+  "players": [
+    {
+      "id": 0,
+      "role": "fwd",
+      "name": "Orion Vex",
+      "description": "Skyttestjärnan Orion Vex är iskall i riskkalkylen men brinnande i kampen — aggressiv och svår att möta, han skjuter bara när han vet att det sitter."
+    },
+    {
+      "id": 1,
+      "role": "mid",
+      "name": "Lyra Cass",
+      "description": "Motorn Lyra Cass är lagets tystlåtna kraft — aldrig höljd i drama men alltid i närkampen, risktagande utan att blinka och lagvillig till benet."
+    },
+    {
+      "id": 2,
+      "role": "mid",
+      "name": "Quasar Dyne",
+      "description": "Spelaren Quasar Dyne är Nebulas excentriska gnista — nära maximal aggression men undviker tackles, väntar på ett nästan perfekt läge och vill alltid lösa det ensam."
+    },
+    {
+      "id": 3,
+      "role": "def",
+      "name": "Nova Stern",
+      "description": "Klippan Nova Stern håller backlinjen med kall beräkning — hög aggression men väljer sina dueller med precision och riskerar aldrig i onödan."
+    },
+    {
+      "id": 4,
+      "role": "gk",
+      "name": "Cosmo Rael",
+      "description": "Räddaren Cosmo Rael är galaxens mest hetlevrade keeper — kliver aggressivt ut, tar på sig dueller de flesta keepers undviker och fördelar bollen blixtsnabbt."
+    }
+  ],
+  "style": "Explosiv & Snabb",
+  "styleIcon": "✨",
+  "formation": "2-2",
+  "strengths": [
+    "Rena löpningar",
+    "Hög press",
+    "Snabb omställning"
+  ],
+  "weaknesses": [
+    "Tröttnar snabbt",
+    "Sårbar bakom backlinjen"
+  ],
+  "star": {
+    "slot": 1,
+    "name": "Lyra Cass",
+    "trait": "Raketen"
+  },
+  "rating": {
+    "attack": 98,
+    "defense": 55,
+    "aggression": 56,
+    "pressing": 71,
+    "risk": 50,
+    "directPlay": 40
+  }
+}

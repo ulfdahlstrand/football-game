@@ -1,0 +1,485 @@
+{
+  "acceptedCount": 5,
+  "acceptedEpochs": [
+    6,
+    7,
+    8,
+    14,
+    16
+  ],
+  "averageEpochElapsedMs": 315,
+  "bestGoalDiff": 343.0,
+  "epochs": 20,
+  "finalChampionEpoch": 16,
+  "finalChampionPlayerParams": [
+    {
+      "decisions": {
+        "aggression": 2.0,
+        "forwardPassMinGain": 6.741199970245361,
+        "markDistance": 78.81700134277344,
+        "passChanceDefault": 0.07519999891519547,
+        "passChanceForward": 0.010599999688565731,
+        "passChancePressured": 0.20360000431537628,
+        "passChanceWing": 0.20080000162124634,
+        "passDirDefensive": 0.8210999965667725,
+        "passDirNeutral": 1.4926999807357788,
+        "passDirOffensive": 0.7408999800682068,
+        "riskAppetite": 0.711899995803833,
+        "shootProgressThreshold": 0.6381999850273132,
+        "tackleChance": 0.2199999988079071
+      },
+      "spatial": {
+        "ball": {
+          "max": 20.473100662231445,
+          "min": 9.226799964904785,
+          "preferred": 9.226799964904785
+        },
+        "opponent": {
+          "max": 127.54190063476562,
+          "min": 20.44339942932129,
+          "preferred": 127.54190063476562
+        },
+        "ownGoal": {
+          "max": 728.3994140625,
+          "min": 337.908203125,
+          "preferred": 681.4888916015625
+        },
+        "side": {
+          "max": 180.9987030029297,
+          "min": 40.112098693847656,
+          "preferred": 106.43609619140625
+        },
+        "teammate": {
+          "max": 245.23739624023438,
+          "min": 238.67190551757812,
+          "preferred": 245.23739624023438
+        }
+      }
+    },
+    {
+      "decisions": {
+        "aggression": 1.2697999477386475,
+        "forwardPassMinGain": 1.624400019645691,
+        "markDistance": 25.31839942932129,
+        "passChanceDefault": 0.07859999686479568,
+        "passChanceForward": 0.058400001376867294,
+        "passChancePressured": 0.05719999969005585,
+        "passChanceWing": 0.07540000230073929,
+        "passDirDefensive": 1.7646000385284424,
+        "passDirNeutral": 0.43540000915527344,
+        "passDirOffensive": 1.933899998664856,
+        "riskAppetite": 0.30070000886917114,
+        "shootProgressThreshold": 0.6789000034332275,
+        "tackleChance": 0.12849999964237213
+      },
+      "spatial": {
+        "ball": {
+          "max": 674.7052001953125,
+          "min": 7.2393999099731445,
+          "preferred": 129.76400756835938
+        },
+        "opponent": {
+          "max": 312.17779541015625,
+          "min": 0.0,
+          "preferred": 84.50669860839844
+        },
+        "ownGoal": {
+          "max": 351.94720458984375,
+          "min": 0.0,
+          "preferred": 228.9821014404297
+        },
+        "side": {
+          "max": 225.8961944580078,
+          "min": 65.03230285644531,
+          "preferred": 225.8961944580078
+        },
+        "teammate": {
+          "max": 96.19110107421875,
+          "min": 5.19189977645874,
+          "preferred": 48.46860122680664
+        }
+      }
+    },
+    {
+      "decisions": {
+        "aggression": 1.239799976348877,
+        "forwardPassMinGain": 6.8190999031066895,
+        "markDistance": 33.9463996887207,
+        "passChanceDefault": 0.20000000298023224,
+        "passChanceForward": 0.011300000362098217,
+        "passChancePressured": 0.2793999910354614,
+        "passChanceWing": 0.03590000048279762,
+        "passDirDefensive": 1.4443000555038452,
+        "passDirNeutral": 0.15919999778270721,
+        "passDirOffensive": 1.1253000497817993,
+        "riskAppetite": 0.6672999858856201,
+        "shootProgressThreshold": 0.550000011920929,
+        "tackleChance": 0.2175000011920929
+      },
+      "spatial": {
+        "ball": {
+          "max": 69.34950256347656,
+          "min": 56.555301666259766,
+          "preferred": 56.555301666259766
+        },
+        "opponent": {
+          "max": 60.39699935913086,
+          "min": 38.14469909667969,
+          "preferred": 39.650001525878906
+        },
+        "ownGoal": {
+          "max": 550.6547241210938,
+          "min": 22.06920051574707,
+          "preferred": 460.33099365234375
+        },
+        "side": {
+          "max": 481.4206848144531,
+          "min": 385.22119140625,
+          "preferred": 400.5198974609375
+        },
+        "teammate": {
+          "max": 71.36940002441406,
+          "min": 0.0,
+          "preferred": 16.699399948120117
+        }
+      }
+    },
+    {
+      "decisions": {
+        "aggression": 1.9121999740600586,
+        "forwardPassMinGain": 15.024700164794922,
+        "markDistance": 64.73200225830078,
+        "passChanceDefault": 0.1808999925851822,
+        "passChanceForward": 0.13339999318122864,
+        "passChancePressured": 0.062199998646974564,
+        "passChanceWing": 0.0203000009059906,
+        "passDirDefensive": 0.0,
+        "passDirNeutral": 1.3697999715805054,
+        "passDirOffensive": 1.3387000560760498,
+        "riskAppetite": 0.038100000470876694,
+        "shootProgressThreshold": 0.5965999960899353,
+        "tackleChance": 0.02019999921321869
+      },
+      "spatial": {
+        "ball": {
+          "max": 57.73910140991211,
+          "min": 22.03860092163086,
+          "preferred": 57.73910140991211
+        },
+        "opponent": {
+          "max": 107.04820251464844,
+          "min": 11.89780044555664,
+          "preferred": 89.1447982788086
+        },
+        "ownGoal": {
+          "max": 483.8622131347656,
+          "min": 394.67950439453125,
+          "preferred": 421.4984130859375
+        },
+        "side": {
+          "max": 272.8548889160156,
+          "min": 0.0,
+          "preferred": 268.0120849609375
+        },
+        "teammate": {
+          "max": 43.05670166015625,
+          "min": 28.571399688720703,
+          "preferred": 43.05670166015625
+        }
+      }
+    },
+    {
+      "decisions": {
+        "aggression": 1.458299994468689,
+        "forwardPassMinGain": 3.35260009765625,
+        "markDistance": 25.0,
+        "passChanceDefault": 0.09889999777078629,
+        "passChanceForward": 0.004999999888241291,
+        "passChancePressured": 0.25429999828338623,
+        "passChanceWing": 0.17260000109672546,
+        "passDirDefensive": 0.8574000000953674,
+        "passDirNeutral": 1.0621999502182007,
+        "passDirOffensive": 1.1919000148773193,
+        "riskAppetite": 0.7465999722480774,
+        "shootProgressThreshold": 0.8700000047683716,
+        "tackleChance": 0.013399999588727951
+      },
+      "spatial": {
+        "ball": {
+          "max": 607.1478881835938,
+          "min": 228.8070068359375,
+          "preferred": 370.0035095214844
+        },
+        "opponent": {
+          "max": 243.6571044921875,
+          "min": 220.20050048828125,
+          "preferred": 243.6571044921875
+        },
+        "ownGoal": {
+          "max": 873.2362060546875,
+          "min": 2.351900100708008,
+          "preferred": 365.1947021484375
+        },
+        "side": {
+          "max": 298.0050964355469,
+          "min": 179.81170654296875,
+          "preferred": 217.00750732421875
+        },
+        "teammate": {
+          "max": 375.201904296875,
+          "min": 150.96470642089844,
+          "preferred": 344.3124084472656
+        }
+      }
+    }
+  ],
+  "finishedAt": "2026-05-05T08:53:30Z",
+  "gamesPerEpoch": 5000,
+  "history": [
+    {
+      "accepted": false,
+      "baselineAvgGoals": 5.978,
+      "candidateAvgGoals": 5.931,
+      "championEpoch": 0,
+      "earlyStop": "indecisive",
+      "elapsedMs": 515,
+      "epoch": 1,
+      "gamesRun": 275,
+      "goalDiff": -13.0,
+      "zScore": -0.146
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 5.72,
+      "candidateAvgGoals": 5.7,
+      "championEpoch": 0,
+      "earlyStop": "indecisive",
+      "elapsedMs": 184,
+      "epoch": 2,
+      "gamesRun": 100,
+      "goalDiff": -2.0,
+      "zScore": -0.04
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 5.954,
+      "candidateAvgGoals": 6.006,
+      "championEpoch": 0,
+      "earlyStop": "indecisive",
+      "elapsedMs": 327,
+      "epoch": 3,
+      "gamesRun": 175,
+      "goalDiff": 9.0,
+      "zScore": 0.136
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 5.41,
+      "candidateAvgGoals": 2.48,
+      "championEpoch": 0,
+      "earlyStop": "worse",
+      "elapsedMs": 198,
+      "epoch": 4,
+      "gamesRun": 100,
+      "goalDiff": -293.0,
+      "zScore": -7.428
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 5.85,
+      "candidateAvgGoals": 5.88,
+      "championEpoch": 0,
+      "earlyStop": "indecisive",
+      "elapsedMs": 186,
+      "epoch": 5,
+      "gamesRun": 100,
+      "goalDiff": 3.0,
+      "zScore": 0.058
+    },
+    {
+      "accepted": true,
+      "baselineAvgGoals": 5.392,
+      "candidateAvgGoals": 6.896,
+      "championEpoch": 6,
+      "earlyStop": "better",
+      "elapsedMs": 238,
+      "epoch": 6,
+      "gamesRun": 125,
+      "goalDiff": 188.0,
+      "zScore": 2.81
+    },
+    {
+      "accepted": true,
+      "baselineAvgGoals": 5.305,
+      "candidateAvgGoals": 6.315,
+      "championEpoch": 7,
+      "earlyStop": "better",
+      "elapsedMs": 377,
+      "epoch": 7,
+      "gamesRun": 200,
+      "goalDiff": 202.0,
+      "zScore": 2.591
+    },
+    {
+      "accepted": true,
+      "baselineAvgGoals": 6.695,
+      "candidateAvgGoals": 7.942,
+      "championEpoch": 8,
+      "earlyStop": "better",
+      "elapsedMs": 534,
+      "epoch": 8,
+      "gamesRun": 275,
+      "goalDiff": 343.0,
+      "zScore": 2.517
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 4.4,
+      "candidateAvgGoals": 4.42,
+      "championEpoch": 8,
+      "earlyStop": "indecisive",
+      "elapsedMs": 187,
+      "epoch": 9,
+      "gamesRun": 100,
+      "goalDiff": 2.0,
+      "zScore": 0.063
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 5.571,
+      "candidateAvgGoals": 4.846,
+      "championEpoch": 8,
+      "earlyStop": "worse",
+      "elapsedMs": 334,
+      "epoch": 10,
+      "gamesRun": 175,
+      "goalDiff": -127.0,
+      "zScore": -2.78
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 4.46,
+      "candidateAvgGoals": 2.48,
+      "championEpoch": 8,
+      "earlyStop": "worse",
+      "elapsedMs": 190,
+      "epoch": 11,
+      "gamesRun": 100,
+      "goalDiff": -198.0,
+      "zScore": -8.223
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 6.32,
+      "candidateAvgGoals": 5.13,
+      "championEpoch": 8,
+      "earlyStop": "worse",
+      "elapsedMs": 185,
+      "epoch": 12,
+      "gamesRun": 100,
+      "goalDiff": -119.0,
+      "zScore": -3.508
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 5.16,
+      "candidateAvgGoals": 5.16,
+      "championEpoch": 8,
+      "earlyStop": "indecisive",
+      "elapsedMs": 196,
+      "epoch": 13,
+      "gamesRun": 100,
+      "goalDiff": 0.0,
+      "zScore": 0.0
+    },
+    {
+      "accepted": true,
+      "baselineAvgGoals": 4.823,
+      "candidateAvgGoals": 5.175,
+      "championEpoch": 14,
+      "earlyStop": "better",
+      "elapsedMs": 1076,
+      "epoch": 14,
+      "gamesRun": 525,
+      "goalDiff": 185.0,
+      "zScore": 2.527
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 5.12,
+      "candidateAvgGoals": 5.125,
+      "championEpoch": 14,
+      "earlyStop": "indecisive",
+      "elapsedMs": 363,
+      "epoch": 15,
+      "gamesRun": 200,
+      "goalDiff": 1.0,
+      "zScore": 0.022
+    },
+    {
+      "accepted": true,
+      "baselineAvgGoals": 4.8,
+      "candidateAvgGoals": 7.86,
+      "championEpoch": 16,
+      "earlyStop": "better",
+      "elapsedMs": 181,
+      "epoch": 16,
+      "gamesRun": 100,
+      "goalDiff": 306.0,
+      "zScore": 8.511
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 11.83,
+      "candidateAvgGoals": 4.0,
+      "championEpoch": 16,
+      "earlyStop": "worse",
+      "elapsedMs": 180,
+      "epoch": 17,
+      "gamesRun": 100,
+      "goalDiff": -783.0,
+      "zScore": -19.611
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 9.2,
+      "candidateAvgGoals": 6.2,
+      "championEpoch": 16,
+      "earlyStop": "worse",
+      "elapsedMs": 186,
+      "epoch": 18,
+      "gamesRun": 100,
+      "goalDiff": -300.0,
+      "zScore": -6.539
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 8.473,
+      "candidateAvgGoals": 8.371,
+      "championEpoch": 16,
+      "earlyStop": "indecisive",
+      "elapsedMs": 493,
+      "epoch": 19,
+      "gamesRun": 275,
+      "goalDiff": -28.0,
+      "zScore": -0.205
+    },
+    {
+      "accepted": false,
+      "baselineAvgGoals": 9.47,
+      "candidateAvgGoals": 6.66,
+      "championEpoch": 16,
+      "earlyStop": "worse",
+      "elapsedMs": 183,
+      "epoch": 20,
+      "gamesRun": 100,
+      "goalDiff": -281.0,
+      "zScore": -6.149
+    }
+  ],
+  "name": "anneal-stage-2-20ep-5000g",
+  "rejectedCount": 15,
+  "startedAt": "2026-05-05T08:53:23Z",
+  "totalTrainingElapsedMs": 6313,
+  "trainingMode": "v6-team"
+}

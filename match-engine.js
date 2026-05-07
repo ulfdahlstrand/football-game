@@ -21,6 +21,20 @@
   const GAME_SECS = 150;
   const h2 = FH / 2;
 
+  // Set pieces & new mechanics
+  const SLOW_DUR = 6;              // 100ms slowdown after on-ball tackle
+  const SLOW_FACTOR = 0.5;         // speed multiplier when slowed
+  const FOUL_PAUSE = 30;           // 0.5s freeze after foul before free kick
+  const FREE_KICK_WALL_DIST = 55;  // min opponent distance from free kick spot
+  const GK_DIVE_DUR = 6;           // 100ms on ground after missed dive
+  const GK_DIVE_COMMIT_DIST = 160; // distance from goal at which GK commits dive dir
+  const GK_DIVE_JITTER = 40;       // y-prediction noise for close shots
+  const GK_HOLD_DELAY = 60;        // 1s GK holds ball before distributing
+  const SET_PIECE_DELAY = 60;      // 1s delay before corner/kick-in/goal-kick
+  const FIELD_LINE = 18;           // visual field-line offset from canvas edge
+  const GOAL_AREA_W = 54;          // goal area width (GK can use hands here)
+  const TACKLE_BALL_NUDGE_POW = 6; // ball speed when nudged forward by tackler
+
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const norm = (dx, dy) => {
     const m = Math.hypot(dx, dy) || 1;
@@ -33,6 +47,8 @@
       knockTimer:0, homeX:x, homeY:y, facing:'down', stepCounter:0,
       celebrateTimer:0, tackleCooldown:0, jumpTimer:0,
       aiJitterX:0, aiJitterY:0, aiJitterTimer:0,
+      slowTimer:0,
+      gkDiveDir:null, gkDiveTimer:0, gkHoldTimer:0,
     };
   }
 
@@ -44,17 +60,20 @@
         mkP(1,0,FW*.32,h2-85, 'mid'),
         mkP(2,0,FW*.32,h2+85, 'mid'),
         mkP(3,0,FW*.17,h2,    'def'),
-        mkP(4,0,FW*.04,h2,    'gk'),
+        mkP(4,0,FIELD_LINE+PR*2,h2, 'gk'),
         mkP(5,1,FW*.56,h2,    'fwd'),
         mkP(6,1,FW*.68,h2-85, 'mid'),
         mkP(7,1,FW*.68,h2+85, 'mid'),
         mkP(8,1,FW*.83,h2,    'def'),
-        mkP(9,1,FW*.96,h2,    'gk'),
+        mkP(9,1,FW-FIELD_LINE-PR*2,h2, 'gk'),
       ],
       ball:{ x:FW/2,y:h2,vx:0,vy:0,owner:null,mega:false,cooldown:0,lastTouchTeam:null },
       score:[0,0], timer:GAME_SECS*60,
       phase:'kickoff', goalAnim:0, goalTeam:null,
       setPieceText:null, setPieceTimer:0, penaltyTeam:null, penaltyTaken:false,
+      freeKickActive:false, freeKickShooterId:null,
+      gkHasBall:[false,false],
+      setPieceTakerId:null, setPieceX:0, setPieceY:0,
       aiPolicies:{
         0: {
           passChancePressured: 0.16, passChanceWing: 0.07, passChanceForward: 0.04,
@@ -72,6 +91,16 @@
         passes:0, passCompleted:0, shots:0, shotsOnTarget:0,
         goals:0, tackles:0, tackleSuccess:0, turnovers:0, outOfBounds:0,
       },
+      playerGoals: {},
+      playerShots: {},
+      playerAssists: {},
+      playerFouls: {},
+      playerPenaltiesCaused: {},
+      playerPenaltiesTaken: {},
+      playerPenaltiesScored: {},
+      lastShooter: null,
+      lastPasser: null,
+      penaltyShotPending: false,
       _done:false,
     };
     if (opts.aiOnly) game.pl.forEach(p => { p.human = false; });
@@ -85,6 +114,8 @@
   }
 
   function doShoot(g, shooter, mega, tx, ty, pow, kind) {
+    // Indirect free kick: taker cannot shoot directly, must pass first
+    if (g.freeKickActive && shooter.id === g.freeKickShooterId && kind === 'shot') return;
     const p = pow || (mega ? MEGA_POW : SHOOT_POW);
     const ball = g.ball;
     const [nx,ny] = norm(tx - shooter.x, ty - shooter.y);
@@ -93,9 +124,13 @@
     ball.owner=null; ball.mega=!!mega; ball.cooldown=BALL_COOL;
     ball.lastTouchTeam=shooter.team;
     if (kind === 'pass') {
+      g.lastPasser = shooter.id;
       g.stats.passes++;
       emit(g, 'pass_attempt', { team:shooter.team, playerId:shooter.id, targetX:tx, targetY:ty });
     } else {
+      g.lastShooter = shooter.id;
+      g.lastPasser = null;
+      g.playerShots[shooter.id] = (g.playerShots[shooter.id] || 0) + 1;
       g.stats.shots++;
       emit(g, 'shot_attempt', { team:shooter.team, playerId:shooter.id, mega:!!mega });
     }
@@ -119,6 +154,10 @@
     }
   }
 
+  function slowPlayer(p, dur) {
+    p.slowTimer = dur || SLOW_DUR;
+  }
+
   function isJumping(p) {
     return p && p.state==='active' && p.jumpTimer>0;
   }
@@ -127,21 +166,53 @@
     if (!tackler || !target || tackler.state!=='active' || target.state!=='active') return false;
     g.stats.tackles++;
     emit(g, 'tackle_attempt', { team:tackler.team, playerId:tackler.id, targetId:target.id });
-    if (target.team!==tackler.team && isInOwnPenaltyArea(tackler)) {
-      startPenalty(g, target.team);
-      tackler.tackleCooldown = TACKLE_COOL;
-      emit(g, 'penalty_awarded', { team:target.team, tacklerId:tackler.id });
-      return true;
-    }
+    tackler.tackleCooldown = TACKLE_COOL;
+
+    const targetHasBall = g.ball.owner === target.id;
+
     if (isJumping(target)) {
       knockPlayer(g, tackler, TACKLE_MISS_DUR);
       emit(g, 'tackle_evaded', { team:target.team, playerId:target.id, tacklerId:tackler.id });
-    } else {
-      knockPlayer(g, target);
-      g.stats.tackleSuccess++;
-      emit(g, 'tackle_success', { team:tackler.team, playerId:tackler.id, targetId:target.id });
+      return true;
     }
-    tackler.tackleCooldown = TACKLE_COOL;
+
+    if (targetHasBall) {
+      // Cannot kick the ball out of a GK's hands — foul, free kick to GK's team
+      if (target.role === 'gk' && g.gkHasBall[target.team]) {
+        awardSetPiece(g, target.id, target.x, target.y, 'FRISPARK');
+        g.gkHasBall[target.team] = false;
+        g.stats.fouls = (g.stats.fouls || 0) + 1;
+        g.playerFouls[tackler.id] = (g.playerFouls[tackler.id] || 0) + 1;
+        emit(g, 'foul', { team:tackler.team, playerId:tackler.id, targetId:target.id, x:target.x, y:target.y });
+        return true;
+      }
+      // On-ball tackle: strip the ball, nudge it forward in tackler's direction
+      const b = g.ball;
+      const [nx, ny] = norm(target.x - tackler.x, target.y - tackler.y);
+      b.owner = null;
+      b.vx = nx * TACKLE_BALL_NUDGE_POW;
+      b.vy = ny * TACKLE_BALL_NUDGE_POW;
+      b.x = target.x; b.y = target.y;
+      b.cooldown = BALL_COOL;
+      slowPlayer(target, SLOW_DUR);
+      g.stats.tackleSuccess++;
+      emit(g, 'tackle_success_ball', { team:tackler.team, playerId:tackler.id, targetId:target.id });
+    } else {
+      // Off-ball tackle: foul. No pause, no knock-down — slow the target so
+      // they stumble briefly, then the match continues with a free kick.
+      if (target.team!==tackler.team && isInOwnPenaltyArea(tackler)) {
+        g.playerFouls[tackler.id] = (g.playerFouls[tackler.id] || 0) + 1;
+        g.playerPenaltiesCaused[tackler.id] = (g.playerPenaltiesCaused[tackler.id] || 0) + 1;
+        startPenalty(g, target.team);
+        emit(g, 'penalty_awarded', { team:target.team, tacklerId:tackler.id });
+        return true;
+      }
+      slowPlayer(target, SLOW_DUR * 4); // brief stumble after foul
+      startFreeKick(g, target, target.x, target.y);
+      g.stats.tackleSuccess++;
+      g.playerFouls[tackler.id] = (g.playerFouls[tackler.id] || 0) + 1;
+      emit(g, 'foul', { team:tackler.team, playerId:tackler.id, targetId:target.id, x:target.x, y:target.y });
+    }
     return true;
   }
 
@@ -159,6 +230,17 @@
     return g.pl.filter(p => p.team===team && p.state==='active');
   }
 
+  // Returns the active policy params for a player: their per-player override
+  // if set, otherwise the team-level policy from g.aiPolicies.
+  function effectivePolicy(g, p) {
+    return p.aiPolicy || g.aiPolicies?.[p.team] || {};
+  }
+
+  // Returns GK-specific params. Only meaningful when p.role === 'gk'.
+  function effectiveGkPolicy(g, p) {
+    return p.aiPolicy?.gk || g.gkPolicies?.[p.team] || {};
+  }
+
   function rolePlayer(g, team, role) {
     return teamPlayers(g, team).find(p => p.role===role) || teamPlayers(g, team)[0];
   }
@@ -173,6 +255,21 @@
     g.phase='playing';
     g.setPieceText=text;
     g.setPieceTimer=90;
+    g.setPieceTakerId=null;
+  }
+
+  // Place the ball at a set-piece spot and mark a specific taker. Match continues
+  // running normally — only the marked player can pick up the ball, and they
+  // run to it via the AI override in baselineCpuTick.
+  function awardSetPiece(g, takerId, sx, sy, text) {
+    const b = g.ball;
+    b.x = sx; b.y = sy; b.vx = 0; b.vy = 0;
+    b.owner = null; b.mega = false; b.cooldown = 0;
+    g.setPieceTakerId = takerId;
+    g.setPieceX = sx; g.setPieceY = sy;
+    g.setPieceText = text;
+    g.setPieceTimer = 120;
+    g.phase = 'playing';
   }
 
   function goalLineTeams(x) {
@@ -191,8 +288,9 @@
 
   function restartGoalKick(g, team) {
     const keeper = rolePlayer(g, team, 'gk');
-    const x = team===0 ? PR*2.3 : FW-PR*2.3;
-    setBallOwner(g, keeper, x, h2, 'MALVAKTENS BOLL');
+    const sx = team===0 ? FIELD_LINE + PR*2.3 : FW - FIELD_LINE - PR*2.3;
+    awardSetPiece(g, keeper.id, sx, h2, 'MÅLVAKTENS BOLL');
+    g.gkHasBall[team] = false;
     emit(g, 'goal_kick', { team });
   }
 
@@ -200,23 +298,43 @@
     const taker = teamPlayers(g, team)
       .filter(p => p.role!=='gk')
       .sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y))[0] || rolePlayer(g, team, 'mid');
-    setBallOwner(g, taker, clamp(x, PR, FW-PR), y < h2 ? PR : FH-PR, 'INSPARK');
+    const sy = y < h2 ? PR : FH-PR;
+    awardSetPiece(g, taker.id, clamp(x, PR, FW-PR), sy, 'INSPARK');
     emit(g, 'kick_in', { team });
   }
 
   function restartCorner(g, team, x, y) {
     const taker = rolePlayer(g, team, 'mid') || rolePlayer(g, team, 'fwd');
-    setBallOwner(g, taker, x < FW/2 ? PR : FW-PR, y < h2 ? PR : FH-PR, 'HORNA');
+    const sx = x < FW/2 ? FIELD_LINE + PR : FW - FIELD_LINE - PR;
+    const sy = y < h2 ? PR : FH-PR;
+    awardSetPiece(g, taker.id, sx, sy, 'HÖRNA');
     emit(g, 'corner', { team });
+  }
+
+  function startFreeKick(g, fouledPlayer, fx, fy) {
+    awardSetPiece(g, fouledPlayer.id, fx, fy, 'FRISPARK');
+    g.freeKickShooterId = fouledPlayer.id;
+    g.freeKickActive = true;
   }
 
   function startPenalty(g, team) {
     const shooter = team===0 ? g.pl[0] : (rolePlayer(g, team, 'fwd') || rolePlayer(g, team, 'mid'));
-    const x = team===0 ? FW-PENALTY_SPOT_D : PENALTY_SPOT_D;
+    const sx = team===0 ? FW - FIELD_LINE - PENALTY_SPOT_D : FIELD_LINE + PENALTY_SPOT_D;
+    // Clear players from penalty area (except shooter and opposing GK)
     g.pl.forEach(p => {
-      p.state='active'; p.knockTimer=0; p.jumpTimer=0; p.tackleCooldown=Math.max(p.tackleCooldown, 35);
+      p.state='active'; p.knockTimer=0; p.jumpTimer=0; p.tackleCooldown=Math.max(p.tackleCooldown, FOUL_PAUSE + SET_PIECE_DELAY);
+      if (p.id === shooter.id) return;
+      const oppGk = p.role==='gk' && p.team!==team;
+      if (!oppGk) {
+        // Push field players behind penalty spot (outside penalty area)
+        if (team===0 && p.x > FW - FIELD_LINE - PENALTY_AREA_W - 20) {
+          p.x = FW - FIELD_LINE - PENALTY_AREA_W - 20 - Math.random()*40;
+        } else if (team===1 && p.x < FIELD_LINE + PENALTY_AREA_W + 20) {
+          p.x = FIELD_LINE + PENALTY_AREA_W + 20 + Math.random()*40;
+        }
+      }
     });
-    setBallOwner(g, shooter, x, h2, 'STRAFF');
+    setBallOwner(g, shooter, sx, h2, 'STRAFF');
     g.phase='penalty';
     g.penaltyTeam=team;
     g.penaltyTaken=false;
@@ -231,7 +349,7 @@
       restartKickIn(g, restartTeam, b.x, b.y);
       return true;
     }
-    if (b.x-BR <= 0 || b.x+BR >= FW) {
+    if (b.x-BR <= FIELD_LINE || b.x+BR >= FW-FIELD_LINE) {
       const teams = goalLineTeams(b.x);
       if (b.lastTouchTeam===teams.attacking) restartGoalKick(g, teams.defending);
       else restartCorner(g, teams.attacking, b.x, b.y);
@@ -400,7 +518,7 @@
   }
 
   function cpuFindPass(g, carrier) {
-    const params = g.aiPolicies?.[carrier.team] || {};
+    const params = effectivePolicy(g, carrier);
     const oppGoalX = carrier.team===0 ? FW : 0;
     let best=null, bestScore=-Infinity;
     g.pl.forEach(p => {
@@ -424,11 +542,18 @@
 
   function baselineCpuTick(g, p, random) {
     const rng = random || Math.random;
-    const params = g.aiPolicies?.[p.team] || {};
+    const params = effectivePolicy(g, p);
     const ball = g.ball;
     const hasball = ball.owner===p.id;
     const carrier = g.pl.find(q => q.id===ball.owner);
     const teamHasBall = carrier && carrier.team===p.team;
+
+    // Set-piece taker override: run to the ball
+    if (g.setPieceTakerId === p.id && !hasball) {
+      const slowMult = p.slowTimer > 0 ? SLOW_FACTOR : 1;
+      moveTo(p, ball.x, ball.y, CSPEED * 1.18 * slowMult);
+      return;
+    }
 
     if (!hasball && carrier && carrier.team!==p.team && p.tackleCooldown<=0) {
       if (Math.hypot(p.x-carrier.x,p.y-carrier.y)<TACKLE_DIST && rng()<(params.tackleChance ?? 0.08)) {
@@ -438,9 +563,85 @@
     }
 
     if (p.role==='gk') {
-      if (hasball) { doShoot(g,p,false,FW/2,h2,undefined,'shot'); return; }
-      const gx = p.team===0 ? PR*1.8 : FW-PR*1.8;
-      moveTo(p, gx, clamp(ball.y,h2-GH/2+PR,h2+GH/2-PR), CSPEED*0.88);
+      if (p.gkDiveTimer < 0) return; // on the ground after missed dive
+      if (hasball) {
+        // Hold ball briefly, then distribute
+        if (p.gkHoldTimer > 0) {
+          p.gkHoldTimer--;
+          return;
+        }
+        const gkp = effectiveGkPolicy(g, p);
+        const riskClearance = gkp.gkRiskClearance ?? 0.5;
+        const opponentsOnOwnHalf = g.pl.some(q =>
+          q.team !== p.team && q.state === 'active' &&
+          (p.team === 0 ? q.x < FW/2 : q.x > FW/2)
+        );
+        if (opponentsOnOwnHalf && rng() > riskClearance) {
+          p.gkHoldTimer = 5;
+          return;
+        }
+        g.gkHasBall[p.team] = false;
+        // Prefer a short pass to a nearby teammate.
+        const passTargetDist = gkp.gkPassTargetDist ?? 200;
+        const passTarget = g.pl
+          .filter(q => q.team === p.team && q.id !== p.id && q.state === 'active')
+          .filter(q => Math.hypot(q.x - p.x, q.y - p.y) <= passTargetDist)
+          .filter(q => passLineOpen(g, p, q, p.team))
+          .sort((a, b) => Math.hypot(a.x-p.x,a.y-p.y) - Math.hypot(b.x-p.x,b.y-p.y))[0];
+        if (passTarget) {
+          doShoot(g, p, false, passTarget.x, passTarget.y, CPU_PASS_POW, 'pass');
+          return;
+        }
+        // Distribute to preferred zone.
+        const distZone = gkp.gkDistributionZone ?? 0;
+        const targetY = distZone > 0.5 ? (ball.y < h2 ? PR*2 : FH-PR*2) : h2;
+        doShoot(g, p, false, FW/2, targetY, undefined, 'shot');
+        return;
+      }
+      // Try to dive for incoming shot
+      if (p.gkDiveTimer === 0 && ball.owner === null) {
+        const gkp = effectiveGkPolicy(g, p);
+        const diveCommitDist = gkp.gkDiveCommitDist ?? GK_DIVE_COMMIT_DIST;
+        const diveChance = gkp.gkDiveChance ?? 0.9;
+        const isIncoming = p.team===0 ? ball.vx < -8 : ball.vx > 8;
+        const goalX = p.team===0 ? FIELD_LINE : FW - FIELD_LINE;
+        const distToGoal = Math.abs(p.x - goalX);
+        if (isIncoming && distToGoal < diveCommitDist && rng() < diveChance) {
+          const framesUntilGoal = ball.vx !== 0 ? (goalX - ball.x) / ball.vx : 0;
+          const predictedY = ball.y + ball.vy * Math.max(0, framesUntilGoal);
+          const jitter = GK_DIVE_JITTER * (1 - distToGoal / diveCommitDist);
+          const effectiveY = predictedY + (rng()*2-1) * jitter;
+          p.gkDiveDir = effectiveY < h2 ? 'up' : 'down';
+          p.gkDiveTimer = GK_DIVE_DUR;
+        }
+      }
+      if (p.gkDiveTimer > 0) {
+        // Actively diving: move quickly toward predicted save position
+        const diveY = p.gkDiveDir==='up' ? h2 - GH/2 + PR : h2 + GH/2 - PR;
+        moveTo(p, p.x, diveY, CSPEED * 3.5);
+        p.gkDiveTimer--;
+        if (p.gkDiveTimer <= 0) {
+          // Check if we caught the ball
+          const caught = ball.owner === null &&
+            Math.hypot(p.x - ball.x, p.y - ball.y) < PR + BR + 8;
+          if (!caught) p.gkDiveTimer = -GK_DIVE_DUR; // miss: lie on ground
+          else p.gkDiveTimer = 0;
+        }
+        return;
+      }
+      // Normal GK patrol
+      const gx = p.team===0 ? FIELD_LINE + PR*1.5 : FW - FIELD_LINE - PR*1.5;
+      moveTo(p, gx, clamp(ball.y, h2-GH/2+PR, h2+GH/2-PR), CSPEED*0.88);
+      return;
+    }
+
+    // Retreat to midline when opposing GK holds ball
+    const enemyTeam = 1 - p.team;
+    if (g.gkHasBall[enemyTeam]) {
+      const retreatX = p.team===0
+        ? Math.min(p.x, FW/2 - PR)
+        : Math.max(p.x, FW/2 + PR);
+      moveTo(p, retreatX, p.y, CSPEED * 0.9);
       return;
     }
 
@@ -457,6 +658,12 @@
     }
 
     if (hasball) {
+      // Indirect free kick: must pass first, cannot shoot directly
+      if (g.freeKickActive && p.id === g.freeKickShooterId) {
+        const pt = cpuFindPass(g, p);
+        if (pt) doShoot(g, p, false, pt.x, pt.y, CPU_PASS_POW, 'pass');
+        return;
+      }
       const oppGoal = oppGoalPoint(p.team);
       const inShootZone = attackProgress(p.team,p.x)>(params.shootProgressThreshold ?? 0.76);
       const reachedHalf = p.team===0 ? p.x>FW*0.50 : p.x<FW*0.50;
@@ -494,7 +701,8 @@
     const target = teamHasBall ? getAttackTarget(g,p) : getDefendTarget(g,p);
     const loose = p.role==='def' || p.role==='gk' ? 7 : 18;
     const nt = naturalTarget(p, target, loose, rng);
-    const spd = teamHasBall ? CSPEED*0.82 : CSPEED;
+    const slowMult = p.slowTimer > 0 ? SLOW_FACTOR : 1;
+    const spd = (teamHasBall ? CSPEED*0.82 : CSPEED) * slowMult;
     moveTo(p, nt.x, nt.y, spd);
   }
 
@@ -505,11 +713,14 @@
       p.state='active'; p.knockTimer=0; p.celebrateTimer=0; p.tackleCooldown=0;
       p.jumpTimer=0; p.aiJitterX=0; p.aiJitterY=0; p.aiJitterTimer=0;
       p.facing='down'; p.stepCounter=0;
+      p.slowTimer=0; p.gkDiveDir=null; p.gkDiveTimer=0; p.gkHoldTimer=0;
     });
     const b=g.ball;
     b.x=FW/2; b.y=h2; b.vx=0; b.vy=0; b.owner=null; b.mega=false; b.cooldown=0; b.lastTouchTeam=null;
     g.phase='kickoff'; g.celebration=false; g.celebrateFrame=0;
     g.setPieceText=null; g.setPieceTimer=0; g.penaltyTeam=null; g.penaltyTaken=false;
+    g.freeKickActive=false; g.freeKickShooterId=null;
+    g.gkHasBall=[false,false]; g.setPieceTakerId=null;
   }
 
   function applyHumanAction(g, action) {
@@ -517,8 +728,14 @@
     if (!action || human.state!=='active') return;
     if (action.jump && human.jumpTimer<=0) human.jumpTimer=JUMP_DUR;
     if (action.tackle && human.tackleCooldown<=0) {
-      const carrier=g.pl.find(p=>p.id===g.ball.owner);
-      if (carrier && carrier.team!==0 && Math.hypot(human.x-carrier.x,human.y-carrier.y)<TACKLE_DIST) tacklePlayer(g, human, carrier);
+      // Find nearest opponent within tackle distance (not just ball carrier)
+      let bestTarget=null, bestD=TACKLE_DIST;
+      g.pl.forEach(p => {
+        if (p.team===0 || p.state!=='active') return;
+        const d=Math.hypot(human.x-p.x,human.y-p.y);
+        if (d<bestD) { bestD=d; bestTarget=p; }
+      });
+      if (bestTarget) tacklePlayer(g, human, bestTarget);
     }
     if ((action.pass || action.shoot) && g.ball.owner===0) {
       const aim = action.aim || {};
@@ -528,8 +745,9 @@
       else doShoot(g,human,!!action.mega,human.x+dx*220,human.y+dy*220,undefined,'shot');
     }
     if (action.move && g.phase==='playing') {
-      let dx = clamp(action.move.x || 0, -1, 1) * PSPEED;
-      let dy = clamp(action.move.y || 0, -1, 1) * PSPEED;
+      const slowMult = human.slowTimer > 0 ? SLOW_FACTOR : 1;
+      let dx = clamp(action.move.x || 0, -1, 1) * PSPEED * slowMult;
+      let dy = clamp(action.move.y || 0, -1, 1) * PSPEED * slowMult;
       if (dx&&dy){dx*=0.707;dy*=0.707;}
       human.x=clamp(human.x+dx,PR,FW-PR); human.y=clamp(human.y+dy,PR,FH-PR);
     }
@@ -549,18 +767,36 @@
     ball.vx*=BALL_FRIC; ball.vy*=BALL_FRIC;
 
     const inGoalY=Math.abs(ball.y-h2)<GH/2;
-    if (ball.x-BR<=0) {
+    if (ball.x-BR<=FIELD_LINE) {
       if (inGoalY) {
         g.score[1]++; g.phase='goal'; g.goalAnim=160; g.goalTeam=1;
-        g.stats.goals++; emit(g, 'goal', { team:1 });
+        g.stats.goals++;
+        if (g.lastShooter !== null) {
+          g.playerGoals[g.lastShooter] = (g.playerGoals[g.lastShooter] || 0) + 1;
+          if (g.penaltyShotPending) g.playerPenaltiesScored[g.lastShooter] = (g.playerPenaltiesScored[g.lastShooter] || 0) + 1;
+          if (g.lastPasser !== null && g.lastPasser !== g.lastShooter)
+            g.playerAssists[g.lastPasser] = (g.playerAssists[g.lastPasser] || 0) + 1;
+        }
+        g.penaltyShotPending = false;
+        emit(g, 'goal', { team:1, scorer:g.lastShooter, assister:g.lastPasser });
+        g.gkHasBall[0]=false;
         return;
       }
       handleBallOut(g); return;
     }
-    if (ball.x+BR>=FW) {
+    if (ball.x+BR>=FW-FIELD_LINE) {
       if (inGoalY) {
         g.score[0]++; g.phase='goal'; g.goalAnim=160; g.goalTeam=0;
-        g.stats.goals++; emit(g, 'goal', { team:0 });
+        g.stats.goals++;
+        if (g.lastShooter !== null) {
+          g.playerGoals[g.lastShooter] = (g.playerGoals[g.lastShooter] || 0) + 1;
+          if (g.penaltyShotPending) g.playerPenaltiesScored[g.lastShooter] = (g.playerPenaltiesScored[g.lastShooter] || 0) + 1;
+          if (g.lastPasser !== null && g.lastPasser !== g.lastShooter)
+            g.playerAssists[g.lastPasser] = (g.playerAssists[g.lastPasser] || 0) + 1;
+        }
+        g.penaltyShotPending = false;
+        emit(g, 'goal', { team:0, scorer:g.lastShooter, assister:g.lastPasser });
+        g.gkHasBall[1]=false;
         return;
       }
       handleBallOut(g); return;
@@ -580,22 +816,67 @@
       let nearId=null, nearD2=(PR+BR+7)**2;
       g.pl.forEach(p => {
         if (p.state!=='active') return;
+        // During an active set piece, only the designated taker can pick up
+        if (g.setPieceTakerId !== null && p.id !== g.setPieceTakerId) return;
         const dd=(p.x-ball.x)**2+(p.y-ball.y)**2;
         if (dd<nearD2){nearD2=dd;nearId=p.id;}
       });
       if (nearId!==null) {
+        const candidate = g.pl.find(p=>p.id===nearId);
+        // GK using hands outside goal area = handball foul → free kick to opponents
+        if (candidate && candidate.role === 'gk') {
+          const inGoalArea = candidate.team===0
+            ? candidate.x <= FIELD_LINE + GOAL_AREA_W
+            : candidate.x >= FW - FIELD_LINE - GOAL_AREA_W;
+          if (!inGoalArea) {
+            const oppTeam = 1 - candidate.team;
+            const fkTaker = teamPlayers(g, oppTeam)
+              .filter(p => p.role !== 'gk')
+              .sort((a,b)=>Math.hypot(a.x-candidate.x,a.y-candidate.y)-Math.hypot(b.x-candidate.x,b.y-candidate.y))[0]
+              || rolePlayer(g, oppTeam, 'mid');
+            if (fkTaker) {
+              awardSetPiece(g, fkTaker.id, candidate.x, candidate.y, 'HANDS!');
+              g.freeKickShooterId = fkTaker.id;
+              g.freeKickActive = true;
+              g.stats.fouls = (g.stats.fouls || 0) + 1;
+              g.playerFouls[candidate.id] = (g.playerFouls[candidate.id] || 0) + 1;
+              emit(g, 'foul_handball', { team:candidate.team, playerId:candidate.id, x:candidate.x, y:candidate.y });
+            }
+            return; // skip normal pickup
+          }
+        }
         const prev = ball.lastTouchTeam;
         ball.owner=nearId;
-        const owner=g.pl.find(p=>p.id===nearId);
+        if (g.setPieceTakerId === nearId) g.setPieceTakerId = null;
+        const owner=candidate;
         if (owner) {
           if (prev===owner.team) {
             g.stats.passCompleted++;
             emit(g, 'pass_completed', { team:owner.team, playerId:owner.id });
           }
           ball.lastTouchTeam=owner.team;
+
+          // Cancel indirect free kick restriction once another player touches the ball
+          if (g.freeKickActive && owner.id !== g.freeKickShooterId) {
+            g.freeKickActive = false;
+          }
+
+          // Track GK holding ball with hands (in goal area only — outside is handball foul above)
+          if (owner.role === 'gk') {
+            g.gkHasBall[owner.team] = true;
+            owner.gkHoldTimer = GK_HOLD_DELAY;
+          }
         }
       }
     }
+
+    // Clear gkHasBall if ball is no longer owned by GK
+    [0,1].forEach(t => {
+      if (g.gkHasBall[t]) {
+        const gk = g.pl.find(p => p.role==='gk' && p.team===t);
+        if (!gk || ball.owner !== gk.id) g.gkHasBall[t] = false;
+      }
+    });
   }
 
   function stepGame(g, input, options) {
@@ -614,12 +895,16 @@
       g.ball.x=shooter.x; g.ball.y=shooter.y;
       if (g.penaltyTeam===0 && humanAction && humanAction.shoot) {
         const aim = humanAction.aim || { x:1, y:0 };
+        g.playerPenaltiesTaken[shooter.id] = (g.playerPenaltiesTaken[shooter.id] || 0) + 1;
+        g.penaltyShotPending = true;
         doShoot(g,shooter,false,shooter.x+(aim.x||1)*220,shooter.y+(aim.y||0)*220,SHOOT_POW,'shot');
         g.phase='playing'; g.penaltyTaken=true; g.setPieceText=null;
       } else if (g.penaltyTeam!==0 && !g.penaltyTaken) {
         g.setPieceTimer--;
         if (g.setPieceTimer<=35) {
-          const tx = g.penaltyTeam===0 ? FW+GD : -GD;
+          const tx = g.penaltyTeam===0 ? FW-FIELD_LINE : FIELD_LINE;
+          g.playerPenaltiesTaken[shooter.id] = (g.playerPenaltiesTaken[shooter.id] || 0) + 1;
+          g.penaltyShotPending = true;
           doShoot(g,shooter,false,tx,h2+(rng()*2-1)*48,SHOOT_POW,'shot');
           g.phase='playing'; g.penaltyTaken=true; g.setPieceText=null;
         }
@@ -638,6 +923,7 @@
     const human=g.pl[0];
     if (human.tackleCooldown>0) human.tackleCooldown--;
     if (human.jumpTimer>0) human.jumpTimer--;
+    if (human.slowTimer>0) human.slowTimer--;
     if (human.state!=='active') {
       if (--human.knockTimer<=0) human.state='active';
     } else {
@@ -648,10 +934,12 @@
       if (p.human) return;
       if (p.tackleCooldown>0) p.tackleCooldown--;
       if (p.jumpTimer>0) p.jumpTimer--;
-      if (p.state!=='active') { if (--p.knockTimer<=0) p.state='active'; return; }
+      if (p.slowTimer>0) p.slowTimer--;
+      if (p.gkDiveTimer < 0) { p.gkDiveTimer++; return; } // on ground after missed dive
+      if (p.state!=='active') { if (--p.knockTimer<=0) { p.state='active'; p.gkDiveDir=null; } return; }
       const policy = opts.teamPolicies && opts.teamPolicies[p.team] || 'baseline';
       if (policy === 'candidate') candidateCpuTick(g,p,rng,opts.candidatePolicy);
-      else baselineCpuTick(g,p,rng);
+      else tickPlayer(g,p,rng);
     });
 
     updateBall(g);
@@ -668,6 +956,225 @@
     return g;
   }
 
+  // Dispatcher: every CPU player ticks through here. v1/v2 use classic;
+  // v3 modulates; v4 = v3 + directional pass mult + GK freedom.
+  function tickPlayer(g, p, random) {
+    if (!p.brain) { baselineCpuTick(g, p, random); return; }
+    switch (p.brain.version) {
+      case 'v6': v6Tick(g, p, random); return;
+      case 'v4': v4Tick(g, p, random); return;
+      case 'v3': v3Tick(g, p, random); return;
+      case 'v1':
+      case 'v2':
+      default: {
+        const saved = p.aiPolicy;
+        p.aiPolicy = p.brain.params;
+        baselineCpuTick(g, p, random);
+        p.aiPolicy = saved;
+        return;
+      }
+    }
+  }
+
+  function v6PrefCost(d, pref) {
+    if (!pref) return 0;
+    const range = Math.max(1, pref.max - pref.min);
+    const norm = (d - pref.preferred) / range;
+    const base = norm * norm;
+    const below = Math.max(0, pref.min - d);
+    const above = Math.max(0, d - pref.max);
+    return base + below*below*0.01 + above*above*0.01;
+  }
+  function v6NearestActive(g, excludeId, wantTeam, x, y) {
+    let best = Infinity;
+    for (const q of g.pl) {
+      if (q.state !== 'active' || q.id === excludeId) continue;
+      if (wantTeam !== null && q.team !== wantTeam) continue;
+      const d = Math.hypot(q.x - x, q.y - y);
+      if (d < best) best = d;
+    }
+    return Number.isFinite(best) ? best : 600;
+  }
+  function v6CostAt(g, p, x, y, sp) {
+    const ownGx = p.team === 0 ? FIELD_LINE : FW - FIELD_LINE;
+    const dGoal = Math.hypot(x - ownGx, y - h2);
+    return v6PrefCost(dGoal, sp.ownGoal)
+         + v6PrefCost(y, sp.side)
+         + v6PrefCost(Math.hypot(x-g.ball.x, y-g.ball.y), sp.ball)
+         + v6PrefCost(v6NearestActive(g, p.id, p.team, x, y), sp.teammate)
+         + v6PrefCost(v6NearestActive(g, p.id, 1-p.team, x, y), sp.opponent);
+  }
+  function v6Target(g, p, sp) {
+    const r = 24, s = r*0.7071;
+    const cands = [
+      [p.x,p.y],[p.x+r,p.y],[p.x-r,p.y],[p.x,p.y+r],[p.x,p.y-r],
+      [p.x+s,p.y+s],[p.x+s,p.y-s],[p.x-s,p.y+s],[p.x-s,p.y-s],
+    ];
+    let best = [p.x,p.y], bestC = Infinity;
+    for (const [cx,cy] of cands) {
+      const x=clamp(cx,PR,FW-PR), y=clamp(cy,PR,FH-PR);
+      const c = v6CostAt(g, p, x, y, sp);
+      if (c < bestC) { bestC=c; best=[x,y]; }
+    }
+    return best;
+  }
+  function v6Tick(g, p, random) {
+    const rng = random || Math.random;
+    const v6 = p.brain.params || {};
+    const sp = v6.spatial || {};
+    const dec = v6.decisions || {};
+    // Risk-appetite modulation: higher risk → shoot earlier.
+    // Matches Rust ai.rs and JS v3Tick.
+    const risk = dec.riskAppetite == null ? 0.5 : Math.max(0, Math.min(1, dec.riskAppetite));
+    const baseShoot = dec.shootProgressThreshold == null ? 0.76 : dec.shootProgressThreshold;
+    const modulatedDec = Object.assign({}, dec, {
+      shootProgressThreshold: clamp(baseShoot - 0.05 * (risk - 0.5), 0.5, 0.95),
+    });
+    const ball = g.ball;
+    const hasball = ball.owner === p.id;
+
+    if (g.setPieceTakerId === p.id && !hasball) {
+      const slow = p.slowTimer > 0 ? SLOW_FACTOR : 1;
+      moveTo(p, ball.x, ball.y, CSPEED * 1.18 * slow);
+      return;
+    }
+    if (!hasball && ball.owner !== null) {
+      const carrier = g.pl.find(q => q.id === ball.owner);
+      if (carrier && carrier.team !== p.team && p.tackleCooldown <= 0) {
+        const tc = (dec.tackleChance || 0.08) * (dec.aggression || 1);
+        if (Math.hypot(p.x-carrier.x,p.y-carrier.y) < TACKLE_DIST && rng() < tc) {
+          tacklePlayer(g, p, carrier); return;
+        }
+      }
+    }
+    if (hasball) {
+      const saved = p.aiPolicy;
+      // Include GK params so effectiveGkPolicy (read inside baselineCpuTick) finds them.
+      p.aiPolicy = p.role === 'gk'
+        ? Object.assign({}, modulatedDec, { gk: v6.gk || {} })
+        : modulatedDec;
+      baselineCpuTick(g, p, rng);
+      p.aiPolicy = saved;
+      return;
+    }
+    if (p.role === 'gk') {
+      // Inline GK special behaviors (dive, hold/distribute) then v6 spatial + clamp.
+      const gkp = v6.gk || {};
+      const lineX = p.team === 0 ? FIELD_LINE + PR*1.5 : FW - FIELD_LINE - PR*1.5;
+      const goalX = p.team === 0 ? FIELD_LINE : FW - FIELD_LINE;
+      const h2 = FH / 2;
+
+      if (p.gkDiveTimer < 0) return; // on ground
+      // Try to dive
+      if (p.gkDiveTimer === 0 && ball.owner === null) {
+        const diveCommitDist = gkp.gkDiveCommitDist != null ? gkp.gkDiveCommitDist : GK_DIVE_COMMIT_DIST;
+        const diveChance = gkp.gkDiveChance != null ? gkp.gkDiveChance : 0.9;
+        const isIncoming = p.team === 0 ? ball.vx < -8 : ball.vx > 8;
+        const distToGoal = Math.abs(p.x - goalX);
+        if (isIncoming && distToGoal < diveCommitDist && rng() < diveChance) {
+          const framesUntilGoal = ball.vx !== 0 ? (goalX - ball.x) / ball.vx : 0;
+          const predictedY = ball.y + ball.vy * Math.max(0, framesUntilGoal);
+          const jitter = GK_DIVE_JITTER * (1 - distToGoal / diveCommitDist);
+          const effectiveY = predictedY + (rng()*2 - 1) * jitter;
+          p.gkDiveDir = effectiveY < h2 ? 'up' : 'down';
+          p.gkDiveTimer = GK_DIVE_DUR;
+        }
+      }
+      if (p.gkDiveTimer > 0) {
+        const diveY = p.gkDiveDir === 'up' ? h2 - GH/2 + PR : h2 + GH/2 - PR;
+        moveTo(p, p.x, diveY, CSPEED * 3.5);
+        p.gkDiveTimer--;
+        if (p.gkDiveTimer <= 0) {
+          const caught = ball.owner === null && Math.hypot(p.x - ball.x, p.y - ball.y) < PR + BR + 8;
+          if (!caught) p.gkDiveTimer = -GK_DIVE_DUR;
+          else p.gkDiveTimer = 0;
+        }
+        return;
+      }
+
+      // Off-ball: use v6 spatial cost like outfield, then clamp by GK params.
+      let [tx, ty] = v6Target(g, p, sp);
+      const ownGoalMax = (sp.ownGoal && sp.ownGoal.max != null) ? sp.ownGoal.max : 0;
+      const sweeperFreedom = gkp.gkSweeperFreedom != null
+        ? Math.max(0, Math.min(1, gkp.gkSweeperFreedom))
+        : 0;
+      const maxZone = Math.abs(FW * 0.5 - lineX);
+      const maxOut = Math.max(0, Math.min(ownGoalMax, maxZone)) * sweeperFreedom;
+      if (p.team === 0) {
+        tx = Math.min(Math.max(tx, lineX), lineX + maxOut);
+      } else {
+        tx = Math.max(Math.min(tx, lineX), lineX - maxOut);
+      }
+      ty = Math.max(PR, Math.min(FH - PR, ty));
+      const slow = p.slowTimer > 0 ? SLOW_FACTOR : 1;
+      moveTo(p, tx, ty, CSPEED * 0.88 * slow);
+      return;
+    }
+    if (ball.owner === null) {
+      let chaserId = null, bestD = Infinity;
+      for (const q of g.pl) {
+        if (q.role === 'gk' || q.state !== 'active') continue;
+        const d = Math.hypot(q.x-ball.x, q.y-ball.y);
+        if (d < bestD) { bestD = d; chaserId = q.id; }
+      }
+      if (chaserId === p.id) {
+        const lead = Math.min(18, Math.hypot(ball.vx,ball.vy) * 1.4);
+        const tx = clamp(ball.x + ball.vx*lead, PR, FW-PR);
+        const ty = clamp(ball.y + ball.vy*lead, PR, FH-PR);
+        const slow = p.slowTimer > 0 ? SLOW_FACTOR : 1;
+        moveTo(p, tx, ty, CSPEED * 1.18 * slow);
+        return;
+      }
+    }
+    const [tx, ty] = v6Target(g, p, sp);
+    const slow = p.slowTimer > 0 ? SLOW_FACTOR : 1;
+    moveTo(p, tx, ty, CSPEED * slow);
+  }
+
+  // v4 approximation in JS engine: delegates to v3 logic, then enforces the
+  // per-slot maxDistanceFromGoal roaming cap.
+  function v4Tick(g, p, random) {
+    const v4 = p.brain.params || {};
+    const savedBrain = p.brain;
+    const savedPolicy = p.aiPolicy;
+    p.brain = { version: 'v3', params: v4.v3 || {} };
+    v3Tick(g, p, random);
+    p.brain = savedBrain;
+    p.aiPolicy = savedPolicy;
+    applyRoamLimit(p, v4.maxDistanceFromGoal);
+  }
+
+  function applyRoamLimit(p, maxDist) {
+    if (maxDist == null || maxDist >= 1.0) return;
+    const md = Math.max(0, Math.min(1, maxDist));
+    const span = FW - 2*FIELD_LINE;
+    const limit = md * span;
+    if (p.team === 0) {
+      if (p.x > FIELD_LINE + limit) p.x = FIELD_LINE + limit;
+    } else {
+      const minX = FW - FIELD_LINE - limit;
+      if (p.x < minX) p.x = minX;
+    }
+  }
+
+  // v3 algorithm. Today: classic logic + aggression / risk modulators.
+  // Stays a single source-of-truth for the v3 dispatch path; future v3 work
+  // can diverge further from classic_tick without touching v1/v2.
+  function v3Tick(g, p, random) {
+    const b = p.brain.params || {};
+    const base = b.base || b;
+    const aggression = b.aggression == null ? 1.0 : b.aggression;
+    const risk = b.riskAppetite == null ? 0.5 : b.riskAppetite;
+    const modulated = Object.assign({}, base, {
+      tackleChance: clamp((base.tackleChance ?? 0.08) * aggression, 0.01, 0.5),
+      shootProgressThreshold: clamp((base.shootProgressThreshold ?? 0.76) - 0.05 * (risk - 0.5), 0.5, 0.95),
+    });
+    const saved = p.aiPolicy;
+    p.aiPolicy = modulated;
+    baselineCpuTick(g, p, random);
+    p.aiPolicy = saved;
+  }
+
   function candidateCpuTick(g, p, random, policy) {
     const params = { ...(policy && policy.parameters || {}) };
     if (!g.aiPolicies) g.aiPolicies = {};
@@ -678,7 +1185,9 @@
   }
 
   return {
-    constants: { FW, FH, GH, GD, PR, BR, GAME_SECS },
+    constants: { FW, FH, GH, GD, PR, BR, GAME_SECS, FIELD_LINE, GOAL_AREA_W,
+                 SLOW_DUR, SLOW_FACTOR, FREE_KICK_WALL_DIST, SET_PIECE_DELAY,
+                 GK_DIVE_COMMIT_DIST, GK_DIVE_JITTER, GK_HOLD_DELAY },
     createGame,
     stepGame,
     runSimulation,
@@ -687,5 +1196,8 @@
     cpuFindPass,
     baselineCpuTick,
     candidateCpuTick,
+    tickPlayer,
+    v3Tick,
+    v4Tick,
   };
 });

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Granite Athletic logo</title>
+  <desc id="desc">A shield crest with a granite cairn, mountain facets, and bold tackle marks for Granite Athletic.</desc>
+  <defs>
+    <linearGradient id="shield" x1="92" x2="420" y1="40" y2="472" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5f6870"/>
+      <stop offset="0.52" stop-color="#252b30"/>
+      <stop offset="1" stop-color="#080a0c"/>
+    </linearGradient>
+    <linearGradient id="stone" x1="142" x2="370" y1="130" y2="380" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d9dde0"/>
+      <stop offset="0.5" stop-color="#8b9298"/>
+      <stop offset="1" stop-color="#3d4348"/>
+    </linearGradient>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="124%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000" flood-opacity="0.38"/>
+    </filter>
+  </defs>
+  <path fill="url(#shield)" d="M256 34 428 94v138c0 114-65 202-172 246C149 434 84 346 84 232V94L256 34Z"/>
+  <path fill="none" stroke="#b7bec4" stroke-width="17" d="M256 57 405 109v122c0 99-55 174-149 215-94-41-149-116-149-215V109L256 57Z"/>
+  <path fill="none" stroke="#2d3338" stroke-width="5" opacity="0.95" d="M256 75 386 120v111c0 85-45 151-130 190-85-39-130-105-130-190V120L256 75Z"/>
+
+  <g filter="url(#shadow)">
+    <path fill="url(#stone)" d="M103 352 184 171 251 236 300 126 414 352Z"/>
+    <path fill="#eff1f2" d="M184 171 251 236 212 263 157 231Z" opacity="0.55"/>
+    <path fill="#c6cbcf" d="M300 126 340 276 251 236Z" opacity="0.72"/>
+    <path fill="#4c5358" d="M251 236 340 276 414 352H103Z" opacity="0.5"/>
+    <path fill="none" stroke="#282e33" stroke-linecap="round" stroke-linejoin="round" stroke-width="8" d="M207 212 229 274 199 322"/>
+    <path fill="none" stroke="#282e33" stroke-linecap="round" stroke-linejoin="round" stroke-width="8" d="M307 175 286 255 326 319"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <ellipse cx="256" cy="362" rx="103" ry="23" fill="#191d21"/>
+    <path fill="#767e84" d="M186 326h140c11 0 21 9 21 21v16H165v-16c0-11 9-21 21-21Z"/>
+    <path fill="#9aa1a6" d="M205 285h103c10 0 18 8 18 18v28H187v-28c0-10 8-18 18-18Z"/>
+    <path fill="#bdc3c7" d="M225 247h68c9 0 17 8 17 17v25h-102v-25c0-9 8-17 17-17Z"/>
+    <path fill="#eef1f2" d="M238 215h38c8 0 15 7 15 15v19h-68v-19c0-8 7-15 15-15Z"/>
+  </g>
+
+  <g fill="none" stroke="#ffcf66" stroke-linecap="round" stroke-width="10" opacity="0.9">
+    <path d="M124 199 161 225"/>
+    <path d="M388 199 351 225"/>
+    <path d="M152 139 179 157"/>
+    <path d="M360 139 333 157"/>
+  </g>
+
+  <path fill="#080a0c" d="M120 408h272v24H120z"/>
+  <text x="256" y="428" fill="#d8dde0" font-family="Arial Black, Impact, sans-serif" font-size="24" text-anchor="middle" letter-spacing="1.5">GRANITE ATHLETIC</text>
+</svg>

@@ -1,0 +1,704 @@
+{
+  "accepted": false,
+  "candidate": {
+    "playerParams": [
+      {
+        "decisions": {
+          "aggression": 1.2305999994277954,
+          "forwardPassMinGain": 4.604599952697754,
+          "markDistance": 46.94369888305664,
+          "passChanceDefault": 0.03849999979138374,
+          "passChanceForward": 0.00860000029206276,
+          "passChancePressured": 0.13519999384880066,
+          "passChanceWing": 0.10790000110864639,
+          "passDirDefensive": 0.8737000226974487,
+          "passDirNeutral": 1.083400011062622,
+          "passDirOffensive": 0.7555999755859375,
+          "riskAppetite": 0.2759000062942505,
+          "shootProgressThreshold": 0.7145000100135803,
+          "tackleChance": 0.03530000150203705
+        },
+        "spatial": {
+          "ball": {
+            "max": 452.1785888671875,
+            "min": 100.2531967163086,
+            "preferred": 100.2531967163086
+          },
+          "opponent": {
+            "max": 316.6814880371094,
+            "min": 66.42569732666016,
+            "preferred": 66.42569732666016
+          },
+          "ownGoal": {
+            "max": 656.293701171875,
+            "min": 57.410099029541016,
+            "preferred": 401.09429931640625
+          },
+          "side": {
+            "max": 424.63690185546875,
+            "min": 76.4136962890625,
+            "preferred": 287.7054138183594
+          },
+          "teammate": {
+            "max": 213.6121063232422,
+            "min": 16.764999389648438,
+            "preferred": 36.021400451660156
+          }
+        }
+      },
+      {
+        "decisions": {
+          "aggression": 1.0324000120162964,
+          "forwardPassMinGain": 10.42240047454834,
+          "markDistance": 29.222200393676758,
+          "passChanceDefault": 0.07999999821186066,
+          "passChanceForward": 0.0272000003606081,
+          "passChancePressured": 0.20000000298023224,
+          "passChanceWing": 0.04050000011920929,
+          "passDirDefensive": 0.8073999881744385,
+          "passDirNeutral": 0.7437000274658203,
+          "passDirOffensive": 0.7885000109672546,
+          "riskAppetite": 0.41510000824928284,
+          "shootProgressThreshold": 0.7577999830245972,
+          "tackleChance": 0.08699999749660492
+        },
+        "spatial": {
+          "ball": {
+            "max": 252.37710571289062,
+            "min": 90.9175033569336,
+            "preferred": 161.48590087890625
+          },
+          "opponent": {
+            "max": 253.6992950439453,
+            "min": 32.4828987121582,
+            "preferred": 104.27220153808594
+          },
+          "ownGoal": {
+            "max": 558.3469848632812,
+            "min": 415.87249755859375,
+            "preferred": 415.87249755859375
+          },
+          "side": {
+            "max": 168.07359313964844,
+            "min": 22.471399307250977,
+            "preferred": 136.3834991455078
+          },
+          "teammate": {
+            "max": 255.24960327148438,
+            "min": 69.44719696044922,
+            "preferred": 88.6405029296875
+          }
+        }
+      },
+      {
+        "decisions": {
+          "aggression": 1.1888999938964844,
+          "forwardPassMinGain": 0.3384000062942505,
+          "markDistance": 83.05860137939453,
+          "passChanceDefault": 0.08240000158548355,
+          "passChanceForward": 0.07989999651908875,
+          "passChancePressured": 0.33980000019073486,
+          "passChanceWing": 0.052299998700618744,
+          "passDirDefensive": 1.18149995803833,
+          "passDirNeutral": 0.8324000239372253,
+          "passDirOffensive": 1.0297000408172607,
+          "riskAppetite": 0.22910000383853912,
+          "shootProgressThreshold": 0.6973000168800354,
+          "tackleChance": 0.156700000166893
+        },
+        "spatial": {
+          "ball": {
+            "max": 200.48570251464844,
+            "min": 52.26459884643555,
+            "preferred": 135.0498046875
+          },
+          "opponent": {
+            "max": 228.32200622558594,
+            "min": 6.923099994659424,
+            "preferred": 6.923099994659424
+          },
+          "ownGoal": {
+            "max": 685.88671875,
+            "min": 31.77790069580078,
+            "preferred": 284.78179931640625
+          },
+          "side": {
+            "max": 464.1527099609375,
+            "min": 265.5360107421875,
+            "preferred": 265.5360107421875
+          },
+          "teammate": {
+            "max": 250.3345947265625,
+            "min": 9.30519962310791,
+            "preferred": 89.73519897460938
+          }
+        }
+      },
+      {
+        "decisions": {
+          "aggression": 0.7752000093460083,
+          "forwardPassMinGain": 11.193099975585938,
+          "markDistance": 48.543800354003906,
+          "passChanceDefault": 0.14710000157356262,
+          "passChanceForward": 0.03020000085234642,
+          "passChancePressured": 0.23989999294281006,
+          "passChanceWing": 0.014100000262260437,
+          "passDirDefensive": 0.7548999786376953,
+          "passDirNeutral": 0.8424000144004822,
+          "passDirOffensive": 0.8406000137329102,
+          "riskAppetite": 0.21930000185966492,
+          "shootProgressThreshold": 0.7081999778747559,
+          "tackleChance": 0.025499999523162842
+        },
+        "spatial": {
+          "ball": {
+            "max": 321.0321960449219,
+            "min": 0.0,
+            "preferred": 51.67399978637695
+          },
+          "opponent": {
+            "max": 185.44869995117188,
+            "min": 45.121299743652344,
+            "preferred": 56.277198791503906
+          },
+          "ownGoal": {
+            "max": 348.3328857421875,
+            "min": 38.328399658203125,
+            "preferred": 38.328399658203125
+          },
+          "side": {
+            "max": 476.3522033691406,
+            "min": 0.0,
+            "preferred": 185.0220947265625
+          },
+          "teammate": {
+            "max": 190.79730224609375,
+            "min": 0.0,
+            "preferred": 59.68040084838867
+          }
+        }
+      },
+      {
+        "decisions": {
+          "aggression": 0.932699978351593,
+          "forwardPassMinGain": 5.941299915313721,
+          "markDistance": 42.470699310302734,
+          "passChanceDefault": 0.04540000110864639,
+          "passChanceForward": 0.04280000180006027,
+          "passChancePressured": 0.21649999916553497,
+          "passChanceWing": 0.009999999776482582,
+          "passDirDefensive": 0.7336999773979187,
+          "passDirNeutral": 1.2697999477386475,
+          "passDirOffensive": 0.7853000164031982,
+          "riskAppetite": 0.6955000162124634,
+          "shootProgressThreshold": 0.7246000170707703,
+          "tackleChance": 0.02280000038444996
+        },
+        "spatial": {
+          "ball": {
+            "max": 672.5350952148438,
+            "min": 172.5496063232422,
+            "preferred": 228.88180541992188
+          },
+          "opponent": {
+            "max": 156.27059936523438,
+            "min": 0.0,
+            "preferred": 91.35230255126953
+          },
+          "ownGoal": {
+            "max": 401.23858642578125,
+            "min": 60.44419860839844,
+            "preferred": 86.48419952392578
+          },
+          "side": {
+            "max": 347.55560302734375,
+            "min": 301.4042053222656,
+            "preferred": 301.4042053222656
+          },
+          "teammate": {
+            "max": 331.1358947753906,
+            "min": 127.22589874267578,
+            "preferred": 159.05929565429688
+          }
+        }
+      }
+    ]
+  },
+  "championEpoch": 74,
+  "championPlayerParams": [
+    {
+      "decisions": {
+        "aggression": 1.2305999994277954,
+        "forwardPassMinGain": 4.604599952697754,
+        "markDistance": 46.94369888305664,
+        "passChanceDefault": 0.03849999979138374,
+        "passChanceForward": 0.00860000029206276,
+        "passChancePressured": 0.13519999384880066,
+        "passChanceWing": 0.10790000110864639,
+        "passDirDefensive": 0.8737000226974487,
+        "passDirNeutral": 1.083400011062622,
+        "passDirOffensive": 0.7555999755859375,
+        "riskAppetite": 0.2759000062942505,
+        "shootProgressThreshold": 0.7145000100135803,
+        "tackleChance": 0.03530000150203705
+      },
+      "spatial": {
+        "ball": {
+          "max": 452.1785888671875,
+          "min": 100.2531967163086,
+          "preferred": 100.2531967163086
+        },
+        "opponent": {
+          "max": 316.6814880371094,
+          "min": 66.42569732666016,
+          "preferred": 66.42569732666016
+        },
+        "ownGoal": {
+          "max": 656.293701171875,
+          "min": 57.410099029541016,
+          "preferred": 401.09429931640625
+        },
+        "side": {
+          "max": 424.63690185546875,
+          "min": 76.4136962890625,
+          "preferred": 287.7054138183594
+        },
+        "teammate": {
+          "max": 213.6121063232422,
+          "min": 16.764999389648438,
+          "preferred": 36.021400451660156
+        }
+      }
+    },
+    {
+      "decisions": {
+        "aggression": 1.0324000120162964,
+        "forwardPassMinGain": 8.610400199890137,
+        "markDistance": 29.222200393676758,
+        "passChanceDefault": 0.07999999821186066,
+        "passChanceForward": 0.01360000018030405,
+        "passChancePressured": 0.2433999925851822,
+        "passChanceWing": 0.04050000011920929,
+        "passDirDefensive": 0.8073999881744385,
+        "passDirNeutral": 1.0,
+        "passDirOffensive": 0.7885000109672546,
+        "riskAppetite": 0.41510000824928284,
+        "shootProgressThreshold": 0.7577999830245972,
+        "tackleChance": 0.08699999749660492
+      },
+      "spatial": {
+        "ball": {
+          "max": 252.37710571289062,
+          "min": 75.8781967163086,
+          "preferred": 181.01609802246094
+        },
+        "opponent": {
+          "max": 253.6992950439453,
+          "min": 50.07820129394531,
+          "preferred": 104.27220153808594
+        },
+        "ownGoal": {
+          "max": 558.3469848632812,
+          "min": 351.98699951171875,
+          "preferred": 351.98699951171875
+        },
+        "side": {
+          "max": 168.07359313964844,
+          "min": 22.471399307250977,
+          "preferred": 168.07359313964844
+        },
+        "teammate": {
+          "max": 255.24960327148438,
+          "min": 69.44719696044922,
+          "preferred": 88.6405029296875
+        }
+      }
+    },
+    {
+      "decisions": {
+        "aggression": 1.0442999601364136,
+        "forwardPassMinGain": 0.3384000062942505,
+        "markDistance": 82.99150085449219,
+        "passChanceDefault": 0.08240000158548355,
+        "passChanceForward": 0.08089999854564667,
+        "passChancePressured": 0.33980000019073486,
+        "passChanceWing": 0.052299998700618744,
+        "passDirDefensive": 1.18149995803833,
+        "passDirNeutral": 0.9696000218391418,
+        "passDirOffensive": 1.0297000408172607,
+        "riskAppetite": 0.22910000383853912,
+        "shootProgressThreshold": 0.67330002784729,
+        "tackleChance": 0.156700000166893
+      },
+      "spatial": {
+        "ball": {
+          "max": 200.48570251464844,
+          "min": 52.26459884643555,
+          "preferred": 135.0498046875
+        },
+        "opponent": {
+          "max": 228.32200622558594,
+          "min": 6.923099994659424,
+          "preferred": 6.923099994659424
+        },
+        "ownGoal": {
+          "max": 685.88671875,
+          "min": 31.77790069580078,
+          "preferred": 284.78179931640625
+        },
+        "side": {
+          "max": 464.1527099609375,
+          "min": 265.5360107421875,
+          "preferred": 265.5360107421875
+        },
+        "teammate": {
+          "max": 250.3345947265625,
+          "min": 9.30519962310791,
+          "preferred": 89.73519897460938
+        }
+      }
+    },
+    {
+      "decisions": {
+        "aggression": 0.7752000093460083,
+        "forwardPassMinGain": 11.193099975585938,
+        "markDistance": 48.543800354003906,
+        "passChanceDefault": 0.14710000157356262,
+        "passChanceForward": 0.03020000085234642,
+        "passChancePressured": 0.23989999294281006,
+        "passChanceWing": 0.014100000262260437,
+        "passDirDefensive": 0.7548999786376953,
+        "passDirNeutral": 0.8424000144004822,
+        "passDirOffensive": 0.8406000137329102,
+        "riskAppetite": 0.21930000185966492,
+        "shootProgressThreshold": 0.7081999778747559,
+        "tackleChance": 0.025499999523162842
+      },
+      "spatial": {
+        "ball": {
+          "max": 321.0321960449219,
+          "min": 0.0,
+          "preferred": 51.67399978637695
+        },
+        "opponent": {
+          "max": 185.44869995117188,
+          "min": 45.121299743652344,
+          "preferred": 56.277198791503906
+        },
+        "ownGoal": {
+          "max": 348.3328857421875,
+          "min": 38.328399658203125,
+          "preferred": 38.328399658203125
+        },
+        "side": {
+          "max": 476.3522033691406,
+          "min": 0.0,
+          "preferred": 185.0220947265625
+        },
+        "teammate": {
+          "max": 190.79730224609375,
+          "min": 0.0,
+          "preferred": 59.68040084838867
+        }
+      }
+    },
+    {
+      "decisions": {
+        "aggression": 0.955299973487854,
+        "forwardPassMinGain": 5.941299915313721,
+        "markDistance": 42.470699310302734,
+        "passChanceDefault": 0.04540000110864639,
+        "passChanceForward": 0.049400001764297485,
+        "passChancePressured": 0.21649999916553497,
+        "passChanceWing": 0.009999999776482582,
+        "passDirDefensive": 0.5939000248908997,
+        "passDirNeutral": 1.3617000579833984,
+        "passDirOffensive": 0.7853000164031982,
+        "riskAppetite": 0.6955000162124634,
+        "shootProgressThreshold": 0.7246000170707703,
+        "tackleChance": 0.02280000038444996
+      },
+      "spatial": {
+        "ball": {
+          "max": 672.5350952148438,
+          "min": 106.83809661865234,
+          "preferred": 228.88180541992188
+        },
+        "opponent": {
+          "max": 156.27059936523438,
+          "min": 0.0,
+          "preferred": 93.47930145263672
+        },
+        "ownGoal": {
+          "max": 401.23858642578125,
+          "min": 60.44419860839844,
+          "preferred": 86.48419952392578
+        },
+        "side": {
+          "max": 347.55560302734375,
+          "min": 301.4042053222656,
+          "preferred": 302.4497985839844
+        },
+        "teammate": {
+          "max": 331.1358947753906,
+          "min": 127.22589874267578,
+          "preferred": 137.38189697265625
+        }
+      }
+    }
+  ],
+  "createdAt": "2026-05-04T07:53:34Z",
+  "epoch": 76,
+  "evaluation": {
+    "avgGoals": 6.79,
+    "avgOutOfBounds": 0.48,
+    "avgPasses": 55.14,
+    "avgShots": 59.34,
+    "avgTackles": 14.19,
+    "baselineAvgGoals": 4.25,
+    "candidateAvgGoals": 2.54,
+    "candidateWon": false,
+    "earlyStop": "worse",
+    "elapsedMs": 183,
+    "games": 100,
+    "gamesPerSecond": 546.45,
+    "goalDiff": -171.0,
+    "maxGames": 10000,
+    "passCompletionRate": 1.399,
+    "tackleSuccessRate": 1.0,
+    "zScore": -6.954
+  },
+  "gamesPerEpoch": 10000,
+  "mutatedSlots": [
+    1,
+    2,
+    4
+  ],
+  "name": "epoch-076",
+  "opponent": {
+    "playerParams": [
+      {
+        "decisions": {
+          "aggression": 1.2305999994277954,
+          "forwardPassMinGain": 4.604599952697754,
+          "markDistance": 46.94369888305664,
+          "passChanceDefault": 0.03849999979138374,
+          "passChanceForward": 0.00860000029206276,
+          "passChancePressured": 0.13519999384880066,
+          "passChanceWing": 0.10790000110864639,
+          "passDirDefensive": 0.8737000226974487,
+          "passDirNeutral": 1.083400011062622,
+          "passDirOffensive": 0.7555999755859375,
+          "riskAppetite": 0.2759000062942505,
+          "shootProgressThreshold": 0.7145000100135803,
+          "tackleChance": 0.03530000150203705
+        },
+        "spatial": {
+          "ball": {
+            "max": 452.1785888671875,
+            "min": 100.2531967163086,
+            "preferred": 100.2531967163086
+          },
+          "opponent": {
+            "max": 316.6814880371094,
+            "min": 66.42569732666016,
+            "preferred": 66.42569732666016
+          },
+          "ownGoal": {
+            "max": 656.293701171875,
+            "min": 57.410099029541016,
+            "preferred": 401.09429931640625
+          },
+          "side": {
+            "max": 424.63690185546875,
+            "min": 76.4136962890625,
+            "preferred": 287.7054138183594
+          },
+          "teammate": {
+            "max": 213.6121063232422,
+            "min": 16.764999389648438,
+            "preferred": 36.021400451660156
+          }
+        }
+      },
+      {
+        "decisions": {
+          "aggression": 1.0324000120162964,
+          "forwardPassMinGain": 8.610400199890137,
+          "markDistance": 29.222200393676758,
+          "passChanceDefault": 0.07999999821186066,
+          "passChanceForward": 0.01360000018030405,
+          "passChancePressured": 0.2433999925851822,
+          "passChanceWing": 0.04050000011920929,
+          "passDirDefensive": 0.8073999881744385,
+          "passDirNeutral": 1.0,
+          "passDirOffensive": 0.7885000109672546,
+          "riskAppetite": 0.41510000824928284,
+          "shootProgressThreshold": 0.7577999830245972,
+          "tackleChance": 0.08699999749660492
+        },
+        "spatial": {
+          "ball": {
+            "max": 252.37710571289062,
+            "min": 75.8781967163086,
+            "preferred": 181.01609802246094
+          },
+          "opponent": {
+            "max": 253.6992950439453,
+            "min": 50.07820129394531,
+            "preferred": 104.27220153808594
+          },
+          "ownGoal": {
+            "max": 558.3469848632812,
+            "min": 351.98699951171875,
+            "preferred": 351.98699951171875
+          },
+          "side": {
+            "max": 168.07359313964844,
+            "min": 22.471399307250977,
+            "preferred": 168.07359313964844
+          },
+          "teammate": {
+            "max": 255.24960327148438,
+            "min": 69.44719696044922,
+            "preferred": 88.6405029296875
+          }
+        }
+      },
+      {
+        "decisions": {
+          "aggression": 1.0442999601364136,
+          "forwardPassMinGain": 0.3384000062942505,
+          "markDistance": 82.99150085449219,
+          "passChanceDefault": 0.08240000158548355,
+          "passChanceForward": 0.08089999854564667,
+          "passChancePressured": 0.33980000019073486,
+          "passChanceWing": 0.052299998700618744,
+          "passDirDefensive": 1.18149995803833,
+          "passDirNeutral": 0.9696000218391418,
+          "passDirOffensive": 1.0297000408172607,
+          "riskAppetite": 0.22910000383853912,
+          "shootProgressThreshold": 0.67330002784729,
+          "tackleChance": 0.156700000166893
+        },
+        "spatial": {
+          "ball": {
+            "max": 200.48570251464844,
+            "min": 52.26459884643555,
+            "preferred": 135.0498046875
+          },
+          "opponent": {
+            "max": 228.32200622558594,
+            "min": 6.923099994659424,
+            "preferred": 6.923099994659424
+          },
+          "ownGoal": {
+            "max": 685.88671875,
+            "min": 31.77790069580078,
+            "preferred": 284.78179931640625
+          },
+          "side": {
+            "max": 464.1527099609375,
+            "min": 265.5360107421875,
+            "preferred": 265.5360107421875
+          },
+          "teammate": {
+            "max": 250.3345947265625,
+            "min": 9.30519962310791,
+            "preferred": 89.73519897460938
+          }
+        }
+      },
+      {
+        "decisions": {
+          "aggression": 0.7752000093460083,
+          "forwardPassMinGain": 11.193099975585938,
+          "markDistance": 48.543800354003906,
+          "passChanceDefault": 0.14710000157356262,
+          "passChanceForward": 0.03020000085234642,
+          "passChancePressured": 0.23989999294281006,
+          "passChanceWing": 0.014100000262260437,
+          "passDirDefensive": 0.7548999786376953,
+          "passDirNeutral": 0.8424000144004822,
+          "passDirOffensive": 0.8406000137329102,
+          "riskAppetite": 0.21930000185966492,
+          "shootProgressThreshold": 0.7081999778747559,
+          "tackleChance": 0.025499999523162842
+        },
+        "spatial": {
+          "ball": {
+            "max": 321.0321960449219,
+            "min": 0.0,
+            "preferred": 51.67399978637695
+          },
+          "opponent": {
+            "max": 185.44869995117188,
+            "min": 45.121299743652344,
+            "preferred": 56.277198791503906
+          },
+          "ownGoal": {
+            "max": 348.3328857421875,
+            "min": 38.328399658203125,
+            "preferred": 38.328399658203125
+          },
+          "side": {
+            "max": 476.3522033691406,
+            "min": 0.0,
+            "preferred": 185.0220947265625
+          },
+          "teammate": {
+            "max": 190.79730224609375,
+            "min": 0.0,
+            "preferred": 59.68040084838867
+          }
+        }
+      },
+      {
+        "decisions": {
+          "aggression": 0.955299973487854,
+          "forwardPassMinGain": 5.941299915313721,
+          "markDistance": 42.470699310302734,
+          "passChanceDefault": 0.04540000110864639,
+          "passChanceForward": 0.049400001764297485,
+          "passChancePressured": 0.21649999916553497,
+          "passChanceWing": 0.009999999776482582,
+          "passDirDefensive": 0.5939000248908997,
+          "passDirNeutral": 1.3617000579833984,
+          "passDirOffensive": 0.7853000164031982,
+          "riskAppetite": 0.6955000162124634,
+          "shootProgressThreshold": 0.7246000170707703,
+          "tackleChance": 0.02280000038444996
+        },
+        "spatial": {
+          "ball": {
+            "max": 672.5350952148438,
+            "min": 106.83809661865234,
+            "preferred": 228.88180541992188
+          },
+          "opponent": {
+            "max": 156.27059936523438,
+            "min": 0.0,
+            "preferred": 93.47930145263672
+          },
+          "ownGoal": {
+            "max": 401.23858642578125,
+            "min": 60.44419860839844,
+            "preferred": 86.48419952392578
+          },
+          "side": {
+            "max": 347.55560302734375,
+            "min": 301.4042053222656,
+            "preferred": 302.4497985839844
+          },
+          "teammate": {
+            "max": 331.1358947753906,
+            "min": 127.22589874267578,
+            "preferred": 137.38189697265625
+          }
+        }
+      }
+    ],
+    "sourceEpoch": 74
+  },
+  "session": "stage2-10k"
+}

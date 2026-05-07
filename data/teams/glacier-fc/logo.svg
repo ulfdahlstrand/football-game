@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Glacier FC logo</title>
+  <desc id="desc">A shield crest with a cracked glacier peak and cold explosive core for Glacier FC.</desc>
+  <defs>
+    <linearGradient id="shield" x1="92" x2="420" y1="40" y2="472" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d8fbff"/>
+      <stop offset="0.4" stop-color="#377a9b"/>
+      <stop offset="1" stop-color="#08233a"/>
+    </linearGradient>
+    <linearGradient id="ice" x1="142" x2="370" y1="142" y2="386" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.46" stop-color="#a8efff"/>
+      <stop offset="1" stop-color="#2c82b8"/>
+    </linearGradient>
+    <linearGradient id="core" x1="217" x2="306" y1="220" y2="330" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff8d8"/>
+      <stop offset="0.65" stop-color="#7df0ff"/>
+      <stop offset="1" stop-color="#1d6fbd"/>
+    </linearGradient>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="124%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#00101f" flood-opacity="0.38"/>
+    </filter>
+  </defs>
+  <path fill="url(#shield)" d="M256 34 428 94v138c0 114-65 202-172 246C149 434 84 346 84 232V94L256 34Z"/>
+  <path fill="none" stroke="#dfffff" stroke-width="17" d="M256 57 405 109v122c0 99-55 174-149 215-94-41-149-116-149-215V109L256 57Z"/>
+  <path fill="none" stroke="#2a7ab1" stroke-width="5" opacity="0.9" d="M256 75 386 120v111c0 85-45 151-130 190-85-39-130-105-130-190V120L256 75Z"/>
+
+  <g filter="url(#shadow)">
+    <path fill="url(#ice)" d="M94 354 182 182l52 70 38-116 146 218Z"/>
+    <path fill="#efffff" d="M182 182 234 252 202 271 160 226Z" opacity="0.74"/>
+    <path fill="#eaffff" d="M272 136 312 273 248 246Z" opacity="0.82"/>
+    <path fill="#2b6f9f" d="M234 252 272 136 312 273 418 354H94Z" opacity="0.42"/>
+    <path fill="none" stroke="#0c4568" stroke-linecap="round" stroke-linejoin="round" stroke-width="9" d="M258 176 236 236 273 259 250 306 286 337"/>
+    <path fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="5" opacity="0.8" d="M259 177 241 234 276 258"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path fill="url(#core)" d="M256 230 273 266 314 271 284 299 291 340 256 320 221 340 228 299 198 271 239 266Z"/>
+    <path fill="#fff" d="M256 247 264 272 289 275 270 292 275 316 256 303 237 316 242 292 223 275 248 272Z" opacity="0.75"/>
+  </g>
+
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="9" opacity="0.9">
+    <path d="M122 161h37"/>
+    <path d="M353 161h37"/>
+    <path d="M256 99v-31"/>
+  </g>
+
+  <path fill="#06192b" d="M151 408h210v24H151z"/>
+  <text x="256" y="428" fill="#e9ffff" font-family="Arial Black, Impact, sans-serif" font-size="28" text-anchor="middle" letter-spacing="2">GLACIER FC</text>
+</svg>
