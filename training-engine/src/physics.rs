@@ -580,6 +580,8 @@ pub fn step_game(game: &mut Game, teams: &mut [Box<dyn Team>; 2], rng: &mut impl
 
     if game.set_piece_timer > 0 { game.set_piece_timer -= 1; }
 
+    for team in teams.iter_mut() { team.pre_tick(game); }
+
     // Tick all CPU players
     for i in 0..game.pl.len() {
         if game.pl[i].tackle_cooldown > 0 { game.pl[i].tackle_cooldown -= 1; }
