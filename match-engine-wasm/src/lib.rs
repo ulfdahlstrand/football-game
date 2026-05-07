@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 
 use training_engine::constants::*;
-use training_engine::game::{Game, Phase, Role, PlayerState};
+use training_engine::game::{Game, Phase, Role, PlayerState, MatchEvent};
 use training_engine::physics::{step_game as rust_step_game, do_shoot, tackle_player};
 use training_engine::ai::cpu_find_pass;
 use training_engine::policy::{TeamPolicyV6, PolicyParams};
@@ -166,6 +166,47 @@ struct JsEvents {
     tackle_done: bool,
 }
 
+/// Per-event details, drained from the engine each frame.
+#[derive(Serialize)]
+#[serde(tag = "type", rename_all = "lowercase")]
+enum JsMatchEvent {
+    Pass  { team: usize, #[serde(rename = "playerId")] player_id: usize },
+    Shot  { team: usize, #[serde(rename = "playerId")] player_id: usize, mega: bool },
+    Tackle {
+        #[serde(rename = "tacklerId")]   tackler_id:   usize,
+        #[serde(rename = "tacklerTeam")] tackler_team: usize,
+        #[serde(rename = "targetId")]    target_id:    usize,
+        #[serde(rename = "targetTeam")]  target_team:  usize,
+        x: i32, y: i32,
+    },
+    Goal {
+        team: usize,
+        #[serde(rename = "scorerId")]   scorer_id:   Option<usize>,
+        #[serde(rename = "assisterId")] assister_id: Option<usize>,
+        #[serde(rename = "isPenalty")]  is_penalty:  bool,
+    },
+}
+
+fn convert_event(e: &MatchEvent) -> JsMatchEvent {
+    match e {
+        MatchEvent::Pass { team, player_id } =>
+            JsMatchEvent::Pass { team: *team, player_id: *player_id },
+        MatchEvent::Shot { team, player_id, mega } =>
+            JsMatchEvent::Shot { team: *team, player_id: *player_id, mega: *mega },
+        MatchEvent::Tackle { tackler_id, tackler_team, target_id, target_team, x, y } =>
+            JsMatchEvent::Tackle {
+                tackler_id: *tackler_id, tackler_team: *tackler_team,
+                target_id: *target_id, target_team: *target_team,
+                x: x.round() as i32, y: y.round() as i32,
+            },
+        MatchEvent::Goal { team, scorer_id, assister_id, is_penalty } =>
+            JsMatchEvent::Goal {
+                team: *team, scorer_id: *scorer_id,
+                assister_id: *assister_id, is_penalty: *is_penalty,
+            },
+    }
+}
+
 #[derive(Serialize)]
 struct JsGameState {
     pl: Vec<JsPlayer>,
@@ -203,6 +244,8 @@ struct JsGameState {
     #[serde(rename = "_done")]
     done: bool,
     events: JsEvents,
+    #[serde(rename = "matchEvents")]
+    match_events: Vec<JsMatchEvent>,
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -241,7 +284,9 @@ fn facing_from_delta(dx: f32, dy: f32) -> &'static str {
     }
 }
 
-fn build_state_json(session: &GameSession) -> String {
+fn build_state_json(session: &mut GameSession) -> String {
+    let drained_events: Vec<JsMatchEvent> = std::mem::take(&mut session.game.events)
+        .iter().map(convert_event).collect();
     let g = &session.game;
 
     let pl = g.pl.iter().enumerate().map(|(i, p)| {
@@ -308,6 +353,7 @@ fn build_state_json(session: &GameSession) -> String {
             pass_done: session.ev_pass_done,
             tackle_done: session.ev_tackle_done,
         },
+        match_events: drained_events,
     };
 
     serde_json::to_string(&state).unwrap_or_else(|_| "{}".to_string())

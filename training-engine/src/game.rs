@@ -84,6 +84,29 @@ impl Player {
     }
 }
 
+/// Match events emitted by the engine during a tick. Drained per frame
+/// by consumers (e.g. WASM frontend logging). Engine-owned — teams and
+/// player AI never see these.
+#[derive(Clone, Debug)]
+pub enum MatchEvent {
+    Pass { team: usize, player_id: usize },
+    Shot { team: usize, player_id: usize, mega: bool },
+    Tackle {
+        tackler_id: usize,
+        tackler_team: usize,
+        target_id: usize,
+        target_team: usize,
+        x: f32,
+        y: f32,
+    },
+    Goal {
+        team: usize,
+        scorer_id: Option<usize>,
+        assister_id: Option<usize>,
+        is_penalty: bool,
+    },
+}
+
 /// Per-player match statistics. Owned by Game, not by Player —
 /// teams and player AI never see these.
 #[derive(Clone, Copy, Debug, Default)]
@@ -154,6 +177,7 @@ pub struct Game {
     pub penalty_taken: bool,
     pub stats: Stats,
     pub player_stats: Vec<PlayerStats>,
+    pub events: Vec<MatchEvent>,
     pub free_kick_active: bool,
     pub free_kick_shooter_id: Option<usize>,
     pub gk_has_ball: [bool; 2],
@@ -183,6 +207,7 @@ impl Game {
             penalty_taken: false,
             stats: Stats::default(),
             player_stats: vec![PlayerStats::default(); n],
+            events: Vec::new(),
             free_kick_active: false,
             free_kick_shooter_id: None,
             gk_has_ball: [false; 2],

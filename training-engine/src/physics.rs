@@ -78,6 +78,16 @@ pub fn tackle_player(game: &mut Game, tackler_idx: usize, target_idx: usize) -> 
         game.ball.cooldown = BALL_COOL;
         slow_player(game, target_idx, SLOW_DUR);
         game.stats.tackle_success += 1;
+        let tackler_id = game.pl[tackler_idx].id;
+        let target_id = game.pl[target_idx].id;
+        game.events.push(crate::game::MatchEvent::Tackle {
+            tackler_id,
+            tackler_team,
+            target_id,
+            target_team,
+            x: gx,
+            y: gy,
+        });
     } else {
         // Off-ball tackle: foul. No pause, no knock — slow target briefly,
         // free kick at foul spot.
@@ -115,14 +125,24 @@ pub fn do_shoot(game: &mut Game, shooter_idx: usize, mega: bool, tx: f32, ty: f3
     game.ball.cooldown = BALL_COOL;
     game.ball.last_touch_team = Some(game.pl[shooter_idx].team);
     let shooter_id = game.pl[shooter_idx].id;
+    let shooter_team = game.pl[shooter_idx].team;
     if is_pass {
         game.last_passer = Some(shooter_id);
         game.stats.passes += 1;
+        game.events.push(crate::game::MatchEvent::Pass {
+            team: shooter_team,
+            player_id: shooter_id,
+        });
     } else {
         game.last_passer = None;
         game.last_shooter = Some(shooter_id);
         game.player_stats[shooter_idx].shots += 1;
         game.stats.shots += 1;
+        game.events.push(crate::game::MatchEvent::Shot {
+            team: shooter_team,
+            player_id: shooter_id,
+            mega,
+        });
     }
 }
 
@@ -137,12 +157,22 @@ fn attribute_goal(game: &mut Game) {
             if is_penalty { game.player_stats[idx].penalties_scored += 1; }
         }
     }
+    let mut emit_assist: Option<usize> = None;
     if let (Some(aid), Some(sid)) = (assister_id, scorer_id) {
         if aid != sid {
             if let Some(idx) = game.pl.iter().position(|p| p.id == aid) {
                 game.player_stats[idx].assists += 1;
+                emit_assist = Some(aid);
             }
         }
+    }
+    if let Some(team) = game.goal_team {
+        game.events.push(crate::game::MatchEvent::Goal {
+            team,
+            scorer_id,
+            assister_id: emit_assist,
+            is_penalty,
+        });
     }
 }
 
