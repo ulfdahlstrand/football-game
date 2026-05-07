@@ -473,6 +473,11 @@ pub struct GkDecisionParams {
     pub gk_distribution_zone: f32,
     /// Max pixel distance to a teammate for the GK to prefer a short pass.
     pub gk_pass_target_dist: f32,
+    /// Sweeper-keeper freedom (0..1): how far the GK can drift toward midfield
+    /// when the ball is on the opponent's half. 0 = stays on goal line always.
+    /// 1 = can reach the centre circle. Ignored when ball is in own half.
+    #[serde(default)]
+    pub gk_sweeper_freedom: f32,
 }
 
 impl Default for GkDecisionParams {
@@ -483,6 +488,7 @@ impl Default for GkDecisionParams {
             gk_risk_clearance: 0.5,
             gk_distribution_zone: 0.0,
             gk_pass_target_dist: 200.0,
+            gk_sweeper_freedom: 0.0,
         }
     }
 }
@@ -576,28 +582,29 @@ pub fn mutate_v6(p: &V6Params, rng: &mut impl Rng, scale: f32) -> V6Params {
         };
     }
 
+    // Decision params apply to ALL slots — GK uses them via classic_tick too.
+    perturb_dec!(next.decisions.pass_chance_pressured, 0.035, 0.02, 0.4);
+    perturb_dec!(next.decisions.pass_chance_wing,      0.025, 0.01, 0.25);
+    perturb_dec!(next.decisions.pass_chance_forward,   0.018, 0.005, 0.18);
+    perturb_dec!(next.decisions.pass_chance_default,   0.018, 0.005, 0.2);
+    perturb_dec!(next.decisions.shoot_progress_threshold, 0.035, 0.55, 0.9);
+    perturb_dec!(next.decisions.tackle_chance,         0.025, 0.01, 0.22);
+    perturb_dec!(next.decisions.forward_pass_min_gain, 2.0, 0.0, 18.0);
+    perturb_dec!(next.decisions.mark_distance,         5.0, 25.0, 85.0);
+    perturb_dec!(next.decisions.aggression,            0.10, 0.0, 2.0);
+    perturb_dec!(next.decisions.risk_appetite,         0.08, 0.0, 1.0);
+    perturb_dec!(next.decisions.pass_dir_offensive,    0.15, 0.0, 2.0);
+    perturb_dec!(next.decisions.pass_dir_defensive,    0.15, 0.0, 2.0);
+    perturb_dec!(next.decisions.pass_dir_neutral,      0.15, 0.0, 2.0);
+
+    // GK-specific params (slot 4 only).
     if let Some(ref mut gk) = next.gk {
-        // GK slot: mutate GK-specific params only, skip outfield decisions.
         perturb_dec!(gk.gk_dive_chance,        0.07, 0.2, 1.0);
         perturb_dec!(gk.gk_dive_commit_dist,   15.0, 60.0, 280.0);
         perturb_dec!(gk.gk_risk_clearance,     0.08, 0.0, 1.0);
         perturb_dec!(gk.gk_distribution_zone,  0.12, 0.0, 1.0);
         perturb_dec!(gk.gk_pass_target_dist,   20.0, 80.0, 400.0);
-    } else {
-        // Outfield slot: mutate decision params only.
-        perturb_dec!(next.decisions.pass_chance_pressured, 0.035, 0.02, 0.4);
-        perturb_dec!(next.decisions.pass_chance_wing,      0.025, 0.01, 0.25);
-        perturb_dec!(next.decisions.pass_chance_forward,   0.018, 0.005, 0.18);
-        perturb_dec!(next.decisions.pass_chance_default,   0.018, 0.005, 0.2);
-        perturb_dec!(next.decisions.shoot_progress_threshold, 0.035, 0.55, 0.9);
-        perturb_dec!(next.decisions.tackle_chance,         0.025, 0.01, 0.22);
-        perturb_dec!(next.decisions.forward_pass_min_gain, 2.0, 0.0, 18.0);
-        perturb_dec!(next.decisions.mark_distance,         5.0, 25.0, 85.0);
-        perturb_dec!(next.decisions.aggression,            0.10, 0.0, 2.0);
-        perturb_dec!(next.decisions.risk_appetite,         0.08, 0.0, 1.0);
-        perturb_dec!(next.decisions.pass_dir_offensive,    0.15, 0.0, 2.0);
-        perturb_dec!(next.decisions.pass_dir_defensive,    0.15, 0.0, 2.0);
-        perturb_dec!(next.decisions.pass_dir_neutral,      0.15, 0.0, 2.0);
+        perturb_dec!(gk.gk_sweeper_freedom,    0.10, 0.0, 1.0);
     }
     next
 }
@@ -622,6 +629,13 @@ pub fn mutate_team_v6(team: &TeamPolicyV6, rng: &mut impl Rng, scale: f32) -> Te
 pub fn mutate_gk_only(team: &TeamPolicyV6, rng: &mut impl Rng, scale: f32) -> TeamPolicyV6 {
     let mut next = *team;
     next[4] = mutate_v6(&team[4], rng, scale);
+    next
+}
+
+/// Mutate only the specified slot (0..5). Used for per-slot single-stage training.
+pub fn mutate_slot_only(team: &TeamPolicyV6, slot: usize, rng: &mut impl Rng, scale: f32) -> TeamPolicyV6 {
+    let mut next = *team;
+    next[slot] = mutate_v6(&team[slot], rng, scale);
     next
 }
 
