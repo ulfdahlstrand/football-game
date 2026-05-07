@@ -1,5 +1,5 @@
 {
-  "description": "aurora-fc: GK-only training, 100 epochs",
+  "description": "aurora-fc: champion after 2 adaptive anneal sessions",
   "name": "aurora-fc",
   "playerParams": [
     {
@@ -11,7 +11,7 @@
         "passChanceForward": 0.0478999987244606,
         "passChancePressured": 0.39879998564720154,
         "passChanceWing": 0.21389999985694885,
-        "passDirDefensive": 0.4781000018119812,
+        "passDirDefensive": 0.6899999976158142,
         "passDirNeutral": 1.8866000175476074,
         "passDirOffensive": 1.472100019454956,
         "riskAppetite": 0.7986999750137329,
@@ -26,23 +26,23 @@
           "preferred": 206.28810119628906
         },
         "opponent": {
-          "max": 343.4866943359375,
-          "min": 22.15719985961914,
-          "preferred": 127.77899932861328
+          "max": 315.3988037109375,
+          "min": 44.201698303222656,
+          "preferred": 108.75430297851562
         },
         "ownGoal": {
           "max": 809.7241821289062,
-          "min": 599.7750244140625,
+          "min": 614.5715942382812,
           "preferred": 809.7241821289062
         },
         "side": {
           "max": 397.4905090332031,
           "min": 302.2568054199219,
-          "preferred": 302.2568054199219
+          "preferred": 345.5823059082031
         },
         "teammate": {
-          "max": 269.7933044433594,
-          "min": 164.21009826660156,
+          "max": 291.0409851074219,
+          "min": 166.218994140625,
           "preferred": 196.31410217285156
         }
       }
@@ -54,11 +54,11 @@
         "markDistance": 25.0,
         "passChanceDefault": 0.055799998342990875,
         "passChanceForward": 0.12280000001192093,
-        "passChancePressured": 0.21140000224113464,
+        "passChancePressured": 0.2502000033855438,
         "passChanceWing": 0.009999999776482582,
         "passDirDefensive": 1.6330000162124634,
         "passDirNeutral": 0.9977999925613403,
-        "passDirOffensive": 0.6854000091552734,
+        "passDirOffensive": 0.4180999994277954,
         "riskAppetite": 0.08219999819993973,
         "shootProgressThreshold": 0.7696999907493591,
         "tackleChance": 0.2199999988079071
@@ -72,7 +72,7 @@
         },
         "opponent": {
           "max": 246.7191925048828,
-          "min": 17.352699279785156,
+          "min": 11.591699600219727,
           "preferred": 43.16600036621094
         },
         "ownGoal": {
@@ -101,9 +101,9 @@
         "passChanceForward": 0.17880000174045563,
         "passChancePressured": 0.181099995970726,
         "passChanceWing": 0.25,
-        "passDirDefensive": 1.5041999816894531,
-        "passDirNeutral": 0.7422000169754028,
-        "passDirOffensive": 1.6359000205993652,
+        "passDirDefensive": 1.4119000434875488,
+        "passDirNeutral": 0.8205000162124634,
+        "passDirOffensive": 1.388200044631958,
         "riskAppetite": 0.5795000195503235,
         "shootProgressThreshold": 0.550000011920929,
         "tackleChance": 0.2199999988079071
@@ -118,11 +118,11 @@
         "opponent": {
           "max": 157.90089416503906,
           "min": 57.187599182128906,
-          "preferred": 57.187599182128906
+          "preferred": 59.43360137939453
         },
         "ownGoal": {
           "max": 222.61669921875,
-          "min": 181.75909423828125,
+          "min": 166.3166046142578,
           "preferred": 222.17660522460938
         },
         "side": {
@@ -133,7 +133,7 @@
         "teammate": {
           "max": 316.74530029296875,
           "min": 20.965700149536133,
-          "preferred": 261.90838623046875
+          "preferred": 289.4125061035156
         }
       }
     },
@@ -202,40 +202,40 @@
         "gkDistributionZone": 0.2992999851703644,
         "gkDiveChance": 0.7621999979019165,
         "gkDiveCommitDist": 202.58030700683594,
-        "gkPassTargetDist": 169.8560028076172,
+        "gkPassTargetDist": 216.64349365234375,
         "gkRiskClearance": 0.20669999718666077
       },
       "spatial": {
         "ball": {
-          "max": 637.9063720703125,
-          "min": 560.9136962890625,
-          "preferred": 560.9136962890625
+          "min": 0.0,
+          "preferred": 60.0,
+          "max": 200.0
         },
         "opponent": {
-          "max": 391.3161926269531,
+          "max": 367.8125,
           "min": 128.95559692382812,
           "preferred": 284.40289306640625
         },
         "ownGoal": {
-          "max": 900.0,
-          "min": 52.38779830932617,
-          "preferred": 202.97860717773438
+          "min": 0.0,
+          "preferred": 0.0,
+          "max": 200.0
         },
         "side": {
-          "max": 512.8648071289062,
-          "min": 366.2557067871094,
-          "preferred": 408.04888916015625
+          "min": 130.0,
+          "preferred": 260.0,
+          "max": 390.0
         },
         "teammate": {
           "max": 334.1264953613281,
           "min": 191.66810607910156,
-          "preferred": 297.69610595703125
+          "preferred": 329.8988037109375
         }
       }
     }
   ],
-  "trainedAt": "2026-05-05T13:23:35Z",
-  "trainingMethod": "gk-only-anneal",
+  "trainedAt": "2026-05-06T02:21:41Z",
+  "trainingMethod": "population-anneal-continuation",
   "type": "team-policy-v6",
-  "version": 8
+  "version": 3
 }
