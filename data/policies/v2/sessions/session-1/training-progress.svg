@@ -2,7 +2,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1100" height="620" viewBox="0 0 1100 620">
   <rect width="100%" height="100%" fill="#ffffff"/>
   <text x="72" y="30" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#111827">Training progress</text>
-  <text x="1068" y="30" text-anchor="end" font-family="Arial, sans-serif" font-size="13" fill="#4b5563">Final champion epoch: 97</text>
+  <text x="1068" y="30" text-anchor="end" font-family="Arial, sans-serif" font-size="13" fill="#4b5563">Final champion epoch: 100</text>
   <g font-family="Arial, sans-serif">
     <line x1="72.0" y1="54.0" x2="72.0" y2="542.0" stroke="#eef2f7" stroke-width="1"/>
     <text x="72.0" y="566.0" text-anchor="middle" font-size="12" fill="#4b5563">1</text>
@@ -25,53 +25,64 @@
     <line x1="977.5" y1="54.0" x2="977.5" y2="542.0" stroke="#eef2f7" stroke-width="1"/>
     <text x="977.5" y="566.0" text-anchor="middle" font-size="12" fill="#4b5563">91</text>
     <line x1="72.0" y1="542.0" x2="1068.0" y2="542.0" stroke="#d8dee9" stroke-width="1" opacity="0.55"/>
-    <text x="60.0" y="546.0" text-anchor="end" font-size="12" fill="#4b5563">-424.0</text>
+    <text x="60.0" y="546.0" text-anchor="end" font-size="12" fill="#4b5563">-262.0</text>
     <line x1="72.0" y1="444.4" x2="1068.0" y2="444.4" stroke="#d8dee9" stroke-width="1" opacity="0.55"/>
-    <text x="60.0" y="448.4" text-anchor="end" font-size="12" fill="#4b5563">-282.8</text>
+    <text x="60.0" y="448.4" text-anchor="end" font-size="12" fill="#4b5563">-190.4</text>
     <line x1="72.0" y1="346.8" x2="1068.0" y2="346.8" stroke="#d8dee9" stroke-width="1" opacity="0.55"/>
-    <text x="60.0" y="350.8" text-anchor="end" font-size="12" fill="#4b5563">-141.6</text>
+    <text x="60.0" y="350.8" text-anchor="end" font-size="12" fill="#4b5563">-118.8</text>
     <line x1="72.0" y1="249.2" x2="1068.0" y2="249.2" stroke="#d8dee9" stroke-width="1" opacity="0.55"/>
-    <text x="60.0" y="253.2" text-anchor="end" font-size="12" fill="#4b5563">-0.4</text>
+    <text x="60.0" y="253.2" text-anchor="end" font-size="12" fill="#4b5563">-47.2</text>
     <line x1="72.0" y1="151.6" x2="1068.0" y2="151.6" stroke="#d8dee9" stroke-width="1" opacity="0.55"/>
-    <text x="60.0" y="155.6" text-anchor="end" font-size="12" fill="#4b5563">140.8</text>
+    <text x="60.0" y="155.6" text-anchor="end" font-size="12" fill="#4b5563">24.4</text>
     <line x1="72.0" y1="54.0" x2="1068.0" y2="54.0" stroke="#d8dee9" stroke-width="1" opacity="0.55"/>
-    <text x="60.0" y="58.0" text-anchor="end" font-size="12" fill="#4b5563">282.0</text>
+    <text x="60.0" y="58.0" text-anchor="end" font-size="12" fill="#4b5563">96.0</text>
     <line x1="72.0" y1="54.0" x2="72.0" y2="542.0" stroke="#111827" stroke-width="1.4"/>
     <line x1="72.0" y1="542.0" x2="1068.0" y2="542.0" stroke="#111827" stroke-width="1.4"/>
     <text x="570.0" y="596.0" text-anchor="middle" font-size="13" fill="#111827">Epoch</text>
     <text x="20" y="298.0" transform="rotate(-90 20 298.0)" text-anchor="middle" font-size="13" fill="#111827">Goals / goal diff</text>
-    <polyline fill="none" stroke="#2563eb" stroke-width="2.4" points="72.0,244.7 82.1,245.3 92.1,244.9 102.2,244.8 112.2,244.8 122.3,244.9 132.4,245.0 142.4,245.0 152.5,244.8 162.5,244.9 172.6,244.9 182.7,244.8 192.7,244.9 202.8,245.1 212.8,244.9 222.9,245.8 233.0,244.8 243.0,245.0 253.1,245.0 263.2,245.8 273.2,245.0 283.3,248.0 293.3,245.1 303.4,245.0 313.5,245.1 323.5,245.1 333.6,245.1 343.6,246.7 353.7,247.0 363.8,245.2 373.8,245.2 383.9,245.2 393.9,245.1 404.0,245.2 414.1,245.1 424.1,245.2 434.2,247.3 444.2,245.1 454.3,245.4 464.4,245.8 474.4,245.2 484.5,245.2 494.5,245.7 504.6,245.3 514.7,245.1 524.7,247.9 534.8,245.2 544.8,245.2 554.9,245.1 565.0,247.9 575.0,245.1 585.1,246.1 595.2,245.2 605.2,247.7 615.3,245.2 625.3,245.5 635.4,245.2 645.5,245.3 655.5,247.3 665.6,245.2 675.6,245.2 685.7,245.2 695.8,245.2 705.8,245.1 715.9,246.9 725.9,245.2 736.0,245.2 746.1,245.2 756.1,245.4 766.2,247.3 776.2,245.2 786.3,245.2 796.4,246.2 806.4,245.1 816.5,246.7 826.5,245.3 836.6,245.2 846.7,245.1 856.7,245.2 866.8,247.6 876.8,247.7 886.9,245.1 897.0,245.1 907.0,245.2 917.1,245.1 927.2,245.1 937.2,245.2 947.3,245.9 957.3,245.1 967.4,247.9 977.5,245.1 987.5,245.1 997.6,245.1 1007.6,246.5 1017.7,245.1 1027.8,245.3 1037.8,245.1 1047.9,245.1 1057.9,245.3 1068.0,245.1"/>
-    <polyline fill="none" stroke="#ef4444" stroke-width="2.4" points="72.0,244.7 82.1,245.0 92.1,244.8 102.2,244.8 112.2,244.9 122.3,244.9 132.4,245.0 142.4,245.0 152.5,245.0 162.5,244.9 172.6,244.8 182.7,244.9 192.7,244.8 202.8,244.9 212.8,244.8 222.9,245.3 233.0,244.9 243.0,244.8 253.1,244.9 263.2,245.5 273.2,245.0 283.3,246.9 293.3,245.0 303.4,245.0 313.5,245.0 323.5,245.1 333.6,245.1 343.6,246.0 353.7,246.3 363.8,245.1 373.8,245.1 383.9,245.2 393.9,245.1 404.0,245.2 414.1,245.2 424.1,245.1 434.2,246.6 444.2,245.2 454.3,245.2 464.4,245.5 474.4,245.2 484.5,245.1 494.5,245.5 504.6,245.2 514.7,245.2 524.7,246.8 534.8,245.2 544.8,245.2 554.9,245.2 565.0,246.5 575.0,245.2 585.1,245.6 595.2,245.2 605.2,246.8 615.3,245.2 625.3,245.4 635.4,245.1 645.5,245.2 655.5,246.6 665.6,245.1 675.6,245.2 685.7,245.2 695.8,245.2 705.8,245.2 715.9,246.0 725.9,245.1 736.0,245.2 746.1,245.2 756.1,245.2 766.2,246.1 776.2,245.1 786.3,245.2 796.4,245.6 806.4,245.1 816.5,246.0 826.5,245.2 836.6,245.1 846.7,245.1 856.7,245.2 866.8,246.3 876.8,246.7 886.9,245.1 897.0,245.2 907.0,245.1 917.1,245.1 927.2,245.1 937.2,245.0 947.3,245.6 957.3,245.1 967.4,246.8 977.5,245.1 987.5,245.1 997.6,245.1 1007.6,245.7 1017.7,245.0 1027.8,245.2 1037.8,245.1 1047.9,245.1 1057.9,245.1 1068.0,245.1"/>
-    <polyline fill="none" stroke="#7c3aed" stroke-width="2" stroke-dasharray="6 5" points="72.0,235.1 82.1,505.4 92.1,289.0 102.2,276.6 112.2,189.5 122.3,241.3 132.4,289.0 142.4,195.0 152.5,54.0 162.5,235.1 172.6,303.5 182.7,174.3 192.7,365.7 202.8,450.1 212.8,333.9 222.9,442.5 233.0,192.2 243.0,392.0 253.1,381.6 263.2,542.0 273.2,245.5 283.3,362.3 293.3,405.8 303.4,257.2 313.5,345.0 323.5,298.0 333.6,152.2 343.6,325.6 353.7,322.2 363.8,344.3 373.8,337.4 383.9,317.4 393.9,202.6 404.0,291.1 414.1,183.3 424.1,335.3 434.2,330.5 444.2,188.8 454.3,405.1 464.4,515.7 474.4,265.5 484.5,317.4 494.5,483.9 504.6,367.1 514.7,175.7 524.7,354.7 534.8,214.4 544.8,222.7 554.9,186.0 565.0,390.6 575.0,135.6 585.1,419.7 595.2,248.2 605.2,341.5 615.3,248.2 625.3,392.7 635.4,336.0 645.5,416.2 655.5,340.2 665.6,304.9 675.6,247.5 685.7,257.2 695.8,324.3 705.8,188.1 715.9,336.7 725.9,345.0 736.0,293.9 746.1,217.8 756.1,405.1 766.2,365.7 776.2,360.9 786.3,208.8 796.4,378.2 806.4,248.2 816.5,345.0 826.5,392.0 836.6,262.1 846.7,267.6 856.7,301.5 866.8,377.5 876.8,347.8 886.9,217.8 897.0,202.6 907.0,367.1 917.1,291.8 927.2,282.1 937.2,384.4 947.3,500.5 957.3,269.0 967.4,354.7 977.5,195.7 987.5,253.1 997.6,257.9 1007.6,334.6 1017.7,322.2 1027.8,353.3 1037.8,243.4 1047.9,326.3 1057.9,401.0 1068.0,309.8"/>
-    <circle cx="72.0" cy="235.1" r="5" fill="#16a34a"><title>Accepted epoch 1, diff 20</title></circle>
-    <circle cx="112.2" cy="189.5" r="5" fill="#16a34a"><title>Accepted epoch 5, diff 86</title></circle>
-    <circle cx="122.3" cy="241.3" r="5" fill="#16a34a"><title>Accepted epoch 6, diff 11</title></circle>
-    <circle cx="142.4" cy="195.0" r="5" fill="#16a34a"><title>Accepted epoch 8, diff 78</title></circle>
-    <circle cx="152.5" cy="54.0" r="5" fill="#16a34a"><title>Accepted epoch 9, diff 282</title></circle>
-    <circle cx="162.5" cy="235.1" r="5" fill="#16a34a"><title>Accepted epoch 10, diff 20</title></circle>
-    <circle cx="182.7" cy="174.3" r="5" fill="#16a34a"><title>Accepted epoch 12, diff 108</title></circle>
-    <circle cx="233.0" cy="192.2" r="5" fill="#16a34a"><title>Accepted epoch 17, diff 82</title></circle>
-    <circle cx="273.2" cy="245.5" r="5" fill="#16a34a"><title>Accepted epoch 21, diff 5</title></circle>
-    <circle cx="333.6" cy="152.2" r="5" fill="#16a34a"><title>Accepted epoch 27, diff 140</title></circle>
-    <circle cx="393.9" cy="202.6" r="5" fill="#16a34a"><title>Accepted epoch 33, diff 67</title></circle>
-    <circle cx="414.1" cy="183.3" r="5" fill="#16a34a"><title>Accepted epoch 35, diff 95</title></circle>
-    <circle cx="444.2" cy="188.8" r="5" fill="#16a34a"><title>Accepted epoch 38, diff 87</title></circle>
-    <circle cx="514.7" cy="175.7" r="5" fill="#16a34a"><title>Accepted epoch 45, diff 106</title></circle>
-    <circle cx="534.8" cy="214.4" r="5" fill="#16a34a"><title>Accepted epoch 47, diff 50</title></circle>
-    <circle cx="544.8" cy="222.7" r="5" fill="#16a34a"><title>Accepted epoch 48, diff 38</title></circle>
-    <circle cx="554.9" cy="186.0" r="5" fill="#16a34a"><title>Accepted epoch 49, diff 91</title></circle>
-    <circle cx="575.0" cy="135.6" r="5" fill="#16a34a"><title>Accepted epoch 51, diff 164</title></circle>
-    <circle cx="595.2" cy="248.2" r="5" fill="#16a34a"><title>Accepted epoch 53, diff 1</title></circle>
-    <circle cx="615.3" cy="248.2" r="5" fill="#16a34a"><title>Accepted epoch 55, diff 1</title></circle>
-    <circle cx="675.6" cy="247.5" r="5" fill="#16a34a"><title>Accepted epoch 61, diff 2</title></circle>
-    <circle cx="705.8" cy="188.1" r="5" fill="#16a34a"><title>Accepted epoch 64, diff 88</title></circle>
-    <circle cx="746.1" cy="217.8" r="5" fill="#16a34a"><title>Accepted epoch 68, diff 45</title></circle>
-    <circle cx="786.3" cy="208.8" r="5" fill="#16a34a"><title>Accepted epoch 72, diff 58</title></circle>
-    <circle cx="806.4" cy="248.2" r="5" fill="#16a34a"><title>Accepted epoch 74, diff 1</title></circle>
-    <circle cx="886.9" cy="217.8" r="5" fill="#16a34a"><title>Accepted epoch 82, diff 45</title></circle>
-    <circle cx="897.0" cy="202.6" r="5" fill="#16a34a"><title>Accepted epoch 83, diff 67</title></circle>
-    <circle cx="977.5" cy="195.7" r="5" fill="#16a34a"><title>Accepted epoch 91, diff 77</title></circle>
-    <circle cx="1037.8" cy="243.4" r="5" fill="#16a34a"><title>Accepted epoch 97, diff 8</title></circle>
+    <polyline fill="none" stroke="#2563eb" stroke-width="2.4" points="72.0,175.7 82.1,175.6 92.1,175.6 102.2,175.5 112.2,175.5 122.3,175.6 132.4,175.8 142.4,175.2 152.5,175.9 162.5,175.0 172.6,175.7 182.7,175.5 192.7,175.2 202.8,175.3 212.8,175.8 222.9,175.8 233.0,175.7 243.0,175.9 253.1,175.4 263.2,175.9 273.2,175.2 283.3,176.1 293.3,176.1 303.4,175.1 313.5,175.4 323.5,175.5 333.6,175.4 343.6,175.5 353.7,175.1 363.8,175.3 373.8,175.3 383.9,176.0 393.9,175.7 404.0,175.7 414.1,175.3 424.1,175.5 434.2,175.7 444.2,175.7 454.3,175.8 464.4,175.8 474.4,175.4 484.5,176.9 494.5,175.6 504.6,175.6 514.7,176.3 524.7,175.2 534.8,175.6 544.8,175.7 554.9,175.7 565.0,175.5 575.0,175.3 585.1,175.2 595.2,176.1 605.2,175.7 615.3,175.1 625.3,175.8 635.4,175.7 645.5,175.2 655.5,175.0 665.6,174.9 675.6,175.5 685.7,175.1 695.8,175.1 705.8,174.9 715.9,175.4 725.9,175.4 736.0,175.6 746.1,175.5 756.1,176.3 766.2,175.3 776.2,175.6 786.3,175.3 796.4,175.5 806.4,175.2 816.5,175.6 826.5,175.1 836.6,175.4 846.7,175.0 856.7,175.7 866.8,175.7 876.8,175.5 886.9,175.5 897.0,176.8 907.0,175.3 917.1,177.1 927.2,175.1 937.2,175.7 947.3,176.6 957.3,175.4 967.4,175.4 977.5,176.1 987.5,175.6 997.6,175.6 1007.6,175.5 1017.7,175.6 1027.8,175.4 1037.8,175.2 1047.9,175.6 1057.9,175.6 1068.0,175.6"/>
+    <polyline fill="none" stroke="#ef4444" stroke-width="2.4" points="72.0,175.3 82.1,175.6 92.1,175.8 102.2,175.5 112.2,175.7 122.3,175.9 132.4,175.3 142.4,175.6 152.5,175.2 162.5,175.7 172.6,175.1 182.7,175.5 192.7,175.8 202.8,175.4 212.8,175.5 222.9,175.3 233.0,175.3 243.0,175.1 253.1,175.5 263.2,175.8 273.2,175.7 283.3,175.6 293.3,175.3 303.4,175.7 313.5,175.7 323.5,175.3 333.6,175.2 343.6,175.3 353.7,175.7 363.8,175.8 373.8,175.5 383.9,175.2 393.9,175.4 404.0,175.6 414.1,175.4 424.1,175.2 434.2,175.6 444.2,175.4 454.3,175.5 464.4,175.3 474.4,175.6 484.5,175.0 494.5,175.4 504.6,175.3 514.7,175.7 524.7,175.8 534.8,175.3 544.8,175.5 554.9,175.3 565.0,175.6 575.0,175.8 585.1,175.8 595.2,174.9 605.2,175.3 615.3,175.9 625.3,175.3 635.4,175.3 645.5,175.6 655.5,175.6 665.6,175.4 675.6,175.3 685.7,175.1 695.8,175.3 705.8,175.4 715.9,175.4 725.9,175.3 736.0,175.3 746.1,175.1 756.1,175.6 766.2,175.2 776.2,175.2 786.3,175.2 796.4,174.9 806.4,175.4 816.5,174.9 826.5,175.3 836.6,174.7 846.7,175.3 856.7,175.4 866.8,175.0 876.8,175.3 886.9,175.2 897.0,175.0 907.0,175.4 917.1,175.3 927.2,175.7 937.2,175.1 947.3,174.9 957.3,175.8 967.4,175.6 977.5,175.4 987.5,175.7 997.6,175.6 1007.6,175.4 1017.7,175.4 1027.8,175.4 1037.8,175.6 1047.9,175.4 1057.9,175.5 1068.0,175.8"/>
+    <polyline fill="none" stroke="#7c3aed" stroke-width="2" stroke-dasharray="6 5" points="72.0,220.3 82.1,175.3 92.1,164.4 102.2,180.8 112.2,165.8 122.3,156.2 132.4,227.1 142.4,138.5 152.5,329.4 162.5,120.8 172.6,253.0 182.7,180.8 192.7,130.3 202.8,176.7 212.8,214.8 222.9,254.4 233.0,227.1 243.0,353.9 253.1,169.9 263.2,199.9 273.2,130.3 283.3,295.3 293.3,348.4 303.4,123.5 313.5,127.6 323.5,206.7 333.6,201.2 343.6,232.6 353.7,107.2 363.8,130.3 373.8,160.3 383.9,347.1 393.9,218.9 404.0,198.5 414.1,180.8 424.1,212.1 434.2,203.9 444.2,212.1 454.3,210.8 464.4,235.3 474.4,157.6 484.5,422.0 494.5,206.7 504.6,206.7 514.7,272.1 524.7,124.9 534.8,221.7 544.8,205.3 554.9,225.8 565.0,175.3 575.0,129.0 585.1,129.0 595.2,431.6 605.2,229.8 615.3,54.0 625.3,243.5 635.4,243.5 645.5,144.0 655.5,123.5 665.6,137.2 675.6,205.3 685.7,186.2 695.8,167.1 705.8,137.2 715.9,190.3 725.9,191.7 736.0,209.4 746.1,224.4 756.1,270.7 766.2,193.0 776.2,218.9 786.3,194.4 796.4,247.6 806.4,165.8 816.5,280.3 826.5,160.3 836.6,253.0 846.7,164.4 856.7,213.5 866.8,250.3 876.8,208.0 886.9,217.6 897.0,529.7 907.0,174.0 917.1,542.0 927.2,129.0 937.2,240.7 947.3,510.6 957.3,148.1 967.4,168.5 977.5,248.9 987.5,172.6 997.6,180.8 1007.6,198.5 1017.7,208.0 1027.8,187.6 1037.8,142.6 1047.9,206.7 1057.9,197.1 1068.0,164.4"/>
+    <circle cx="82.1" cy="175.3" r="5" fill="#16a34a"><title>Accepted epoch 2, diff 7</title></circle>
+    <circle cx="92.1" cy="164.4" r="5" fill="#16a34a"><title>Accepted epoch 3, diff 15</title></circle>
+    <circle cx="102.2" cy="180.8" r="5" fill="#16a34a"><title>Accepted epoch 4, diff 3</title></circle>
+    <circle cx="112.2" cy="165.8" r="5" fill="#16a34a"><title>Accepted epoch 5, diff 14</title></circle>
+    <circle cx="122.3" cy="156.2" r="5" fill="#16a34a"><title>Accepted epoch 6, diff 21</title></circle>
+    <circle cx="142.4" cy="138.5" r="5" fill="#16a34a"><title>Accepted epoch 8, diff 34</title></circle>
+    <circle cx="162.5" cy="120.8" r="5" fill="#16a34a"><title>Accepted epoch 10, diff 47</title></circle>
+    <circle cx="182.7" cy="180.8" r="5" fill="#16a34a"><title>Accepted epoch 12, diff 3</title></circle>
+    <circle cx="192.7" cy="130.3" r="5" fill="#16a34a"><title>Accepted epoch 13, diff 40</title></circle>
+    <circle cx="202.8" cy="176.7" r="5" fill="#16a34a"><title>Accepted epoch 14, diff 6</title></circle>
+    <circle cx="253.1" cy="169.9" r="5" fill="#16a34a"><title>Accepted epoch 19, diff 11</title></circle>
+    <circle cx="273.2" cy="130.3" r="5" fill="#16a34a"><title>Accepted epoch 21, diff 40</title></circle>
+    <circle cx="303.4" cy="123.5" r="5" fill="#16a34a"><title>Accepted epoch 24, diff 45</title></circle>
+    <circle cx="313.5" cy="127.6" r="5" fill="#16a34a"><title>Accepted epoch 25, diff 42</title></circle>
+    <circle cx="353.7" cy="107.2" r="5" fill="#16a34a"><title>Accepted epoch 29, diff 57</title></circle>
+    <circle cx="363.8" cy="130.3" r="5" fill="#16a34a"><title>Accepted epoch 30, diff 40</title></circle>
+    <circle cx="373.8" cy="160.3" r="5" fill="#16a34a"><title>Accepted epoch 31, diff 18</title></circle>
+    <circle cx="414.1" cy="180.8" r="5" fill="#16a34a"><title>Accepted epoch 35, diff 3</title></circle>
+    <circle cx="474.4" cy="157.6" r="5" fill="#16a34a"><title>Accepted epoch 41, diff 20</title></circle>
+    <circle cx="524.7" cy="124.9" r="5" fill="#16a34a"><title>Accepted epoch 46, diff 44</title></circle>
+    <circle cx="565.0" cy="175.3" r="5" fill="#16a34a"><title>Accepted epoch 50, diff 7</title></circle>
+    <circle cx="575.0" cy="129.0" r="5" fill="#16a34a"><title>Accepted epoch 51, diff 41</title></circle>
+    <circle cx="585.1" cy="129.0" r="5" fill="#16a34a"><title>Accepted epoch 52, diff 41</title></circle>
+    <circle cx="615.3" cy="54.0" r="5" fill="#16a34a"><title>Accepted epoch 55, diff 96</title></circle>
+    <circle cx="645.5" cy="144.0" r="5" fill="#16a34a"><title>Accepted epoch 58, diff 30</title></circle>
+    <circle cx="655.5" cy="123.5" r="5" fill="#16a34a"><title>Accepted epoch 59, diff 45</title></circle>
+    <circle cx="665.6" cy="137.2" r="5" fill="#16a34a"><title>Accepted epoch 60, diff 35</title></circle>
+    <circle cx="695.8" cy="167.1" r="5" fill="#16a34a"><title>Accepted epoch 63, diff 13</title></circle>
+    <circle cx="705.8" cy="137.2" r="5" fill="#16a34a"><title>Accepted epoch 64, diff 35</title></circle>
+    <circle cx="806.4" cy="165.8" r="5" fill="#16a34a"><title>Accepted epoch 74, diff 14</title></circle>
+    <circle cx="826.5" cy="160.3" r="5" fill="#16a34a"><title>Accepted epoch 76, diff 18</title></circle>
+    <circle cx="846.7" cy="164.4" r="5" fill="#16a34a"><title>Accepted epoch 78, diff 15</title></circle>
+    <circle cx="907.0" cy="174.0" r="5" fill="#16a34a"><title>Accepted epoch 84, diff 8</title></circle>
+    <circle cx="927.2" cy="129.0" r="5" fill="#16a34a"><title>Accepted epoch 86, diff 41</title></circle>
+    <circle cx="957.3" cy="148.1" r="5" fill="#16a34a"><title>Accepted epoch 89, diff 27</title></circle>
+    <circle cx="967.4" cy="168.5" r="5" fill="#16a34a"><title>Accepted epoch 90, diff 12</title></circle>
+    <circle cx="987.5" cy="172.6" r="5" fill="#16a34a"><title>Accepted epoch 92, diff 9</title></circle>
+    <circle cx="997.6" cy="180.8" r="5" fill="#16a34a"><title>Accepted epoch 93, diff 3</title></circle>
+    <circle cx="1037.8" cy="142.6" r="5" fill="#16a34a"><title>Accepted epoch 97, diff 31</title></circle>
+    <circle cx="1068.0" cy="164.4" r="5" fill="#16a34a"><title>Accepted epoch 100, diff 15</title></circle>
     <g transform="translate(72, 566.0)" font-size="13" fill="#111827">
       <rect x="0" y="-12" width="14" height="4" fill="#2563eb"/><text x="22" y="-7">Candidate avg goals</text>
       <rect x="190" y="-12" width="14" height="4" fill="#ef4444"/><text x="212" y="-7">Baseline avg goals</text>
