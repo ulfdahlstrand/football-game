@@ -2,8 +2,12 @@ use rand::Rng;
 use rand_distr::Normal;
 use serde::{Deserialize, Serialize};
 
-/// Classic decision parameters. Still used by v6: v6_tick converts DecisionParams
-/// to PolicyParams and passes it to classic_tick for on-ball decisions.
+pub(crate) fn round4(v: f32) -> f32 {
+    (v * 10000.0).round() / 10000.0
+}
+
+pub const TEAM_SLOT_NAMES: [&str; 5] = ["fwd", "mid", "mid", "def", "gk"];
+
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PolicyParams {
@@ -31,20 +35,6 @@ impl Default for PolicyParams {
         }
     }
 }
-
-fn clamp(v: f32, lo: f32, hi: f32) -> f32 {
-    v.max(lo).min(hi)
-}
-
-fn round4(v: f32) -> f32 {
-    (v * 10000.0).round() / 10000.0
-}
-
-pub const TEAM_SLOT_NAMES: [&str; 5] = ["fwd", "mid", "mid", "def", "gk"];
-
-// ════════════════════════════════════════════════════════════════════════════
-// V6: Spatial preference architecture
-// ════════════════════════════════════════════════════════════════════════════
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -217,9 +207,9 @@ fn mutate_distance_pref(p: &DistancePref, lo: f32, hi: f32, rng: &mut impl Rng, 
     let mut n = *p;
     let sigma = (hi - lo) * 0.05 * scale;
     let dist = Normal::new(0.0f32, sigma).unwrap();
-    if rng.gen::<f32>() < 0.3 { n.min = clamp(n.min + rng.sample(dist), lo, hi); }
-    if rng.gen::<f32>() < 0.3 { n.max = clamp(n.max + rng.sample(dist), lo, hi); }
-    if rng.gen::<f32>() < 0.3 { n.preferred = clamp(n.preferred + rng.sample(dist), lo, hi); }
+    if rng.gen::<f32>() < 0.3 { n.min = (n.min + rng.sample(dist)).clamp(lo, hi); }
+    if rng.gen::<f32>() < 0.3 { n.max = (n.max + rng.sample(dist)).clamp(lo, hi); }
+    if rng.gen::<f32>() < 0.3 { n.preferred = (n.preferred + rng.sample(dist)).clamp(lo, hi); }
     if n.min > n.max { let t = n.min; n.min = n.max; n.max = t; }
     n.clamp_self();
     DistancePref { min: round4(n.min), max: round4(n.max), preferred: round4(n.preferred) }
@@ -238,7 +228,7 @@ pub fn mutate_v6(p: &V6Params, rng: &mut impl Rng, scale: f32) -> V6Params {
         ($field:expr, $sigma:expr, $lo:expr, $hi:expr) => {
             if rng.gen::<f32>() < 0.25 {
                 let dist = Normal::new(0.0f32, $sigma * scale).unwrap();
-                $field = clamp($field + rng.sample(dist), $lo, $hi);
+                $field = ($field + rng.sample(dist)).clamp($lo, $hi);
                 $field = round4($field);
             }
         };

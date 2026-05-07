@@ -3,7 +3,8 @@ use std::path::{Path, PathBuf};
 use serde::Deserialize;
 use serde_json::Value;
 
-use crate::policy::{TeamPolicyV6, V6Params};
+use crate::policy::{TeamPolicyV6, V6Params, V7TeamParams};
+use crate::team_v7::{CoachStyle, V7Team};
 use crate::trainer::{EvalResult, EarlyStop};
 
 // ─── v6 file IO ─────────────────────────────────────────────────────────
@@ -202,4 +203,46 @@ impl SessionWriter {
         });
         write_json(&self.session_dir.join("best.json"), &v)
     }
+}
+
+// ─── v7 file IO ─────────────────────────────────────────────────────────
+
+#[derive(Deserialize, Default)]
+struct TacticalResponsesFile {
+    #[serde(default)]
+    pub coachability: Option<[f32; 5]>,
+    #[serde(rename = "coachStyle", default)]
+    pub coach_style: Option<CoachStyle>,
+}
+
+/// Läser baseline.json (V6-instinkt) + valfri tactical_responses.json (coachability + stil).
+/// Om tactical_responses.json saknas används defaultvärden.
+pub fn load_v7_team(team_dir: &Path, team_id: usize) -> anyhow::Result<V7Team> {
+    let baseline_path = team_dir.join("baseline.json");
+    let baseline = read_team_baseline_v6(&baseline_path)?;
+    let instinct = baseline.player_params;
+
+    let responses_path = team_dir.join("tactical_responses.json");
+    let (coachability, coach_style) = if responses_path.exists() {
+        let text = fs::read_to_string(&responses_path)
+            .map_err(|e| anyhow::anyhow!("Cannot read {}: {}", responses_path.display(), e))?;
+        let r: TacticalResponsesFile = serde_json::from_str(&text)
+            .map_err(|e| anyhow::anyhow!("Cannot parse {}: {}", responses_path.display(), e))?;
+        (r.coachability.unwrap_or([0.5; 5]), r.coach_style.unwrap_or_default())
+    } else {
+        ([0.5; 5], CoachStyle::default())
+    };
+
+    Ok(V7Team::new(team_id, instinct, coach_style, coachability))
+}
+
+/// Sparar coachability + CoachStyle till data/teams/<lag>/tactical_responses.json.
+pub fn save_tactical_responses(team_dir: &Path, params: &V7TeamParams) -> anyhow::Result<()> {
+    let path = team_dir.join("tactical_responses.json");
+    let v = serde_json::json!({
+        "type": "tactical-responses-v7",
+        "coachability": params.coachability,
+        "coachStyle": params.coach_style,
+    });
+    write_json(&path, &v)
 }
