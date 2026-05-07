@@ -404,16 +404,20 @@ pub fn classic_tick(
             let (target_x, target_y) = if freedom < 1e-3 {
                 (line_x, line_y)
             } else {
-                let half_x = FW * 0.5;
-                let max_drift = (half_x - line_x).abs() * freedom;
-                let want_x = game.ball.x;
-                let drift_x = if p_team == 0 {
-                    want_x.min(line_x + max_drift).max(line_x)
+                // Sweeper: GK rushes toward ball along the goal→ball angle.
+                let goal_center_x = if p_team == 0 { FIELD_LINE } else { FW - FIELD_LINE };
+                let max_out = (FW * 0.5 - line_x).abs() * freedom;
+                let dx = game.ball.x - goal_center_x;
+                let dy = game.ball.y - H2;
+                let dist = dx.hypot(dy).max(1.0);
+                let step = max_out.min(dist - PR);
+                let tx = if p_team == 0 {
+                    (goal_center_x + dx / dist * step).max(line_x)
                 } else {
-                    want_x.max(line_x - max_drift).min(line_x)
+                    (goal_center_x + dx / dist * step).min(line_x)
                 };
-                let drift_y = by.max(PR).min(FH - PR);
-                (drift_x, drift_y)
+                let ty = (H2 + dy / dist * step).clamp(PR, FH - PR);
+                (tx, ty)
             };
             move_to(&mut game.pl[player_idx], target_x, target_y, CSPEED * 0.88);
         }
@@ -620,15 +624,38 @@ fn v6_target(game: &Game, player_idx: usize, spatial: &crate::policy::V6Spatial)
     best
 }
 
+fn apply_gk_retreat(game: &mut Game, player_idx: usize) -> bool {
+    let p_team = game.pl[player_idx].team;
+    let p_role = game.pl[player_idx].role;
+    if p_role == Role::Gk { return false; }
+    let enemy_team = 1 - p_team;
+    if !game.gk_has_ball[enemy_team] { return false; }
+    let retreat_x = if p_team == 0 {
+        game.pl[player_idx].x.min(FW / 2.0 - PR)
+    } else {
+        game.pl[player_idx].x.max(FW / 2.0 + PR)
+    };
+    let cur_y = game.pl[player_idx].y;
+    move_to(&mut game.pl[player_idx], retreat_x, cur_y, CSPEED * 0.9);
+    true
+}
+
 pub fn v6_tick(
     game: &mut Game, player_idx: usize, params: &crate::policy::V6Params, rng: &mut impl Rng,
 ) {
+    if apply_gk_retreat(game, player_idx) { return; }
+
     let p_id = game.pl[player_idx].id;
     let p_team = game.pl[player_idx].team;
     let p_role = game.pl[player_idx].role;
     let ball_owner = game.ball.owner;
     let has_ball = ball_owner == Some(p_id);
-    let policy = params.decisions.as_policy_params();
+    let mut policy = params.decisions.as_policy_params();
+    // Risk-appetite modulation: higher risk → shoot earlier (lower threshold).
+    // Matches JS v3Tick: shootProgressThreshold -= 0.05 * (risk - 0.5).
+    let risk = params.decisions.risk_appetite.clamp(0.0, 1.0);
+    policy.shoot_progress_threshold =
+        (policy.shoot_progress_threshold - 0.05 * (risk - 0.5)).clamp(0.5, 0.95);
 
     // Set-piece taker override: run to ball
     if game.set_piece_taker_id == Some(p_id) && !has_ball {
@@ -654,24 +681,112 @@ pub fn v6_tick(
         }
     }
 
-    // GK keeps role-specific behavior (dive, hand-pickup, patrol)
+    // GK: outfield-style positioning (v6 spatial cost) clamped by GK params,
+    // PLUS goal-specific privileges as overlay (dive saves, hold/distribute).
     if p_role == Role::Gk {
         let gkp = params.gk.unwrap_or_default();
-        let hooks = crate::brain::TickHooks {
-            pass_dir_mult: [
-                params.decisions.pass_dir_offensive.clamp(0.0, 2.0),
-                params.decisions.pass_dir_defensive.clamp(0.0, 2.0),
-                params.decisions.pass_dir_neutral.clamp(0.0, 2.0),
-            ],
-            gk_freedom: 0.0,
-            max_distance_from_goal: (params.spatial.own_goal.max / 880.0).clamp(0.0, 1.0),
-            gk_dive_chance: gkp.gk_dive_chance,
-            gk_dive_commit_dist: gkp.gk_dive_commit_dist,
-            gk_risk_clearance: gkp.gk_risk_clearance,
-            gk_distribution_zone: gkp.gk_distribution_zone,
-            gk_pass_target_dist: gkp.gk_pass_target_dist,
-        };
-        crate::ai::classic_tick(game, player_idx, &policy, &hooks, rng);
+        let line_x = if p_team == 0 { FIELD_LINE + PR * 1.5 } else { FW - FIELD_LINE - PR * 1.5 };
+        let goal_x = if p_team == 0 { FIELD_LINE } else { FW - FIELD_LINE };
+
+        // On ground after missed dive — can't act.
+        if game.pl[player_idx].gk_dive_timer < 0 { return; }
+
+        // Has ball: hold briefly, then distribute (inline from classic_tick).
+        if has_ball {
+            if game.pl[player_idx].gk_hold_timer > 0 {
+                game.pl[player_idx].gk_hold_timer -= 1;
+                return;
+            }
+            let opponents_on_own_half = game.pl.iter().any(|q| {
+                q.team != p_team && q.state == crate::game::PlayerState::Active
+                    && if p_team == 0 { q.x < FW / 2.0 } else { q.x > FW / 2.0 }
+            });
+            let extended = game.pl[player_idx].gk_hold_extended;
+            if opponents_on_own_half && extended < GK_MAX_HOLD_EXTRA
+                && rng.gen::<f32>() > gkp.gk_risk_clearance
+            {
+                game.pl[player_idx].gk_hold_timer = 5;
+                game.pl[player_idx].gk_hold_extended += 5;
+                return;
+            }
+            game.pl[player_idx].gk_hold_extended = 0;
+            game.gk_has_ball[p_team] = false;
+            let gk_x = game.pl[player_idx].x;
+            let gk_y = game.pl[player_idx].y;
+            let pass_target = game.pl.iter()
+                .filter(|q| q.team == p_team && q.id != p_id && q.state == crate::game::PlayerState::Active)
+                .filter(|q| (q.x - gk_x).hypot(q.y - gk_y) <= gkp.gk_pass_target_dist)
+                .filter(|q| pass_line_open(game, gk_x, gk_y, q.x, q.y, p_team))
+                .min_by(|a, b| {
+                    let da = (a.x - gk_x).hypot(a.y - gk_y);
+                    let db = (b.x - gk_x).hypot(b.y - gk_y);
+                    da.partial_cmp(&db).unwrap()
+                })
+                .map(|q| (q.x, q.y));
+            if let Some((tx, ty)) = pass_target {
+                crate::physics::do_shoot(game, player_idx, false, tx, ty, None, false);
+            } else {
+                let target_y = if gkp.gk_distribution_zone > 0.5 {
+                    if gk_y < H2 { PR * 2.0 } else { FH - PR * 2.0 }
+                } else { H2 };
+                crate::physics::do_shoot(game, player_idx, false, FW / 2.0, target_y, None, false);
+            }
+            return;
+        }
+
+        // Attempt dive for incoming shot (only meaningful when GK is reasonably close to goal).
+        if game.pl[player_idx].gk_dive_timer == 0 && game.ball.owner.is_none() {
+            let is_incoming = if p_team == 0 { game.ball.vx < -8.0 } else { game.ball.vx > 8.0 };
+            let dist_to_goal = (game.pl[player_idx].x - goal_x).abs();
+            if is_incoming && dist_to_goal < gkp.gk_dive_commit_dist
+                && rng.gen::<f32>() < gkp.gk_dive_chance
+            {
+                let frames_until_goal = if game.ball.vx.abs() > 0.1 {
+                    (goal_x - game.ball.x) / game.ball.vx
+                } else { 0.0 };
+                let predicted_y = game.ball.y + game.ball.vy * frames_until_goal.max(0.0);
+                let jitter = GK_DIVE_JITTER * (1.0 - dist_to_goal / gkp.gk_dive_commit_dist);
+                let effective_y = predicted_y + (rng.gen::<f32>() * 2.0 - 1.0) * jitter;
+                game.pl[player_idx].gk_dive_dir = Some(effective_y < H2);
+                game.pl[player_idx].gk_dive_timer = GK_DIVE_DUR;
+            }
+        }
+
+        // Continue dive in progress.
+        if game.pl[player_idx].gk_dive_timer > 0 {
+            let dive_up = game.pl[player_idx].gk_dive_dir.unwrap_or(true);
+            let dive_y = if dive_up { H2 - GH / 2.0 + PR } else { H2 + GH / 2.0 - PR };
+            let cur_x = game.pl[player_idx].x;
+            move_to(&mut game.pl[player_idx], cur_x, dive_y, CSPEED * 3.5);
+            game.pl[player_idx].gk_dive_timer -= 1;
+            if game.pl[player_idx].gk_dive_timer <= 0 {
+                let caught = game.ball.owner.is_none()
+                    && (game.pl[player_idx].x - game.ball.x)
+                        .hypot(game.pl[player_idx].y - game.ball.y) < PR + BR + 8.0;
+                if !caught { game.pl[player_idx].gk_dive_timer = -GK_DIVE_DUR; }
+            }
+            return;
+        }
+
+        // Off-ball positioning: use v6 spatial cost like an outfield player,
+        // then clamp x-position to the GK's allowed roaming zone.
+        let (mut tx, mut ty) = v6_target(game, player_idx, &params.spatial);
+
+        // Combine spatial.own_goal.max with gk_sweeper_freedom for the roaming budget.
+        let max_zone = (FW * 0.5 - line_x).abs();
+        let max_out = params.spatial.own_goal.max
+            .clamp(0.0, max_zone)
+            * gkp.gk_sweeper_freedom.clamp(0.0, 1.0);
+
+        if p_team == 0 {
+            tx = tx.clamp(line_x, line_x + max_out);
+        } else {
+            tx = tx.clamp(line_x - max_out, line_x);
+        }
+        // Y bounded by field; spatial cost handles the rest.
+        ty = ty.clamp(PR, FH - PR);
+
+        move_to(&mut game.pl[player_idx], tx, ty, CSPEED * 0.88);
         return;
     }
 
