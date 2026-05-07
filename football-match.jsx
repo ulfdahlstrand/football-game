@@ -1344,29 +1344,57 @@ function FootballMatch({ matchData, onComplete, onExit }) {
 
   useEffFM(() => {
     if (!started) return;
-    gRef.current = newGame();
-    gRef.current.teamColors = { ...teamColorsRef.current };
 
-    // Apply per-team selections — fetch in parallel, set brain only for that team
+    // ── WASM session handles ──────────────────────────────────────────────────
+    const wasmHandle = { current: null };
+    const humanActive = { current: true };
+    const pending = { current: { shoot:false, mega:false, pass:false, passDir:null, tackle:false, jump:false, celebrate:false } };
+
+    // Initialize JS-only state; simulation state filled each frame from WASM.
+    gRef.current = {
+      teamColors: { ...teamColorsRef.current },
+      aiPolicyNames: { 0: 'baseline', 1: 'baseline' },
+      _stats: {
+        shots:[0,0], passes:[0,0], tackles:[0,0], corners:[0,0],
+        possession:[50,50], _possFrames:[0,0],
+        freeKicks:[0,0], freeKickGoals:[0,0],
+        cornerGoals:[0,0], shotsOnTarget:[0,0],
+        _possOwnFrames:[0,0], _possOppFrames:[0,0],
+        possOwnHalf:[0,0], possOppHalf:[0,0],
+      },
+      playerGoals:{}, playerAssists:{}, _log:[],
+      _done:false, _lastSetPieceText:null, _activePieceKind:null,
+      // Placeholder sim state (safe to render before WASM initialises)
+      pl:[], ball:{ x:FW/2,y:h2,vx:0,vy:0,owner:null,mega:false,cooldown:0,lastTouchTeam:null },
+      score:[0,0], timer:GAME_SECS*60, phase:'kickoff',
+      goalAnim:0, goalTeam:null, setPieceText:'LADDAR...', setPieceTimer:0,
+      penaltyTeam:null, penaltyTaken:false, celebration:false, celebrateFrame:0,
+      freeKickActive:false, freeKickShooterId:null, gkHasBall:[false,false],
+      setPieceTakerId:null, setPieceX:0, setPieceY:0,
+    };
+
+    // Fetch team baseline JSON files and initialise WASM session
     const opp0 = opponents[selectedIdx];
     const opp1 = opponents[selectedIdx1];
-    const fetchOpp = (opp) => opp
-      ? fetch(`${opp.file}?t=${Date.now()}`, { cache: 'no-store' })
-          .then(r => r.ok ? r.json() : null)
-          .catch(() => null)
-      : Promise.resolve(null);
-    Promise.all([fetchOpp(opp0), fetchOpp(opp1)]).then(([p0, p1]) => {
-      if (!gRef.current) return;
-      const g = gRef.current;
-      let label0 = null, label1 = null;
-      if (p0 && opp0) label0 = applyPolicyToTeam(g, opp0, p0, 0);
-      if (p1 && opp1) label1 = applyPolicyToTeam(g, opp1, p1, 1);
-      g.aiPolicyNames[0] = label0 || g.aiPolicyNames[0];
-      g.aiPolicyNames[1] = label1 || g.aiPolicyNames[1];
-      const left = (opp0?.label || opp0?.name || 'BASELINE').toUpperCase();
-      const right = (opp1?.label || opp1?.name || 'BASELINE').toUpperCase();
-      g.setPieceText = `LAG 1: ${left}  vs  LAG 2: ${right}`;
-      g.setPieceTimer = 180;
+    const fetchJson = (opp) => opp
+      ? fetch(`${opp.file}?t=${Date.now()}`, { cache:'no-store' }).then(r => r.ok ? r.text() : '').catch(() => '')
+      : Promise.resolve('');
+    let cancelled = false;
+    (window._wasmReady || Promise.resolve()).then(() => {
+      if (cancelled) return;
+      Promise.all([fetchJson(opp0), fetchJson(opp1)]).then(([json0, json1]) => {
+        if (cancelled) return;
+        const seed = Math.floor(Math.random() * 0xFFFFFFFF);
+        wasmHandle.current = wasm_bindgen.create_game(json0, json1, seed);
+        const g = gRef.current;
+        g.teamColors = { ...teamColorsRef.current };
+        g.aiPolicyNames[0] = opp0?.label || opp0?.name || 'baseline';
+        g.aiPolicyNames[1] = opp1?.label || opp1?.name || 'baseline';
+        const left = (opp0?.label || opp0?.name || 'BASELINE').toUpperCase();
+        const right = (opp1?.label || opp1?.name || 'BASELINE').toUpperCase();
+        g.setPieceText = `LAG 1: ${left}  vs  LAG 2: ${right}`;
+        g.setPieceTimer = 180;
+      });
     });
     const canvas = canvasRef.current;
     const ctx    = canvas.getContext('2d');
@@ -1383,108 +1411,22 @@ function FootballMatch({ matchData, onComplete, onExit }) {
       return { x:nx, y:ny };
     }
 
-    function humanPass() {
-      const g=gRef.current;
-      if (g.phase!=='playing') return;
-      if (!g.pl[0].human) return; // AI har tagit över
-      const human=g.pl[0];
-      if (human.state!=='active') return;
-
-      if (g.ball.owner===0) {
-        const dir = heldPassDirection();
-        if (dir) {
-          doShoot(g,human,false,human.x+dir.x*180,human.y+dir.y*180,PASS_POW);
-          return;
-        }
-        // Passa till bästa fria lagkamrat, ofta ut på kant om du står centralt
-        let best=cpuFindPass(g,human);
-        if (!best) {
-          let bestD=Infinity;
-          g.pl.forEach(p => {
-            if (p.id===0||p.team!==0||p.state!=='active') return;
-            const d=Math.hypot(p.x-human.x,p.y-human.y);
-            if (d<bestD) { bestD=d; best=p; }
-          });
-        }
-        if (best) doShoot(g,human,false,best.x,best.y,PASS_POW);
-      }
-    }
-
-    function humanTackle() {
-      const g=gRef.current;
-      if (g.phase!=='playing') return;
-      if (!g.pl[0].human) return; // AI har tagit över — skippa keyboard-tackle
-      const human=g.pl[0];
-      if (human.state!=='active'||human.tackleCooldown>0) return;
-      const carrier=g.pl.find(p=>p.id===g.ball.owner);
-      if (carrier && carrier.team!==0 && Math.hypot(human.x-carrier.x,human.y-carrier.y)<TACKLE_DIST) {
-        tacklePlayer(g, human, carrier);
-      } else {
-        let best=null,bestD=TACKLE_DIST;
-        g.pl.forEach(p => {
-          if (p.team===0||p.state!=='active') return;
-          const d=Math.hypot(human.x-p.x,human.y-p.y);
-          if (d<bestD) { bestD=d; best=p; }
-        });
-        if (best) {
-          tacklePlayer(g, human, best);
-        }
-      }
-    }
-
-    function humanShoot(mega) {
-      const g=gRef.current;
-      if (!g.pl[0].human) return; // AI har tagit över
-      if ((g.phase!=='playing' && g.phase!=='penalty') || g.ball.owner!==0) return;
-      // Block direct shot during indirect free kick
-      if (g.freeKickActive && g.freeKickShooterId === 0) return;
-      const human = g.pl[0];
-      if (g.phase==='penalty') {
-        const dir = heldPassDirection();
-        const tx = dir ? human.x+dir.x*220 : FW-FIELD_LINE;
-        const ty = dir ? human.y+dir.y*220 : h2;
-        doShoot(g,human,false,tx,ty,SHOOT_POW);
-        g.phase='playing';
-        g.penaltyTaken=true;
-        g.setPieceText=null;
-        return;
-      }
-      doShoot(g,human,mega,FW-FIELD_LINE,h2);
-    }
-
-    function humanCelebrate() {
-      const g=gRef.current;
-      if (g.phase==='goal' && g.celebration) {
-        g.pl[0].celebrateTimer = 55;
-      }
-    }
-
-    function humanJump() {
-      const g=gRef.current;
-      if (g.phase!=='playing') return;
-      if (!g.pl[0].human) return; // AI har tagit över
-      const human=g.pl[0];
-      if (human.state==='active' && human.jumpTimer<=0) human.jumpTimer=JUMP_DUR;
-    }
-
     const onKD = (e) => {
       const k=e.key.toLowerCase();
       keysRef.current[k]=true;
       const actionKey = k===' ' || k==='w' || k==='e' || k==='enter' ||
         (keysRef.current['w'] && (k==='arrowleft'||k==='arrowright'||k==='arrowup'||k==='arrowdown'));
       if (e.repeat && actionKey) { e.preventDefault(); return; }
-      if (k===' ')     { humanShoot(!!keysRef.current['q']); humanCelebrate(); e.preventDefault(); }
-      if (k==='w')     { humanPass(); e.preventDefault(); }
-      if (keysRef.current['w'] && (k==='arrowleft'||k==='arrowright'||k==='arrowup'||k==='arrowdown')) { humanPass(); e.preventDefault(); }
-      if (k==='e')     { humanTackle(); e.preventDefault(); }
-      if (k==='enter') { humanJump(); e.preventDefault(); }
+      if (k===' ')     { pending.current.shoot=true; pending.current.mega=!!keysRef.current['q']; pending.current.celebrate=true; e.preventDefault(); }
+      if (k==='w')     { pending.current.pass=true; pending.current.passDir=heldPassDirection(); e.preventDefault(); }
+      if (keysRef.current['w'] && (k==='arrowleft'||k==='arrowright'||k==='arrowup'||k==='arrowdown')) { pending.current.pass=true; pending.current.passDir=heldPassDirection(); e.preventDefault(); }
+      if (k==='e')     { pending.current.tackle=true; e.preventDefault(); }
+      if (k==='enter') { pending.current.jump=true; e.preventDefault(); }
       if (k==='backspace') {
-        // Toggle human control of player 0. When off, AI plays for them.
-        const g = gRef.current;
-        if (g && g.pl[0]) {
-          g.pl[0].human = !g.pl[0].human;
-          g.setPieceText = g.pl[0].human ? 'DU SPELAR' : 'AI TAR ÖVER';
-          g.setPieceTimer = 100;
+        // Toggle human control of player 0. When off, Rust AI controls player 0.
+        if (wasmHandle.current !== null) {
+          humanActive.current = !humanActive.current;
+          wasm_bindgen.set_human_player(wasmHandle.current, humanActive.current);
         }
         e.preventDefault();
       }
@@ -1494,6 +1436,81 @@ function FootballMatch({ matchData, onComplete, onExit }) {
     window.addEventListener('keydown',onKD);
     window.addEventListener('keyup',onKU);
 
+    function updateWasm() {
+      if (wasmHandle.current === null) return;
+      const k = keysRef.current;
+      const p = pending.current;
+      const input = {
+        dx: (k['arrowright']||k['d'] ? 1 : 0) - (k['arrowleft']||k['a'] ? 1 : 0),
+        dy: (k['arrowdown']||k['s'] ? 1 : 0) - (k['arrowup'] ? 1 : 0),
+        shoot: p.shoot,
+        mega_shoot: p.mega,
+        pass_action: p.pass,
+        pass_dir: p.passDir ? [p.passDir.x, p.passDir.y] : null,
+        tackle: p.tackle,
+        jump: p.jump,
+        celebrate: p.celebrate,
+      };
+      p.shoot=false; p.mega=false; p.pass=false; p.passDir=null; p.tackle=false; p.jump=false; p.celebrate=false;
+
+      const stateJson = wasm_bindgen.step_game(wasmHandle.current, JSON.stringify(input));
+      const state = JSON.parse(stateJson);
+      const g = gRef.current;
+
+      // Preserve JS-only fields
+      const tc=g.teamColors, stats=g._stats, pGoals=g.playerGoals, pAssists=g.playerAssists;
+      const log=g._log, aPN=g.aiPolicyNames, lastSPT=g._lastSetPieceText;
+
+      // Merge WASM state into g
+      g.pl            = state.pl;
+      g.ball          = state.ball;
+      g.score         = state.score;
+      g.timer         = state.timer;
+      g.phase         = state.phase;
+      g.goalAnim      = state.goalAnim;
+      g.goalTeam      = state.goalTeam;
+      g.setPieceText  = state.setPieceText;
+      g.setPieceTimer = state.setPieceTimer;
+      g.penaltyTeam   = state.penaltyTeam;
+      g.penaltyTaken  = state.penaltyTaken;
+      g.freeKickActive     = state.freekickActive;
+      g.freeKickShooterId  = state.freekickShooterId;
+      g.setPieceX     = state.setPieceX;
+      g.setPieceY     = state.setPieceY;
+      g.gkHasBall     = state.gkHasBall;
+      g.celebration   = state.celebration;
+      g.celebrateFrame = state.celebrateFrame;
+      g._done         = state._done;
+
+      // Override human flag on player 0 based on local toggle
+      if (g.pl[0]) g.pl[0].human = humanActive.current;
+
+      // Restore JS-only fields
+      g.teamColors=tc; g._stats=stats; g.playerGoals=pGoals; g.playerAssists=pAssists;
+      g._log=log; g.aiPolicyNames=aPN; g._lastSetPieceText=lastSPT;
+
+      // SFX events
+      const ev = state.events;
+      if (ev.goalScored) { try { if (window.SFX) window.SFX.goal(); } catch(e) {} }
+      if (ev.shotTaken)  { try { if (window.SFX) window.SFX.shoot(); } catch(e) {} }
+      if (ev.passDone)   { try { if (window.SFX) window.SFX.kick(); } catch(e) {} }
+
+      // Accumulate per-team stats from events
+      if (ev.shotTaken && g.ball.lastTouchTeam !== null) {
+        g._stats.shots[g.ball.lastTouchTeam] = (g._stats.shots[g.ball.lastTouchTeam]||0) + 1;
+      }
+      if (ev.goalScored && g.goalTeam !== null) {
+        g._stats.shotsOnTarget[g.goalTeam] = (g._stats.shotsOnTarget[g.goalTeam]||0) + 1;
+      }
+      if (ev.passDone && g.ball.lastTouchTeam !== null) {
+        g._stats.passes[g.ball.lastTouchTeam] = (g._stats.passes[g.ball.lastTouchTeam]||0) + 1;
+      }
+      if (ev.tackleDone && g.ball.lastTouchTeam !== null) {
+        g._stats.tackles[g.ball.lastTouchTeam] = (g._stats.tackles[g.ball.lastTouchTeam]||0) + 1;
+      }
+    }
+
+    // ── Dead code below — kept temporarily for reference ──────────────────────
     function update() {
       const g=gRef.current;
       if (g.phase==='kickoff') {
@@ -1906,9 +1923,16 @@ function FootballMatch({ matchData, onComplete, onExit }) {
     }
 
     let raf;
-    const loop=()=>{ update(); updateStats(); draw(); raf=requestAnimationFrame(loop); };
+    const loop=()=>{ updateWasm(); updateStats(); draw(); raf=requestAnimationFrame(loop); };
     raf=requestAnimationFrame(loop);
-    return ()=>{ cancelAnimationFrame(raf); window.removeEventListener('keydown',onKD); window.removeEventListener('keyup',onKU); try { if (window.SFX) window.SFX.stopAll(); } catch(e) {} };
+    return ()=>{
+      cancelled=true;
+      cancelAnimationFrame(raf);
+      window.removeEventListener('keydown',onKD);
+      window.removeEventListener('keyup',onKU);
+      if (wasmHandle.current !== null) { try { wasm_bindgen.destroy_game(wasmHandle.current); } catch(e) {} }
+      try { if (window.SFX) window.SFX.stopAll(); } catch(e) {}
+    };
   },[started]);
 
   const [matchTeam0, setMatchTeam0] = useStateFM(null);

@@ -129,7 +129,7 @@ struct JsPlayer {
     #[serde(rename = "gkDiveTimer")]
     gk_dive_timer: i32,
     #[serde(rename = "gkDiveDir")]
-    gk_dive_dir: Option<bool>,
+    gk_dive_dir: Option<&'static str>, // "up" | "down" | null
     facing: &'static str,
     #[serde(rename = "stepCounter")]
     step_counter: i32,
@@ -251,7 +251,7 @@ fn build_state_json(session: &GameSession) -> String {
             tackle_cooldown: p.tackle_cooldown,
             slow_timer: p.slow_timer,
             gk_dive_timer: p.gk_dive_timer,
-            gk_dive_dir: p.gk_dive_dir,
+            gk_dive_dir: match p.gk_dive_dir { Some(true) => Some("up"), Some(false) => Some("down"), None => None },
             facing: r.facing,
             step_counter: r.step_counter,
             celebrate_timer: r.celebrate_timer,
@@ -535,6 +535,18 @@ fn update_set_piece_text(session: &mut GameSession) {
     if g.set_piece_timer == 0 {
         session.set_piece_text = None;
     }
+}
+
+/// Toggles whether player 0 is human-controlled or AI-controlled.
+/// Call with active=false to let Rust AI take over player 0.
+#[wasm_bindgen]
+pub fn set_human_player(handle: usize, active: bool) {
+    SESSIONS.with(|s| {
+        let mut sessions = s.borrow_mut();
+        if let Some(Some(session)) = sessions.get_mut(handle) {
+            session.game.human_player = if active { Some(0) } else { None };
+        }
+    });
 }
 
 /// Frees a game session.
