@@ -378,9 +378,11 @@ fn apply_step(session: &mut GameSession, input: &HumanInput) {
 
     match g.phase {
         Phase::Kickoff => {
+            // När AI styr player 0 (human_player = None) finns ingen input att
+            // vänta på — fortsätt direkt så att matchen kan spelas autonomt.
             let has_input = input.dx.abs() > 0.01 || input.dy.abs() > 0.01
                 || input.shoot || input.tackle || input.jump;
-            if has_input {
+            if has_input || g.human_player.is_none() {
                 g.phase = Phase::Playing;
             }
             return;
