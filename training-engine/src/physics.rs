@@ -536,27 +536,8 @@ pub fn step_game(game: &mut Game, rng: &mut impl Rng) {
             continue;
         }
         crate::brain::tick_player(game, i, rng);
-        apply_roam_limit(&mut game.pl[i]);
     }
 
     update_ball(game);
 }
 
-/// Enforce per-player max_distance_from_goal: clamp x toward own goal line.
-/// Only applies for V4 brains; v1/v2/v3 are unaffected (max_dist defaults to 1.0).
-fn apply_roam_limit(p: &mut Player) {
-    use crate::brain::PlayerBrain;
-    let max_dist = match &p.brain {
-        PlayerBrain::V4(v4) => v4.max_distance_from_goal.clamp(0.0, 1.0),
-        _ => 1.0,
-    };
-    if max_dist >= 1.0 { return; }
-    let span = FW - 2.0 * FIELD_LINE;
-    let limit = max_dist * span;
-    if p.team == 0 {
-        if p.x > FIELD_LINE + limit { p.x = FIELD_LINE + limit; }
-    } else {
-        let min_x = FW - FIELD_LINE - limit;
-        if p.x < min_x { p.x = min_x; }
-    }
-}
