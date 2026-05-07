@@ -1023,6 +1023,13 @@
     const v6 = p.brain.params || {};
     const sp = v6.spatial || {};
     const dec = v6.decisions || {};
+    // Risk-appetite modulation: higher risk → shoot earlier.
+    // Matches Rust ai.rs and JS v3Tick.
+    const risk = dec.riskAppetite == null ? 0.5 : Math.max(0, Math.min(1, dec.riskAppetite));
+    const baseShoot = dec.shootProgressThreshold == null ? 0.76 : dec.shootProgressThreshold;
+    const modulatedDec = Object.assign({}, dec, {
+      shootProgressThreshold: clamp(baseShoot - 0.05 * (risk - 0.5), 0.5, 0.95),
+    });
     const ball = g.ball;
     const hasball = ball.owner === p.id;
 
@@ -1040,11 +1047,67 @@
         }
       }
     }
-    if (p.role === 'gk' || hasball) {
+    if (hasball) {
       const saved = p.aiPolicy;
-      p.aiPolicy = dec;
+      // Include GK params so effectiveGkPolicy (read inside baselineCpuTick) finds them.
+      p.aiPolicy = p.role === 'gk'
+        ? Object.assign({}, modulatedDec, { gk: v6.gk || {} })
+        : modulatedDec;
       baselineCpuTick(g, p, rng);
       p.aiPolicy = saved;
+      return;
+    }
+    if (p.role === 'gk') {
+      // Inline GK special behaviors (dive, hold/distribute) then v6 spatial + clamp.
+      const gkp = v6.gk || {};
+      const lineX = p.team === 0 ? FIELD_LINE + PR*1.5 : FW - FIELD_LINE - PR*1.5;
+      const goalX = p.team === 0 ? FIELD_LINE : FW - FIELD_LINE;
+      const h2 = FH / 2;
+
+      if (p.gkDiveTimer < 0) return; // on ground
+      // Try to dive
+      if (p.gkDiveTimer === 0 && ball.owner === null) {
+        const diveCommitDist = gkp.gkDiveCommitDist != null ? gkp.gkDiveCommitDist : GK_DIVE_COMMIT_DIST;
+        const diveChance = gkp.gkDiveChance != null ? gkp.gkDiveChance : 0.9;
+        const isIncoming = p.team === 0 ? ball.vx < -8 : ball.vx > 8;
+        const distToGoal = Math.abs(p.x - goalX);
+        if (isIncoming && distToGoal < diveCommitDist && rng() < diveChance) {
+          const framesUntilGoal = ball.vx !== 0 ? (goalX - ball.x) / ball.vx : 0;
+          const predictedY = ball.y + ball.vy * Math.max(0, framesUntilGoal);
+          const jitter = GK_DIVE_JITTER * (1 - distToGoal / diveCommitDist);
+          const effectiveY = predictedY + (rng()*2 - 1) * jitter;
+          p.gkDiveDir = effectiveY < h2 ? 'up' : 'down';
+          p.gkDiveTimer = GK_DIVE_DUR;
+        }
+      }
+      if (p.gkDiveTimer > 0) {
+        const diveY = p.gkDiveDir === 'up' ? h2 - GH/2 + PR : h2 + GH/2 - PR;
+        moveTo(p, p.x, diveY, CSPEED * 3.5);
+        p.gkDiveTimer--;
+        if (p.gkDiveTimer <= 0) {
+          const caught = ball.owner === null && Math.hypot(p.x - ball.x, p.y - ball.y) < PR + BR + 8;
+          if (!caught) p.gkDiveTimer = -GK_DIVE_DUR;
+          else p.gkDiveTimer = 0;
+        }
+        return;
+      }
+
+      // Off-ball: use v6 spatial cost like outfield, then clamp by GK params.
+      let [tx, ty] = v6Target(g, p, sp);
+      const ownGoalMax = (sp.ownGoal && sp.ownGoal.max != null) ? sp.ownGoal.max : 0;
+      const sweeperFreedom = gkp.gkSweeperFreedom != null
+        ? Math.max(0, Math.min(1, gkp.gkSweeperFreedom))
+        : 0;
+      const maxZone = Math.abs(FW * 0.5 - lineX);
+      const maxOut = Math.max(0, Math.min(ownGoalMax, maxZone)) * sweeperFreedom;
+      if (p.team === 0) {
+        tx = Math.min(Math.max(tx, lineX), lineX + maxOut);
+      } else {
+        tx = Math.max(Math.min(tx, lineX), lineX - maxOut);
+      }
+      ty = Math.max(PR, Math.min(FH - PR, ty));
+      const slow = p.slowTimer > 0 ? SLOW_FACTOR : 1;
+      moveTo(p, tx, ty, CSPEED * 0.88 * slow);
       return;
     }
     if (ball.owner === null) {
