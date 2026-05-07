@@ -1,8 +1,6 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::constants::*;
-use crate::brain::PlayerBrain;
-use crate::policy::{PolicyParams, TeamPolicyV6};
 
 /// When true, all field players start clustered at the centre of their own
 /// half (forward/mid/def at the same position). GKs keep their goal-line spot.
@@ -52,15 +50,10 @@ pub struct Player {
     pub ai_jitter_y: f32,
     pub ai_jitter_timer: i32,
     pub slow_timer: i32,
-    pub gk_dive_dir: Option<bool>, // Some(true) = up (y<H2), Some(false) = down
-    pub gk_dive_timer: i32,        // positive = diving, negative = on ground
+    pub gk_dive_dir: Option<bool>,
+    pub gk_dive_timer: i32,
     pub gk_hold_timer: i32,
-    /// Counts extra frames held beyond GK_HOLD_DELAY (risk-clearance extensions).
-    /// Capped at GK_MAX_HOLD_EXTRA to prevent infinite hold.
     pub gk_hold_extended: i32,
-    /// What algorithm + parameters this player uses to make decisions.
-    /// Set at game setup; defaults to V1 with classic params.
-    pub brain: PlayerBrain,
     pub goals: u32,
     pub shots: u32,
     pub assists: u32,
@@ -94,7 +87,6 @@ impl Player {
             gk_dive_timer: 0,
             gk_hold_timer: 0,
             gk_hold_extended: 0,
-            brain: PlayerBrain::default(),
             goals: 0,
             shots: 0,
             assists: 0,
@@ -104,13 +96,6 @@ impl Player {
             penalties_scored: 0,
         }
     }
-}
-
-/// Returns the underlying classic PolicyParams for a player. Read from their
-/// brain (V1/V2 directly, V3 returns its `.base`). Used by helper code that
-/// only cares about classic params (e.g. `cpu_find_pass`).
-pub fn effective_policy(game: &Game, player_idx: usize) -> PolicyParams {
-    game.pl[player_idx].brain.base_params()
 }
 
 #[derive(Clone, Debug)]
@@ -168,14 +153,10 @@ pub struct Game {
     pub set_piece_timer: i32,
     pub penalty_team: Option<usize>,
     pub penalty_taken: bool,
-    pub policies: [PolicyParams; 2],
     pub stats: Stats,
-    // Free kick state (indirect rule)
     pub free_kick_active: bool,
     pub free_kick_shooter_id: Option<usize>,
-    // GK hands state
     pub gk_has_ball: [bool; 2],
-    // Set piece taker — only this player can pick up the ball during a set piece
     pub set_piece_taker_id: Option<usize>,
     pub set_piece_x: f32,
     pub set_piece_y: f32,
@@ -186,7 +167,7 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(policy0: PolicyParams, policy1: PolicyParams) -> Self {
+    pub fn new() -> Self {
         Self {
             pl: make_players(),
             ball: Ball::new(),
@@ -198,7 +179,6 @@ impl Game {
             set_piece_timer: 0,
             penalty_team: None,
             penalty_taken: false,
-            policies: [policy0, policy1],
             stats: Stats::default(),
             free_kick_active: false,
             free_kick_shooter_id: None,
@@ -212,23 +192,10 @@ impl Game {
             human_player: None,
         }
     }
-
-    /// Sets up a v6 team-vs-team match: per-position V6Params, V6 brain.
-    pub fn for_team_battle_v6(team0: &TeamPolicyV6, team1: &TeamPolicyV6) -> Self {
-        let mut game = Self::new(team0[0].decisions.as_policy_params(), team1[0].decisions.as_policy_params());
-        for player in &mut game.pl {
-            let slot = player.id % 5;
-            let p = if player.team == 0 { team0[slot] } else { team1[slot] };
-            player.brain = PlayerBrain::V6(p);
-        }
-        game
-    }
-
 }
 
 pub fn make_players() -> Vec<Player> {
     if CLUSTER_START.load(Ordering::Relaxed) {
-        // All field players cluster at centre of own half. GKs unchanged.
         let cx_team0 = FW * 0.25;
         let cx_team1 = FW * 0.75;
         return vec![

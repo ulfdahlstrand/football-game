@@ -1,8 +1,3 @@
-use rand::Rng;
-
-use crate::game::Game;
-use crate::policy::V6Params;
-
 /// Hooks passed from v6_tick into classic_tick for on-ball decisions.
 #[derive(Clone, Copy, Debug)]
 pub struct TickHooks {
@@ -27,40 +22,6 @@ impl Default for TickHooks {
             gk_risk_clearance: 0.5,
             gk_distribution_zone: 0.0,
             gk_pass_target_dist: 200.0,
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug)]
-pub enum PlayerBrain {
-    V6(V6Params),
-}
-
-impl PlayerBrain {
-    pub fn base_params(&self) -> crate::policy::PolicyParams {
-        match self {
-            PlayerBrain::V6(p) => p.decisions.as_policy_params(),
-        }
-    }
-
-    pub fn version_label(&self) -> &'static str {
-        match self {
-            PlayerBrain::V6(_) => "v6",
-        }
-    }
-}
-
-impl Default for PlayerBrain {
-    fn default() -> Self {
-        PlayerBrain::V6(V6Params::default())
-    }
-}
-
-pub fn tick_player(game: &mut Game, player_idx: usize, rng: &mut impl Rng) {
-    let brain = game.pl[player_idx].brain;
-    match brain {
-        PlayerBrain::V6(p) => {
-            crate::ai::v6_tick(game, player_idx, &p, rng);
         }
     }
 }

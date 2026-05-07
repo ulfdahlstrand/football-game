@@ -5,6 +5,8 @@ mod spatial;
 mod brain;
 mod ai;
 mod physics;
+mod team;
+mod team_v6;
 mod trainer;
 mod session;
 mod svg;
@@ -291,8 +293,12 @@ fn main() {
             let seed: u64 = rand::Rng::gen(&mut rng);
             let swap = i % 2 == 1;
             let (g0, g1) = {
-                let mut g = crate::game::Game::for_team_battle_v6(if swap { &pb } else { &pa }, if swap { &pa } else { &pb });
-                while g.phase != crate::game::Phase::Fulltime { crate::physics::step_game(&mut g, &mut rng); }
+                let mut g = crate::game::Game::new();
+                let mut teams: [Box<dyn crate::team::Team>; 2] = [
+                    Box::new(crate::team_v6::V6Team::new(0, if swap { pb } else { pa })),
+                    Box::new(crate::team_v6::V6Team::new(1, if swap { pa } else { pb })),
+                ];
+                while g.phase != crate::game::Phase::Fulltime { crate::physics::step_game(&mut g, &mut teams, &mut rng); }
                 if swap { (g.score[1], g.score[0]) } else { (g.score[0], g.score[1]) }
             };
             *score_counts.entry((g0, g1)).or_insert(0) += 1;

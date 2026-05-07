@@ -2,6 +2,7 @@ use rand::Rng;
 
 use crate::constants::*;
 use crate::game::{Game, Phase, Player, PlayerState, Role, make_players};
+use crate::team::Team;
 
 fn clamp(v: f32, lo: f32, hi: f32) -> f32 {
     v.max(lo).min(hi)
@@ -473,7 +474,7 @@ pub fn reset_kickoff(game: &mut Game) {
     game.set_piece_taker_id = None;
 }
 
-pub fn step_game(game: &mut Game, rng: &mut impl Rng) {
+pub fn step_game(game: &mut Game, teams: &mut [Box<dyn Team>; 2], rng: &mut impl Rng) {
     if game.phase == Phase::Kickoff { game.phase = Phase::Playing; }
 
     if game.phase == Phase::Goal {
@@ -536,7 +537,8 @@ pub fn step_game(game: &mut Game, rng: &mut impl Rng) {
             continue;
         }
         if game.human_player == Some(game.pl[i].id) { continue; }
-        crate::brain::tick_player(game, i, rng);
+        let team_id = game.pl[i].team;
+        teams[team_id].tick_player(game, i, rng as &mut dyn rand::RngCore);
     }
 
     update_ball(game);
