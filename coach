@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENGINE="$SCRIPT_DIR/training-engine/target/release/training-engine"
+TEAMS_DIR="$SCRIPT_DIR/data/teams"
+
+usage() {
+  echo "Usage: coach <command> [args]"
+  echo ""
+  echo "Info commands:"
+  echo "  rules                                       Show COACH_RULES.md"
+  echo "  persona <team>                              Show coach persona (coach.md)"
+  echo "  coaching <team>                             Show coaching journal (coaching.md)"
+  echo "  coaching <team> append                      Append to coaching.md (reads stdin)"
+  echo "  coaching <team> write                       Overwrite coaching.md (reads stdin)"
+  echo ""
+  echo "Training commands:"
+  echo "  tournament <games>                          Run round-robin tournament"
+  echo "  train <team> [--quick|--short]              Train a team"
+  echo "  single-stage <team> <epochs> <games>        Single-stage exploration"
+  echo "  single-stage-slot <team> <slot> <ep> <g>    Train a specific player slot"
+  echo "  score-probe <team_a> <team_b> <games>       Test match between two teams"
+  echo "  svgs                                        Regenerate all team SVGs"
+  echo ""
+  echo "Nudge commands:"
+  echo "  nudge status <team>"
+  echo "  nudge record-training <team> <evals>"
+  echo "  nudge nudge <team> <slot> <param> <delta>"
+}
+
+require_team() {
+  local team="$1"
+  if [[ -z "$team" ]]; then
+    echo "Error: team name required" >&2
+    exit 1
+  fi
+  if [[ ! -d "$TEAMS_DIR/$team" ]]; then
+    echo "Error: team '$team' not found in $TEAMS_DIR" >&2
+    exit 1
+  fi
+}
+
+if [[ $# -eq 0 ]]; then
+  usage
+  exit 1
+fi
+
+CMD="$1"
+shift
+
+case "$CMD" in
+  rules)
+    cat "$TEAMS_DIR/COACH_RULES.md"
+    ;;
+
+  persona)
+    require_team "${1:-}"
+    cat "$TEAMS_DIR/$1/coach.md"
+    ;;
+
+  coaching)
+    require_team "${1:-}"
+    TEAM="$1"
+    shift
+    SUBCOMMAND="${1:-show}"
+    shift || true
+
+    COACHING_FILE="$TEAMS_DIR/$TEAM/coaching.md"
+
+    case "$SUBCOMMAND" in
+      show|"")
+        cat "$COACHING_FILE"
+        ;;
+      append)
+        CONTENT="$(cat)"
+        printf "\n%s\n" "$CONTENT" >> "$COACHING_FILE"
+        echo "Appended to $COACHING_FILE"
+        ;;
+      write)
+        CONTENT="$(cat)"
+        printf "%s\n" "$CONTENT" > "$COACHING_FILE"
+        echo "Wrote $COACHING_FILE"
+        ;;
+      *)
+        echo "Unknown subcommand: $SUBCOMMAND (use: show, append, write)" >&2
+        exit 1
+        ;;
+    esac
+    ;;
+
+  tournament)
+    "$ENGINE" --v6-tournament "$@"
+    ;;
+
+  train)
+    "$ENGINE" --v6-team-train "$@"
+    ;;
+
+  single-stage)
+    "$ENGINE" --single-stage "$@"
+    ;;
+
+  single-stage-slot)
+    "$ENGINE" --single-stage-slot "$@"
+    ;;
+
+  score-probe)
+    "$ENGINE" --score-probe "$@"
+    ;;
+
+  svgs)
+    "$ENGINE" --v6-team-svgs "$@"
+    ;;
+
+  nudge)
+    python3 "$SCRIPT_DIR/coach_nudge.py" "$@"
+    ;;
+
+  *)
+    echo "Unknown command: $CMD"
+    usage
+    exit 1
+    ;;
+esac
