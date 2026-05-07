@@ -2,8 +2,12 @@ use rand::Rng;
 use rand_distr::Normal;
 use serde::{Deserialize, Serialize};
 
-/// Classic decision parameters. Still used by v6: v6_tick converts DecisionParams
-/// to PolicyParams and passes it to classic_tick for on-ball decisions.
+pub(crate) fn round4(v: f32) -> f32 {
+    (v * 10000.0).round() / 10000.0
+}
+
+pub const TEAM_SLOT_NAMES: [&str; 5] = ["fwd", "mid", "mid", "def", "gk"];
+
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PolicyParams {
@@ -31,20 +35,6 @@ impl Default for PolicyParams {
         }
     }
 }
-
-fn clamp(v: f32, lo: f32, hi: f32) -> f32 {
-    v.max(lo).min(hi)
-}
-
-fn round4(v: f32) -> f32 {
-    (v * 10000.0).round() / 10000.0
-}
-
-pub const TEAM_SLOT_NAMES: [&str; 5] = ["fwd", "mid", "mid", "def", "gk"];
-
-// ════════════════════════════════════════════════════════════════════════════
-// V6: Spatial preference architecture
-// ════════════════════════════════════════════════════════════════════════════
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -217,9 +207,9 @@ fn mutate_distance_pref(p: &DistancePref, lo: f32, hi: f32, rng: &mut impl Rng, 
     let mut n = *p;
     let sigma = (hi - lo) * 0.05 * scale;
     let dist = Normal::new(0.0f32, sigma).unwrap();
-    if rng.gen::<f32>() < 0.3 { n.min = clamp(n.min + rng.sample(dist), lo, hi); }
-    if rng.gen::<f32>() < 0.3 { n.max = clamp(n.max + rng.sample(dist), lo, hi); }
-    if rng.gen::<f32>() < 0.3 { n.preferred = clamp(n.preferred + rng.sample(dist), lo, hi); }
+    if rng.gen::<f32>() < 0.3 { n.min = (n.min + rng.sample(dist)).clamp(lo, hi); }
+    if rng.gen::<f32>() < 0.3 { n.max = (n.max + rng.sample(dist)).clamp(lo, hi); }
+    if rng.gen::<f32>() < 0.3 { n.preferred = (n.preferred + rng.sample(dist)).clamp(lo, hi); }
     if n.min > n.max { let t = n.min; n.min = n.max; n.max = t; }
     n.clamp_self();
     DistancePref { min: round4(n.min), max: round4(n.max), preferred: round4(n.preferred) }
@@ -238,7 +228,7 @@ pub fn mutate_v6(p: &V6Params, rng: &mut impl Rng, scale: f32) -> V6Params {
         ($field:expr, $sigma:expr, $lo:expr, $hi:expr) => {
             if rng.gen::<f32>() < 0.25 {
                 let dist = Normal::new(0.0f32, $sigma * scale).unwrap();
-                $field = clamp($field + rng.sample(dist), $lo, $hi);
+                $field = ($field + rng.sample(dist)).clamp($lo, $hi);
                 $field = round4($field);
             }
         };
@@ -294,65 +284,5 @@ pub fn mutate_gk_only(team: &TeamPolicyV6, rng: &mut impl Rng, scale: f32) -> Te
 pub fn mutate_slot_only(team: &TeamPolicyV6, slot: usize, rng: &mut impl Rng, scale: f32) -> TeamPolicyV6 {
     let mut next = *team;
     next[slot] = mutate_v6(&team[slot], rng, scale);
-    next
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// V7: Coach + coachability
-// ════════════════════════════════════════════════════════════════════════════
-
-/// Träningsbara params för ett V7-lag.
-/// `instinct` tränas exakt som V6; `coachability` och `coach_style` modulerar taktiken.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct V7TeamParams {
-    pub instinct: TeamPolicyV6,
-    pub coachability: [f32; 5],
-    pub coach_style: crate::team_v7::CoachStyle,
-}
-
-impl V7TeamParams {
-    pub fn from_v6(policy: TeamPolicyV6) -> Self {
-        Self {
-            instinct: policy,
-            coachability: [0.5; 5],
-            coach_style: crate::team_v7::CoachStyle::default(),
-        }
-    }
-}
-
-pub fn mutate_v7(p: &V7TeamParams, rng: &mut impl Rng, scale: f32) -> V7TeamParams {
-    let scale = scale.max(0.05).min(2.0);
-    let mut next = p.clone();
-
-    // Mutera instinkt precis som V6
-    for i in 0..5 {
-        if rng.gen::<f32>() < 0.4 {
-            next.instinct[i] = mutate_v6(&p.instinct[i], rng, scale);
-        }
-    }
-
-    // Mutera coachability per slot
-    for i in 0..5 {
-        if rng.gen::<f32>() < 0.3 {
-            let sigma = 0.06 * scale;
-            let delta: f32 = rng.gen::<f32>() * sigma * 2.0 - sigma;
-            next.coachability[i] = round4((p.coachability[i] + delta).clamp(0.05, 0.95));
-        }
-    }
-
-    // Mutera coach style
-    macro_rules! perturb_style {
-        ($field:expr, $sigma:expr) => {
-            if rng.gen::<f32>() < 0.3 {
-                let delta: f32 = rng.gen::<f32>() * $sigma * 2.0 * scale - $sigma * scale;
-                $field = round4(($field + delta).clamp(0.0, 1.0));
-            }
-        };
-    }
-    perturb_style!(next.coach_style.press_response,    0.08);
-    perturb_style!(next.coach_style.depth_response,    0.08);
-    perturb_style!(next.coach_style.compactness_base,  0.07);
-    perturb_style!(next.coach_style.tempo_base,        0.07);
-
     next
 }

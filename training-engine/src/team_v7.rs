@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::detector::{detect_global, GlobalBehavior};
 use crate::game::Game;
-use crate::policy::{DecisionParams, V6Params, V6Spatial, DistancePref, TeamPolicyV6};
+use crate::policy::{V6Params, V6Spatial, DistancePref, TeamPolicyV6};
 use crate::team::Team;
 
 // ── Coach directive ──────────────────────────────────────────────────────────

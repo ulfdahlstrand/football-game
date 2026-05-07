@@ -1,9 +1,11 @@
 pub mod constants;
 pub mod game;
+pub mod math;
 pub mod brain;
 pub mod policy;
 pub mod spatial;
 pub mod ai;
+pub mod gk;
 pub mod physics;
 pub mod team;
 pub mod team_v6;

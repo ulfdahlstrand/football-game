@@ -1,9 +1,11 @@
 mod constants;
 mod game;
+mod math;
 mod policy;
 mod spatial;
 mod brain;
 mod ai;
+mod gk;
 mod physics;
 mod team;
 mod team_v6;
